@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Hockey Pool 2025-26 — Efficacité</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: sans-serif; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  h1 { margin-bottom: 10px; }
+  #legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 2px solid transparent; user-select: none; }
+  .legend-item:hover { border-color: #555; }
+  .legend-item.active { border-color: #fff; }
+  .legend-item.dimmed { opacity: 0.35; }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  #chartWrap { background: #16213e; border-radius: 8px; padding: 10px; width: 100%; max-width: 1100px; }
+  #chartWrap2 { background: #16213e; border-radius: 8px; padding: 10px; width: 100%; max-width: 1100px; margin-top: 30px; }
+  #chartWrap3 { background: #16213e; border-radius: 8px; padding: 10px; width: 100%; max-width: 1100px; margin-top: 30px; }
+  h2 { margin: 24px 0 10px; align-self: flex-start; max-width: 1100px; width: 100%; }
+  #explainer { margin-top: 20px; max-width: 1100px; width: 100%; background: #16213e; border-radius: 8px; padding: 16px 20px; font-size: 13px; line-height: 1.7; color: #bbb; }
+  #explainer strong { color: #eee; }
+  #explainer code { background: #0f3460; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #7ec8e3; }
+</style>
+</head>
+<body>
+<h1>Hockey Pool 2025-26 — Points par 60 minutes (top 10 valides)</h1>
+<div id="legend"></div>
+<div id="chartWrap"><canvas id="chart"></canvas></div>
+<h2>Classement des participants — P/60 moyen (top 10 valides)</h2>
+<div id="chartWrap2"><canvas id="chart2"></canvas></div>
+<h2>Temps de jeu vs Efficacité — taille = points totaux</h2>
+<div id="chartWrap3"><canvas id="chart3"></canvas></div>
+<div id="explainer">
+  <strong>Points par 60 minutes (P/60)</strong> mesure l'efficacité d'un joueur indépendamment du temps de jeu.
+  Un joueur avec 2 points en 20 minutes de jeu par partie sera mieux coté qu'un joueur avec 3 points en 60 minutes.
+  <br><br>
+  Formule : <code>(points totaux ÷ secondes de jeu totales) × 3600</code>
+  <br><br>
+  Seuls les <strong>10 joueurs valides</strong> de chaque participant sont inclus (top 10 par points de saison, avec au moins 1 défenseur).
+  Cliquez sur un participant dans la légende pour isoler ses joueurs.
+</div>
+<script>
+const allPlayers    = [{name:"Nikita Kucherov",pooler:"Frédérick Durain",color:"#4363d8",p60:5.05,pts:130,toi:1545},{name:"Connor McDavid",pooler:"Martin Proulx",color:"#e6194b",p60:4.39,pts:138,toi:1884},{name:"Nathan MacKinnon",pooler:"Steve Trempe",color:"#3cb44b",p60:4.28,pts:127,toi:1780},{name:"Leon Draisaitl",pooler:"Dany Pelletier",color:"#f58231",p60:4.15,pts:97,toi:1402},{name:"Macklin Celebrini",pooler:"Yanick Mimee",color:"#469990",p60:3.95,pts:115,toi:1747},{name:"Mark Stone",pooler:"Manuel Thifault",color:"#800000",p60:3.80,pts:73,toi:1152},{name:"David Pastrnak",pooler:"Martin Montreuil",color:"#42d4f4",p60:3.77,pts:100,toi:1590},{name:"William Nylander",pooler:"Pascal Roussel",color:"#f032e6",p60:3.76,pts:79,toi:1262},{name:"Evgeni Malkin",pooler:"Manuel Thifault",color:"#800000",p60:3.71,pts:61,toi:985},{name:"Cole Caufield",pooler:"Steve Trempe",color:"#3cb44b",p60:3.58,pts:88,toi:1472},{name:"Martin Necas",pooler:"Steve Trempe",color:"#3cb44b",p60:3.58,pts:100,toi:1676},{name:"Mikko Rantanen",pooler:"Manuel Thifault",color:"#800000",p60:3.58,pts:77,toi:1291},{name:"Jack Hughes",pooler:"Yanick Mimee",color:"#469990",p60:3.55,pts:77,toi:1300},{name:"Nick Suzuki",pooler:"Martin Montreuil",color:"#42d4f4",p60:3.55,pts:101,toi:1707},{name:"Mark Scheifele",pooler:"Francois Caya",color:"#9a6324",p60:3.50,pts:103,toi:1763},{name:"Brady Tkachuk",pooler:"Manuel Thifault",color:"#800000",p60:3.48,pts:59,toi:1017},{name:"Jason Robertson",pooler:"Martin Montreuil",color:"#42d4f4",p60:3.47,pts:96,toi:1660},{name:"Jack Eichel",pooler:"Éric Caya",color:"#bfef45",p60:3.44,pts:90,toi:1568},{name:"Sidney Crosby",pooler:"Dany Pelletier",color:"#f58231",p60:3.40,pts:74,toi:1307},{name:"Clayton Keller",pooler:"Martin Proulx",color:"#e6194b",p60:3.37,pts:88,toi:1565},{name:"Alex DeBrincat",pooler:"Éric Caya",color:"#bfef45",p60:3.36,pts:85,toi:1517},{name:"Matt Boldy",pooler:"Éric Caya",color:"#bfef45",p60:3.26,pts:85,toi:1563},{name:"Jake Guentzel",pooler:"Patrick Caya",color:"#911eb4",p60:3.22,pts:88,toi:1639},{name:"Dylan Guenther",pooler:"Frédérick Durain",color:"#4363d8",p60:3.19,pts:73,toi:1374},{name:"Brandon Hagel",pooler:"Yanick Mimee",color:"#469990",p60:3.16,pts:74,toi:1402},{name:"Cutter Gauthier",pooler:"Frédérick Durain",color:"#4363d8",p60:3.16,pts:69,toi:1311},{name:"Robert Thomas",pooler:"Éric Caya",color:"#bfef45",p60:3.16,pts:64,toi:1216},{name:"Nikolaj Ehlers",pooler:"Yanick Mimee",color:"#469990",p60:3.13,pts:71,toi:1360},{name:"Kyle Connor",pooler:"Frédérick Durain",color:"#4363d8",p60:3.13,pts:92,toi:1763},{name:"Andrei Svechnikov",pooler:"Yanick Mimee",color:"#469990",p60:3.13,pts:70,toi:1341},{name:"Wyatt Johnston",pooler:"Éric Caya",color:"#bfef45",p60:3.13,pts:86,toi:1650},{name:"Connor Bedard",pooler:"Manuel Thifault",color:"#800000",p60:3.13,pts:75,toi:1439},{name:"Tage Thompson",pooler:"Frédérick Durain",color:"#4363d8",p60:3.12,pts:81,toi:1558},{name:"Drake Batherson",pooler:"Martin Proulx",color:"#e6194b",p60:3.11,pts:71,toi:1370},{name:"Artemi Panarin",pooler:"Manuel Thifault",color:"#800000",p60:3.10,pts:84,toi:1625},{name:"Sebastian Aho",pooler:"Francois Caya",color:"#9a6324",p60:3.10,pts:80,toi:1549},{name:"Kirill Kaprizov",pooler:"Patrick Caya",color:"#911eb4",p60:3.09,pts:89,toi:1727},{name:"Tim Stützle",pooler:"Pascal Roussel",color:"#f032e6",p60:3.07,pts:83,toi:1621},{name:"Troy Terry",pooler:"Dany Pelletier",color:"#f58231",p60:3.06,pts:57,toi:1119},{name:"Lucas Raymond",pooler:"Éric Caya",color:"#bfef45",p60:3.03,pts:76,toi:1503},{name:"Leo Carlsson",pooler:"Martin Montreuil",color:"#42d4f4",p60:3.00,pts:67,toi:1340},{name:"Mitch Marner",pooler:"Pascal Roussel",color:"#f032e6",p60:2.97,pts:80,toi:1616},{name:"Seth Jarvis",pooler:"Martin Montreuil",color:"#42d4f4",p60:2.95,pts:66,toi:1340},{name:"Ivan Demidov",pooler:"Steve Trempe",color:"#3cb44b",p60:2.93,pts:62,toi:1270},{name:"Filip Forsberg",pooler:"Martin Proulx",color:"#e6194b",p60:2.91,pts:75,toi:1548},{name:"Morgan Geekie",pooler:"Francois Caya",color:"#9a6324",p60:2.89,pts:68,toi:1409},{name:"Juraj Slafkovský",pooler:"Dany Pelletier",color:"#f58231",p60:2.88,pts:73,toi:1520},{name:"Roope Hintz",pooler:"Patrick Caya",color:"#911eb4",p60:2.87,pts:44,toi:919},{name:"John Tavares",pooler:"Martin Montreuil",color:"#42d4f4",p60:2.86,pts:71,toi:1490},{name:"Will Smith",pooler:"Éric Caya",color:"#bfef45",p60:2.82,pts:59,toi:1254},{name:"Evan Bouchard",pooler:"Dany Pelletier",color:"#f58231",p60:2.82,pts:95,toi:2023},{name:"Adrian Kempe",pooler:"Pascal Roussel",color:"#f032e6",p60:2.80,pts:73,toi:1563},{name:"Kirill Marchenko",pooler:"Francois Caya",color:"#9a6324",p60:2.79,pts:67,toi:1439},{name:"Travis Konecny",pooler:"Francois Caya",color:"#9a6324",p60:2.78,pts:68,toi:1469},{name:"Jesper Bratt",pooler:"Patrick Caya",color:"#911eb4",p60:2.77,pts:71,toi:1538},{name:"Mika Zibanejad",pooler:"Pascal Roussel",color:"#f032e6",p60:2.76,pts:78,toi:1692},{name:"Ivan Barbashev",pooler:"Pascal Roussel",color:"#f032e6",p60:2.75,pts:61,toi:1331},{name:"Nick Schmaltz",pooler:"Manuel Thifault",color:"#800000",p60:2.75,pts:74,toi:1617},{name:"Bryan Rust",pooler:"Frédérick Durain",color:"#4363d8",p60:2.72,pts:65,toi:1436},{name:"Steven Stamkos",pooler:"Manuel Thifault",color:"#800000",p60:2.71,pts:66,toi:1461},{name:"Gabriel Vilardi",pooler:"Patrick Caya",color:"#911eb4",p60:2.69,pts:69,toi:1536},{name:"Dylan Larkin",pooler:"Frédérick Durain",color:"#4363d8",p60:2.69,pts:67,toi:1493},{name:"Ryan O'Reilly",pooler:"Martin Proulx",color:"#e6194b",p60:2.69,pts:74,toi:1651},{name:"Sam Reinhart",pooler:"Pascal Roussel",color:"#f032e6",p60:2.69,pts:61,toi:1362},{name:"Alex Ovechkin",pooler:"Steve Trempe",color:"#3cb44b",p60:2.68,pts:64,toi:1430},{name:"Matthew Knies",pooler:"Martin Montreuil",color:"#42d4f4",p60:2.67,pts:66,toi:1484},{name:"Pavel Dorofeyev",pooler:"Steve Trempe",color:"#3cb44b",p60:2.66,pts:64,toi:1443},{name:"Tom Wilson",pooler:"Steve Trempe",color:"#3cb44b",p60:2.65,pts:62,toi:1401},{name:"Trevor Zegras",pooler:"Pascal Roussel",color:"#f032e6",p60:2.65,pts:67,toi:1516},{name:"Alex Tuch",pooler:"Martin Proulx",color:"#e6194b",p60:2.64,pts:66,toi:1500},{name:"Brayden Point",pooler:"Patrick Caya",color:"#911eb4",p60:2.61,pts:50,toi:1150},{name:"Mathew Barzal",pooler:"Steve Trempe",color:"#3cb44b",p60:2.58,pts:72,toi:1672},{name:"Auston Matthews",pooler:"Francois Caya",color:"#9a6324",p60:2.55,pts:53,toi:1248},{name:"Matvei Michkov",pooler:"Éric Caya",color:"#bfef45",p60:2.55,pts:51,toi:1202},{name:"Cale Makar",pooler:"Francois Caya",color:"#9a6324",p60:2.54,pts:79,toi:1863},{name:"Marcus Johansson",pooler:"Patrick Caya",color:"#911eb4",p60:2.54,pts:49,toi:1156},{name:"Darren Raddysh",pooler:"Dany Pelletier",color:"#f58231",p60:2.54,pts:70,toi:1656},{name:"Dylan Cozens",pooler:"Martin Montreuil",color:"#42d4f4",p60:2.53,pts:59,toi:1397},{name:"Rickard Rakell",pooler:"Martin Proulx",color:"#e6194b",p60:2.53,pts:48,toi:1136},{name:"Beckett Sennecke",pooler:"Frédérick Durain",color:"#4363d8",p60:2.52,pts:60,toi:1430},{name:"Luke Evangelista",pooler:"Francois Caya",color:"#9a6324",p60:2.50,pts:56,toi:1346},{name:"Tomas Hertl",pooler:"Manuel Thifault",color:"#800000",p60:2.49,pts:58,toi:1396},{name:"Sam Bennett",pooler:"Steve Trempe",color:"#3cb44b",p60:2.48,pts:58,toi:1405},{name:"Brock Nelson",pooler:"Francois Caya",color:"#9a6324",p60:2.45,pts:65,toi:1591},{name:"Ryan Nugent-Hopkins",pooler:"Dany Pelletier",color:"#f58231",p60:2.45,pts:56,toi:1372},{name:"Zach Werenski",pooler:"Steve Trempe",color:"#3cb44b",p60:2.43,pts:81,toi:1996},{name:"Carter Verhaeghe",pooler:"Yanick Mimee",color:"#469990",p60:2.43,pts:55,toi:1356},{name:"Bo Horvat",pooler:"Francois Caya",color:"#9a6324",p60:2.42,pts:57,toi:1411},{name:"Dylan Strome",pooler:"Dany Pelletier",color:"#f58231",p60:2.41,pts:58,toi:1443},{name:"Lane Hutson",pooler:"Frédérick Durain",color:"#4363d8",p60:2.40,pts:78,toi:1949},{name:"Tyler Bertuzzi",pooler:"Éric Caya",color:"#bfef45",p60:2.39,pts:58,toi:1457},{name:"Rasmus Dahlin",pooler:"Martin Proulx",color:"#e6194b",p60:2.38,pts:74,toi:1862},{name:"Alexis Lafrenière",pooler:"Pascal Roussel",color:"#f032e6",p60:2.37,pts:57,toi:1443},{name:"Nico Hischier",pooler:"Martin Montreuil",color:"#42d4f4",p60:2.33,pts:66,toi:1698},{name:"J.T. Miller",pooler:"Dany Pelletier",color:"#f58231",p60:2.32,pts:53,toi:1369},{name:"Vincent Trocheck",pooler:"Yanick Mimee",color:"#469990",p60:2.31,pts:53,toi:1376},{name:"Joel Eriksson Ek",pooler:"Patrick Caya",color:"#911eb4",p60:2.29,pts:51,toi:1335},{name:"Adam Fantilli",pooler:"Dany Pelletier",color:"#f58231",p60:2.28,pts:59,toi:1550},{name:"Erik Karlsson",pooler:"Yanick Mimee",color:"#469990",p60:2.24,pts:66,toi:1770},{name:"Quinn Hughes",pooler:"Yanick Mimee",color:"#469990",p60:2.22,pts:76,toi:2052},{name:"William Eklund",pooler:"Martin Proulx",color:"#e6194b",p60:2.20,pts:53,toi:1446},{name:"John Carlson",pooler:"Patrick Caya",color:"#911eb4",p60:2.19,pts:60,toi:1644},{name:"JJ Peterka",pooler:"Martin Proulx",color:"#e6194b",p60:2.15,pts:47,toi:1310},{name:"Mason McTavish",pooler:"Frédérick Durain",color:"#4363d8",p60:2.14,pts:41,toi:1148},{name:"Roman Josi",pooler:"Yanick Mimee",color:"#469990",p60:1.95,pts:55,toi:1691},{name:"Jake Sanderson",pooler:"Manuel Thifault",color:"#800000",p60:1.95,pts:54,toi:1664},{name:"Jakob Chychrun",pooler:"Martin Montreuil",color:"#42d4f4",p60:1.93,pts:60,toi:1867},{name:"Miro Heiskanen",pooler:"Patrick Caya",color:"#911eb4",p60:1.93,pts:63,toi:1961},{name:"Josh Morrissey",pooler:"Éric Caya",color:"#bfef45",p60:1.73,pts:55,toi:1903},{name:"Moritz Seider",pooler:"Pascal Roussel",color:"#f032e6",p60:1.71,pts:60,toi:2104}];
+const legendItems   = [{name:"Martin Proulx",color:"#e6194b"},{name:"Steve Trempe",color:"#3cb44b"},{name:"Frédérick Durain",color:"#4363d8"},{name:"Dany Pelletier",color:"#f58231"},{name:"Patrick Caya",color:"#911eb4"},{name:"Martin Montreuil",color:"#42d4f4"},{name:"Pascal Roussel",color:"#f032e6"},{name:"Éric Caya",color:"#bfef45"},{name:"Yanick Mimee",color:"#469990"},{name:"Francois Caya",color:"#9a6324"},{name:"Manuel Thifault",color:"#800000"}];
+const poolerRanking = [{name:"Manuel Thifault",color:"#800000",avg:3.07},{name:"Frédérick Durain",color:"#4363d8",avg:3.01},{name:"Steve Trempe",color:"#3cb44b",avg:2.99},{name:"Martin Montreuil",color:"#42d4f4",avg:2.91},{name:"Éric Caya",color:"#bfef45",avg:2.89},{name:"Martin Proulx",color:"#e6194b",avg:2.84},{name:"Dany Pelletier",color:"#f58231",avg:2.83},{name:"Yanick Mimee",color:"#469990",avg:2.81},{name:"Pascal Roussel",color:"#f032e6",avg:2.75},{name:"Francois Caya",color:"#9a6324",avg:2.75},{name:"Patrick Caya",color:"#911eb4",avg:2.62}];
+const bubbleDatasets = [{label:"Manuel Thifault",backgroundColor:"#80000088",borderColor:"#800000",borderWidth:2,data:[{x:13647,y:3.07,r:27.3,pts:681}]},{label:"Frédérick Durain",backgroundColor:"#4363d888",borderColor:"#4363d8",borderWidth:2,data:[{x:15007,y:3.01,r:29.4,pts:756}]},{label:"Steve Trempe",backgroundColor:"#3cb44b88",borderColor:"#3cb44b",borderWidth:2,data:[{x:15545,y:2.99,r:30.0,pts:778}]},{label:"Martin Montreuil",backgroundColor:"#42d4f488",borderColor:"#42d4f4",borderWidth:2,data:[{x:15573,y:2.91,r:29.3,pts:752}]},{label:"Éric Caya",backgroundColor:"#bfef4588",borderColor:"#bfef45",borderWidth:2,data:[{x:14833,y:2.89,r:28.0,pts:709}]},{label:"Martin Proulx",backgroundColor:"#e6194b88",borderColor:"#e6194b",borderWidth:2,data:[{x:15272,y:2.84,r:28.8,pts:734}]},{label:"Dany Pelletier",backgroundColor:"#f5823188",borderColor:"#f58231",borderWidth:2,data:[{x:14761,y:2.83,r:27.6,pts:692}]},{label:"Yanick Mimee",backgroundColor:"#46999088",borderColor:"#469990",borderWidth:2,data:[{x:15395,y:2.81,r:28.1,pts:712}]},{label:"Pascal Roussel",backgroundColor:"#f032e688",borderColor:"#f032e6",borderWidth:2,data:[{x:15510,y:2.75,r:27.8,pts:699}]},{label:"Francois Caya",backgroundColor:"#9a632488",borderColor:"#9a6324",borderWidth:2,data:[{x:15088,y:2.75,r:27.7,pts:696}]},{label:"Patrick Caya",backgroundColor:"#911eb488",borderColor:"#911eb4",borderWidth:2,data:[{x:14605,y:2.62,r:25.9,pts:634}]}];
+
+// Bubble chart: TOI vs P/60, bubble size = total points
+new Chart(document.getElementById('chart3'), {
+  type: 'bubble',
+  data: { datasets: bubbleDatasets },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'right', labels: { color: '#eee' } },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const d = ctx.raw;
+            return [
+              ` ${ctx.dataset.label}`,
+              ` P/60 moyen : ${d.y}`,
+              ` TOI combiné : ${d.x} min`,
+              ` Points totaux : ${d.pts}`
+            ];
+          }
+        }
+      }
+    },
+    scales: {
+      x: { ticks: { color: '#aaa' }, grid: { color: '#333' },
+           title: { display: true, text: 'TOI combiné des 10 joueurs (minutes)', color: '#aaa' } },
+      y: { ticks: { color: '#aaa' }, grid: { color: '#333' },
+           title: { display: true, text: 'P/60 moyen', color: '#aaa' } }
+    }
+  }
+});
+
+// Pooler ranking chart
+new Chart(document.getElementById('chart2'), {
+  type: 'bar',
+  data: {
+    labels: poolerRanking.map(p => p.name),
+    datasets: [{
+      data: poolerRanking.map(p => p.avg),
+      backgroundColor: poolerRanking.map(p => p.color),
+      borderColor: poolerRanking.map(p => p.color),
+      borderWidth: 1
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: (ctx) => ` P/60 moyen: ${ctx.parsed.x.toFixed(2)}` } }
+    },
+    scales: {
+      x: { ticks: { color: '#aaa' }, grid: { color: '#333' },
+           title: { display: true, text: 'P/60 moyen', color: '#aaa' } },
+      y: { ticks: { color: '#eee', font: { size: 12 } }, grid: { color: '#222' } }
+    }
+  }
+});
+
+const activePoolers = new Set();
+let chartInstance = null;
+
+function getFiltered() {
+  return activePoolers.size > 0 ? allPlayers.filter(p => activePoolers.has(p.pooler)) : allPlayers;
+}
+
+function renderChart() {
+  const data = getFiltered();
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(document.getElementById('chart'), {
+    type: 'bar',
+    data: {
+      labels: data.map(p => p.name),
+      datasets: [{ data: data.map(p => p.p60), backgroundColor: data.map(p => p.color), borderColor: data.map(p => p.color), borderWidth: 1 }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const p = data[ctx.dataIndex];
+              return [` P/60: ${ctx.parsed.x.toFixed(2)}`, ` ${p.pooler} | ${p.pts} pts | ${p.toi} min TOI`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#aaa' }, grid: { color: '#333' },
+             title: { display: true, text: 'Points / 60 min', color: '#aaa' } },
+        y: { ticks: { color: '#eee', font: { size: 11 } }, grid: { color: '#222' } }
+      }
+    }
+  });
+}
+
+function updateLegendStyles() {
+  document.querySelectorAll('.legend-item').forEach(el => {
+    const name = el.dataset.pooler;
+    el.classList.remove('active', 'dimmed');
+    if (activePoolers.size > 0) {
+      el.classList.add(activePoolers.has(name) ? 'active' : 'dimmed');
+    }
+  });
+}
+
+// Build legend
+const legendEl = document.getElementById('legend');
+legendItems.forEach(item => {
+  const div = document.createElement('div');
+  div.className = 'legend-item';
+  div.dataset.pooler = item.name;
+  div.innerHTML = `<div class="legend-swatch" style="background:${item.color}"></div>${item.name}`;
+  div.addEventListener('click', () => {
+    if (activePoolers.has(item.name)) activePoolers.delete(item.name);
+    else activePoolers.add(item.name);
+    updateLegendStyles();
+    renderChart();
+  });
+  legendEl.appendChild(div);
+});
+
+renderChart();
+</script>
+</body>
+</html>
