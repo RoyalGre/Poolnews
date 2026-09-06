@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy Hockey Pool — Fun Facts</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header>
+  <h1>🏒 Fantasy Hockey Pool</h1>
+  <nav class="tabs">
+    <a href="pool.html">Draft</a>
+    <a href="standings.html">Standings</a>
+    <span class="active">Fun facts</span>
+    <a href="pool-records.html">Record book</a>
+  </nav>
+  <span class="stamp" id="dataStamp"></span>
+  <span class="spacer"></span>
+  <button id="btnExport">Export JSON</button>
+  <button id="btnImport">Import JSON</button>
+  <input type="file" id="fileInput" accept=".json,application/json" hidden>
+</header>
+
+<main class="wide">
+  <div id="content"></div>
+</main>
+
+<!-- Data first, then shared code, then the page's own code. -->
+<script src="data/players.js"></script>
+<script src="data/history.js"></script>
+<script src="data/advanced.js"></script>
+<script src="data/pool.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/funfacts.js"></script>
+</body>
+</html>

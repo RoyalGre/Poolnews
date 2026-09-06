@@ -1,0 +1,21 @@
+# Backups the build scripts leave behind
+*.bak
+
+# Local run state and logs — nothing a visitor needs, and it changes constantly
+update.log
+data/update-state.json
+
+# Throwaway copies the test runner builds next to the pages
+_test_*.html
+_pool.test.html
+_smoke.test.html
+_shot.test.html
+_diag.test.html
+
+# One-time conversion sources for the record book. The workbook is 4.5 MB of
+# personal spreadsheet and the intermediate JSON is derived from it; neither is
+# needed to build or serve the site.
+Historique_PoolNews_1994-2025.xlsx
+historique-1994-2025.json
+build-historique-json.py
+migrate-to-source-json.py

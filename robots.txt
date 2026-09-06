@@ -1,0 +1,6 @@
+# The pool is public because free GitHub Pages requires a public repo, but
+# there is no reason for it to turn up in search results. This keeps the
+# well-behaved crawlers out; it is not access control — anyone with the link
+# can still read the site.
+User-agent: *
+Disallow: /

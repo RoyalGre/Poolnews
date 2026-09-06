@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy Hockey Pool — Standings</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header>
+  <h1>🏒 Fantasy Hockey Pool</h1>
+  <nav class="tabs">
+    <a href="pool.html">Draft</a>
+    <span class="active">Standings</span>
+    <a href="funfacts.html">Fun facts</a>
+    <a href="pool-records.html">Record book</a>
+  </nav>
+  <span class="stamp" id="dataStamp"></span>
+  <span class="spacer"></span>
+  <button id="btnExport">Export JSON</button>
+  <button id="btnImport">Import JSON</button>
+  <input type="file" id="fileInput" accept=".json,application/json" hidden>
+</header>
+
+<main class="wide">
+  <div class="toolbar" id="toolbar"></div>
+  <div id="content"></div>
+</main>
+
+<!-- Data first, then shared code, then the page's own code. Plain <script src>
+     tags load fine from file://; fetch() of a local .json would not. -->
+<script src="data/players.js"></script>
+<script src="data/history.js"></script>
+<script src="data/pool.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/standings.js"></script>
+</body>
+</html>

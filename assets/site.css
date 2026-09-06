@@ -1,0 +1,379 @@
+/* =========================================================================
+   Fantasy Hockey Pool — shared stylesheet for every page in the site.
+   Loaded with a plain <link>, which works from file:// (fetch() would not).
+   ========================================================================= */
+
+/* ---- Theme -------------------------------------------------------------- */
+:root {
+  --bg:        #0e1116;
+  --panel:     #161b22;
+  --panel-2:   #1c232d;
+  --border:    #2a3441;
+  --text:      #e6edf3;
+  --muted:     #8b98a5;
+  --accent:    #4a9eff;
+  --accent-dk: #1f4f85;
+  --danger:    #f85149;
+  --warn:      #d29922;
+  --ok:        #3fb950;
+  --d-color:   #d2a8ff;  /* defensemen */
+  --g-color:   #ffa657;  /* goalies */
+  --gold:      #e3b341;
+  --silver:    #c9d1d9;
+  --bronze:    #cd7f32;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 7px 12px;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button.primary { background: var(--accent-dk); border-color: var(--accent); }
+
+input[type=text] {
+  font: inherit;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 11px;
+  width: 100%;
+}
+input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+select {
+  font: inherit;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 9px;
+}
+
+a { color: var(--accent); }
+
+/* ---- Site chrome -------------------------------------------------------- */
+header {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+header h1 { font-size: 17px; margin: 0; white-space: nowrap; }
+header .spacer { flex: 1; }
+.stamp { font-size: 12px; color: var(--muted); }
+.stamp .linkbtn {
+  font: inherit; padding: 1px 6px; margin-left: 2px;
+  background: transparent; border-color: var(--border); color: var(--muted);
+}
+.stamp .linkbtn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Tabs. The current page is a <span>, not a link — nothing to click through
+   to, and it keeps the active state obvious without a JS check per page. */
+nav.tabs { display: flex; gap: 4px; }
+nav.tabs a, nav.tabs span {
+  display: block;
+  padding: 6px 13px;
+  border-radius: 7px;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--muted);
+  border: 1px solid transparent;
+}
+nav.tabs a:hover { background: var(--panel-2); color: var(--text); }
+nav.tabs .active {
+  background: var(--panel-2);
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+main {
+  padding: 18px;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+main.split {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+main.wide { max-width: 1320px; }
+@media (max-width: 800px) { main.split { grid-template-columns: 1fr; } }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.panel + .panel { margin-top: 18px; }
+.panel h2 {
+  font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); margin: 0 0 10px;
+}
+.panel h2 .note { text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+.banner {
+  padding: 9px 12px; border-radius: 7px; margin-bottom: 12px; font-size: 14px;
+  background: rgba(210,153,34,.12); border: 1px solid var(--warn); color: #f0c674;
+}
+.banner.ok { background: rgba(63,185,80,.10); border-color: var(--ok); color: #7ee787; }
+
+.empty-state { color: var(--muted); padding: 30px 10px; text-align: center; }
+.hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.pos { font-weight: 600; font-size: 12px; padding: 1px 5px; border-radius: 4px; background: #30363d; }
+.pos.D { color: var(--d-color); }
+.pos.G { color: var(--g-color); }
+
+.num-cell { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* =========================================================================
+   Draft page
+   ========================================================================= */
+.pooler {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; margin-bottom: 5px;
+  border-radius: 6px; cursor: pointer;
+  border: 1px solid transparent;
+}
+.pooler:hover { background: var(--panel-2); }
+.pooler.active { background: var(--panel-2); border-color: var(--accent); }
+.pooler .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pooler .ct { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pooler .ct.full { color: var(--ok); }
+.pooler .flag { color: var(--warn); }
+
+.addrow { display: flex; gap: 6px; margin-top: 10px; }
+
+.slot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin-bottom: 5px;
+  background: var(--panel-2);
+}
+.slot.empty { background: transparent; border-style: dashed; color: var(--muted); cursor: pointer; }
+.slot.empty:hover { border-color: var(--accent); color: var(--text); }
+
+/* A slot switched into edit mode hosts the search widget inline. */
+.slot.editing { align-items: flex-start; border-color: var(--accent); }
+.slot.editing .num { padding-top: 9px; }
+.slot.editing .searchwrap { flex: 1; margin-bottom: 0; }
+.slot.editing .hint { margin-bottom: 0; }
+.slotbtn { padding: 7px 10px; font-size: 13px; white-space: nowrap; }
+.slotbtn.danger { color: var(--danger); border-color: #55282a; }
+.slotbtn.danger:hover { border-color: var(--danger); }
+.slot .num {
+  width: 20px; text-align: right; color: var(--muted);
+  font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.slot .who { flex: 1; }
+.slot .who .sub { font-size: 12px; color: var(--muted); }
+.slot .pts { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.slot .editbtn {
+  padding: 2px 8px; font-size: 15px; line-height: 1;
+  background: transparent; border-color: transparent; color: var(--muted);
+}
+/* Edits a pick rather than deleting one, so it highlights in the accent
+   colour — red would imply it destroys something. */
+.slot .editbtn:hover { color: var(--accent); border-color: var(--accent); }
+
+.searchwrap { position: relative; margin-bottom: 14px; }
+.results {
+  position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px);
+  max-height: 340px; overflow-y: auto;
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.6);
+}
+.results:empty { display: none; }
+.res {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 11px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.res:last-child { border-bottom: none; }
+.res.sel { background: var(--accent-dk); }
+.res .nm { flex: 1; }
+.res .team { color: var(--muted); font-size: 13px; }
+.res .pts { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); min-width: 34px; text-align: right; }
+.res.taken { opacity: .45; cursor: not-allowed; }
+.res .owner { font-size: 12px; color: var(--warn); }
+
+/* =========================================================================
+   Standings page
+   ========================================================================= */
+.toolbar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.toolbar label { font-size: 13px; color: var(--muted); }
+.toolbar .grow { flex: 1; }
+
+input[type=range] { accent-color: var(--accent); vertical-align: middle; }
+
+/* On a phone the table is wider than the screen. Without this it drags the
+   whole page sideways -- cards, header and all. Let the table scroll inside
+   its own box instead. */
+.tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tablewrap table.standings { min-width: 620px; }
+
+table.standings { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.standings th {
+  text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); font-weight: 600;
+  padding: 6px 8px; border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+table.standings th.sortable { cursor: pointer; user-select: none; }
+table.standings th.sortable:hover { color: var(--text); }
+table.standings th.right, table.standings td.right { text-align: right; }
+table.standings td { padding: 8px; border-bottom: 1px solid var(--border); }
+table.standings tbody tr { cursor: pointer; }
+table.standings tbody tr:hover td { background: var(--panel-2); }
+table.standings tbody tr.open td { background: var(--panel-2); }
+table.standings tbody tr.open td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+.rank { font-size: 15px; font-weight: 700; width: 34px; }
+.rank.r1 { color: var(--gold); }
+.rank.r2 { color: var(--silver); }
+.rank.r3 { color: var(--bronze); }
+
+.who-cell { display: flex; align-items: center; gap: 9px; }
+.chip {
+  width: 10px; height: 10px; border-radius: 3px; flex: none;
+}
+.who-cell .nm { font-weight: 600; }
+.who-cell .sub { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+.move { font-size: 12px; font-variant-numeric: tabular-nums; }
+.move.up   { color: var(--ok); }
+.move.down { color: var(--danger); }
+.move.flat { color: var(--muted); }
+
+.delta { font-size: 13px; color: var(--muted); }
+.delta.up { color: var(--ok); }
+
+/* Points bar behind the total — a rough visual of the gap to the leader. */
+.ptsbar {
+  position: relative; min-width: 92px;
+}
+.ptsbar .fill {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  height: 20px; border-radius: 4px; background: var(--accent-dk); opacity: .55;
+}
+.ptsbar .val { position: relative; padding-right: 6px; font-weight: 600; }
+
+.detail td { background: var(--bg) !important; padding: 0; }
+.detail .inner { padding: 12px 14px 16px 46px; }
+
+.rosterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 6px 14px;
+}
+.rline {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 14px;
+}
+.rline.counts { background: var(--panel-2); border-color: var(--border); }
+.rline.benched { opacity: .5; }
+.rline .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rline .pts { font-variant-numeric: tabular-nums; color: var(--muted); }
+.rline .tag {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--d-color); border: 1px solid var(--d-color); border-radius: 4px;
+  padding: 0 4px;
+}
+
+/* ---- Charts ------------------------------------------------------------- */
+.chartwrap { position: relative; width: 100%; overflow-x: auto; }
+svg.chart { display: block; width: 100%; height: auto; }
+svg.chart text { fill: var(--muted); font: 11px -apple-system, "Segoe UI", Roboto, sans-serif; }
+svg.chart text.lbl { fill: var(--text); font-size: 12px; font-weight: 600; }
+svg.chart .grid { stroke: var(--border); stroke-width: 1; }
+svg.chart .axis { stroke: var(--border); stroke-width: 1; }
+svg.chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+svg.chart .line.dim { opacity: .18; }
+svg.chart .line.hot { stroke-width: 3.5; }
+svg.chart .dot.dim { opacity: .15; }
+svg.chart .bar { rx: 3; }
+svg.chart .hover-band { fill: transparent; }
+svg.chart .hover-band:hover { fill: rgba(255,255,255,.03); }
+svg.chart .cursor-line { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 3; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 10px; }
+.legend .item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 9px 3px 7px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel-2);
+  font-size: 12px; cursor: pointer; user-select: none;
+}
+.legend .item:hover { border-color: var(--accent); }
+.legend .item.off { opacity: .38; }
+.legend .item .chip { width: 9px; height: 9px; border-radius: 2px; }
+
+.tooltip {
+  position: absolute; z-index: 30; pointer-events: none;
+  background: var(--panel-2); border: 1px solid var(--accent);
+  border-radius: 7px; padding: 8px 10px; font-size: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.6);
+  white-space: nowrap;
+}
+.tooltip .t-head { font-weight: 600; margin-bottom: 4px; color: var(--text); }
+.tooltip .t-row { display: flex; gap: 8px; align-items: center; }
+.tooltip .t-row .chip { width: 8px; height: 8px; border-radius: 2px; }
+.tooltip .t-row .v { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* =========================================================================
+   Fun-facts page
+   ========================================================================= */
+.prose { font-size: 14px; line-height: 1.75; color: var(--muted); max-width: 78ch; }
+.prose b { color: var(--text); }
+.prose code {
+  background: var(--panel-2); border: 1px solid var(--border);
+  padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--accent);
+}
+
+.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px 18px; }
+.fact {
+  padding: 9px 12px; border-radius: 8px;
+  background: var(--panel-2); border: 1px solid var(--border);
+}
+.fact .fl {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 2px;
+}
+.fact .ft { font-size: 14px; }
+
+/* Cards across the top of the standings page. */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+}
+.card .k { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.card .v { font-size: 20px; font-weight: 700; margin-top: 3px; }
+.card .s { font-size: 12px; color: var(--muted); }

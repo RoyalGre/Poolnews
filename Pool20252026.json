@@ -1,0 +1,189 @@
+[
+  {
+    "owner": "Martin Pr.",
+    "players": [
+      "Connor McDavid",
+      "Clayton Keller",
+      "Rasmus Dahlin",
+      "Jordan Kyrou",
+      "Filip Forsberg",
+      "Drake Batherson",
+      "JJ Peterka",
+      "Alex Tuch",
+      "William Eklund",
+      "Ryan O'Reilly",
+      "Rickard Rakell",
+      "Dawson Mercer"
+    ]
+  },
+  {
+    "owner": "Steve T.",
+    "players": [
+      "Nathan MacKinnon",
+      "Zach Werenski",
+      "Martin Necas",
+      "Sam Bennett",
+      "Cole Caufield",
+      "Ivan Demidov",
+      "Mathew Barzal",
+      "Valeri Nichushkin",
+      "Alex Ovechkin",
+      "Brad Marchand",
+      "Pavel Dorofeyev",
+      "Tom Wilson"
+    ]
+  },
+  {
+    "owner": "Frédérick D.",
+    "players": [
+      "Nikita Kucherov",
+      "Lane Hutson",
+      "Kyle Connor",
+      "Tage Thompson",
+      "Dylan Larkin",
+      "Dylan Guenther",
+      "Marco Rossi",
+      "Bryan Rust",
+      "Beckett Sennecke",
+      "Luke Hughes",
+      "Mason McTavish",
+      "Cutter Gauthier"
+    ]
+  },
+  {
+    "owner": "Dany P.",
+    "players": [
+      "Leon Draisaitl",
+      "Sidney Crosby",
+      "J.T. Miller",
+      "Evan Bouchard",
+      "Elias Pettersson",
+      "Dylan Strome",
+      "Adam Fantilli",
+      "Ryan Nugent-Hopkins",
+      "Juraj Slafkovský",
+      "Darren Raddysh",
+      "Anton Lundell",
+      "Troy Terry"
+    ]
+  },
+  {
+    "owner": "Patrick C.",
+    "players": [
+      "Kirill Kaprizov",
+      "Brayden Point",
+      "Jesper Bratt",
+      "Jake Guentzel",
+      "Roope Hintz",
+      "John Carlson",
+      "Marcus Johansson",
+      "Miro Heiskanen",
+      "Timo Meier",
+      "Gabriel Vilardi",
+      "Jonathan Huberdeau",
+      "Joel Eriksson Ek"
+    ]
+  },
+  {
+    "owner": "Martin M.",
+    "players": [
+      "David Pastrnak",
+      "Nick Suzuki",
+      "Jason Robertson",
+      "Nico Hischier",
+      "Seth Jarvis",
+      "John Tavares",
+      "Matthew Knies",
+      "Dylan Cozens",
+      "Mikhail Sergachev",
+      "Leo Carlsson",
+      "Quinton Byfield",
+      "Jakob Chychrun"
+    ]
+  },
+  {
+    "owner": "Pascal R.",
+    "players": [
+      "Mitch Marner",
+      "William Nylander",
+      "Tim Stützle",
+      "Sam Reinhart",
+      "Adrian Kempe",
+      "Mika Zibanejad",
+      "Kevin Fiala",
+      "Ivan Barbashev",
+      "Trevor Zegras",
+      "Alexis Lafrenière",
+      "Noah Dobson",
+      "Moritz Seider"
+    ]
+  },
+  {
+    "owner": "Eric C.",
+    "players": [
+      "Jack Eichel",
+      "Robert Thomas",
+      "Lucas Raymond",
+      "Matt Boldy",
+      "Wyatt Johnston",
+      "Matvei Michkov",
+      "Alex DeBrincat",
+      "Josh Morrissey",
+      "Dylan Holloway",
+      "Artturi Lehkonen",
+      "Will Smith",
+      "Tyler Bertuzzi"
+    ]
+  },
+  {
+    "owner": "Yanick M.",
+    "players": [
+      "Jack Hughes",
+      "Quinn Hughes",
+      "Macklin Celebrini",
+      "Brandon Hagel",
+      "Roman Josi",
+      "Nikolaj Ehlers",
+      "Erik Karlsson",
+      "Carter Verhaeghe",
+      "Andrei Svechnikov",
+      "Vincent Trocheck",
+      "Pavel Buchnevich",
+      "Sean Monahan"
+    ]
+  },
+  {
+    "owner": "François C.",
+    "players": [
+      "Auston Matthews",
+      "Cale Makar",
+      "Sebastian Aho",
+      "Mark Scheifele",
+      "Travis Konecny",
+      "Kirill Marchenko",
+      "Morgan Geekie",
+      "Luke Evangelista",
+      "Nazem Kadri",
+      "Brock Nelson",
+      "Bo Horvat",
+      "Aliaksei Protas"
+    ]
+  },
+  {
+    "owner": "Manuel T.",
+    "players": [
+      "Artemi Panarin",
+      "Mikko Rantanen",
+      "Steven Stamkos",
+      "Connor Bedard",
+      "Brady Tkachuk",
+      "Mark Stone",
+      "Patrick Kane",
+      "Jake Sanderson",
+      "Nick Schmaltz",
+      "Tomas Hertl",
+      "Zach Hyman",
+      "Evgeni Malkin"
+    ]
+  }
+]
