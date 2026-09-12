@@ -33,7 +33,9 @@ independent of that — it reads only `pool-history.json`.
 | File | What it is |
 |---|---|
 | `pool.html`, `standings.html`, `funfacts.html` | The three pages. |
-| `assets/site.css` | Shared styling for all of them. |
+| `assets/theme.css` | **The palette and the three faces.** Shared by all four pages, light + dark. |
+| `assets/theme.js` | Applies the reader's light/dark choice before the page paints. |
+| `assets/site.css` | Component styling for the three app pages. |
 | `assets/core.js` | Shared code: player index, saved state, **scoring**, history lookup. |
 | `assets/draft.js` | Draft-page code: the search box, the 12 slots. |
 | `assets/standings.js` | Standings-page code: table, cards, charts. |
@@ -120,6 +122,33 @@ builder actually verify the defenceman rule instead of warning that it cannot.
 Every total was recomputed from the player lists and matched against the
 `Classement` block on each sheet — 28 seasons, ranks and scores, no discrepancies.
 Those three files and the workbook are no longer part of the build and can be deleted.
+
+## Look and feel
+
+All four tabs share one design, defined in **`assets/theme.css`** — change a
+colour there and it changes everywhere. Nothing else defines a palette.
+
+The system came from the record book, which had the better one: a real
+light/dark pair, semantic token names (`--ground`, `--surface`, `--ink`,
+`--line`) and three faces — **Big Shoulders Display** for headings, **Newsreader**
+for prose, **IBM Plex Mono** for figures. The app pages adopted it and kept
+their own density: the draft page is still a compact tool, the standings are
+still a dense table.
+
+Two details worth knowing if you edit the CSS:
+
+- **`site.css` keeps the old token names** (`--bg`, `--panel`, `--text`, …) as
+  aliases pointing at the semantic ones, so its 147 component rules didn't need
+  rewriting. `var()` resolves at use time, so one alias block follows whichever
+  theme is active.
+- **Chart colours can't come from CSS.** The twelve pooler hues are picked in
+  JavaScript (`core.js`), so there are two sets: bright ones for the dark skin,
+  deeper ones for light, where the bright ones would wash out. `colorFor()`
+  chooses per theme, and the theme switch re-renders the charts.
+
+**Light / dark** — the picker in the header offers auto (follow the OS), light,
+or dark. The choice is one localStorage key shared by all four tabs, applied by
+`theme.js` in `<head>` so switching pages doesn't flash the wrong theme.
 
 ## Pool rules encoded here
 

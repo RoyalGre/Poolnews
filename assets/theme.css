@@ -1,0 +1,133 @@
+/* =========================================================================
+   theme.css — the one palette and type system for the whole site.
+
+   These tokens came from the record book, which had the more complete system:
+   a real light/dark pair, semantic names (ground/surface/ink/line rather than
+   bg/panel), and three faces — a condensed display for headings, a serif for
+   prose, a mono for figures. The app pages now share them, so the four tabs
+   read as one publication instead of two.
+
+   Light is the default. Dark follows the OS unless the reader has chosen
+   otherwise; assets/theme.js stamps data-theme on <html> for an explicit
+   choice, and both directions are honoured below.
+
+   Loaded before site.css, and by the record book in place of its own block —
+   edit the palette HERE and nowhere else.
+   ========================================================================= */
+
+:root {
+  --ground:#F1F4F8; --surface:#FFFFFF; --surface-2:#F7F9FB;
+  --ink:#101821; --ink-2:#3A4B5C; --muted:#5C6E7F; --faint:#8296A6;
+  --line:#DCE3EA; --line-strong:#C3CFDA;
+  --blue:#1B4FA0; --blue-soft:#E6EDF7; --blue-ink:#123974;
+  --gold:#B8862A; --gold-soft:#F4EBD8;
+  --red:#C8202E;
+  --board:#132436;
+
+  /* Added for the app pages: states and medals the record book never needed. */
+  --green:#1E7A46; --purple:#6B3FA0; --orange:#B4560F;
+  --silver:#7C8C9A; --bronze:#8C5A2B;
+  --shadow: 0 8px 28px rgba(16,24,33,.14);
+  --hover-wash: rgba(16,24,33,.04);
+
+  --f-disp:"Big Shoulders Display","Archivo Narrow","Arial Narrow",Haettenschweiler,sans-serif;
+  --f-body:Newsreader,"Iowan Old Style",Georgia,serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --f-ui:-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+
+@media (prefers-color-scheme:dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#0B1117; --surface:#131C25; --surface-2:#18232E;
+    --ink:#E4ECF3; --ink-2:#BCCBD8; --muted:#93A6B6; --faint:#6D8395;
+    --line:#24313D; --line-strong:#334453;
+    --blue:#5B93E6; --blue-soft:#17263A; --blue-ink:#9CC0F2;
+    --gold:#B98A2B; --gold-soft:#2A2314;
+    --red:#E85560;
+    --board:#0A1119;
+
+    --green:#3FB950; --purple:#D2A8FF; --orange:#FFA657;
+    --silver:#C9D1D9; --bronze:#CD7F32;
+    --shadow: 0 8px 28px rgba(0,0,0,.6);
+    --hover-wash: rgba(255,255,255,.03);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:#0B1117; --surface:#131C25; --surface-2:#18232E;
+  --ink:#E4ECF3; --ink-2:#BCCBD8; --muted:#93A6B6; --faint:#6D8395;
+  --line:#24313D; --line-strong:#334453;
+  --blue:#5B93E6; --blue-soft:#17263A; --blue-ink:#9CC0F2;
+  --gold:#B98A2B; --gold-soft:#2A2314;
+  --red:#E85560;
+  --board:#0A1119;
+
+  --green:#3FB950; --purple:#D2A8FF; --orange:#FFA657;
+  --silver:#C9D1D9; --bronze:#CD7F32;
+  --shadow: 0 8px 28px rgba(0,0,0,.6);
+  --hover-wash: rgba(255,255,255,.03);
+}
+
+/* ---- compatibility shim -------------------------------------------------
+   site.css was written against the old dark-only names. Rather than rewrite
+   147 rules, the old names now point at the semantic ones. var() resolves at
+   use time, so a single block here follows whichever theme is active. */
+:root {
+  --bg:        var(--ground);
+  --panel:     var(--surface);
+  --panel-2:   var(--surface-2);
+  --border:    var(--line);
+  --text:      var(--ink);
+  --accent:    var(--blue);
+  --accent-dk: var(--blue-soft);
+  --danger:    var(--red);
+  --warn:      var(--gold);
+  --ok:        var(--green);
+  --d-color:   var(--purple);   /* defencemen */
+  --g-color:   var(--orange);   /* goalies */
+}
+
+/* =========================================================================
+   Shared chrome — the strip across the top of all four pages.
+   The app pages use <header> + nav.tabs; the record book uses .sitenav. Both
+   are styled here so the bar is identical wherever you are.
+   ========================================================================= */
+header, .sitenav {
+  background: var(--board);
+  border-bottom: 2px solid var(--gold);
+}
+header { color: #EAF1F8; }
+
+nav.tabs a, nav.tabs span,
+.sitenav a, .sitenav .here {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  color: #8FB4DD;
+}
+nav.tabs a:hover, .sitenav a:hover {
+  color: #EAF1F8;
+  background: rgba(255,255,255,.07);
+}
+nav.tabs .active, .sitenav .here {
+  color: #fff;
+  border-color: var(--gold);
+  background: rgba(184,134,42,.16);
+  font-weight: 500;
+}
+
+/* The site name, in the display face, on both kinds of page. */
+header h1, .sitenav .brand {
+  font-family: var(--f-disp);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .01em;
+  font-size: 21px;
+  color: #fff;
+  white-space: nowrap;
+}

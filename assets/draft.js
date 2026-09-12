@@ -376,6 +376,7 @@ function addPooler() {
 
 wireImportExport();
 wireAutoRefresh();
+wireThemeToggle();
 wirePublishedBadge();
 
 /* ---- Go ---------------------------------------------------------------- */

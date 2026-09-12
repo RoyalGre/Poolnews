@@ -296,14 +296,29 @@ function statsSeason() {
    Shared display helpers
    ========================================================================= */
 
-/* Twelve hues far enough apart to tell one pooler's line from another's on a
-   dark background. Assigned by position in the pool, so a pooler keeps the
-   same colour in the table, the legend and every chart. */
-const POOLER_COLORS = [
+/* Twelve hues far enough apart to tell one pooler's line from another's, in
+   two sets: the bright ones need a dark ground behind them, and would wash out
+   on white, so the light skin gets deeper versions of the same hues. Assigned
+   by position in the pool, so a pooler keeps the same colour in the table, the
+   legend and every chart. */
+const POOLER_COLORS_DARK = [
   '#4a9eff', '#3fb950', '#e3b341', '#f85149', '#d2a8ff', '#ffa657',
   '#2fd6c8', '#ff7eb6', '#9fd356', '#b287ff', '#7a8cff', '#9aa7b8'
 ];
-function colorFor(i) { return POOLER_COLORS[i % POOLER_COLORS.length]; }
+const POOLER_COLORS_LIGHT = [
+  '#1B4FA0', '#1E7A46', '#9A6B12', '#C8202E', '#6B3FA0', '#B4560F',
+  '#0F7C74', '#B02A6B', '#5A7A15', '#5A3FA8', '#33479E', '#5C6E7F'
+];
+
+function poolerColors() {
+  const dark = window.poolTheme ? window.poolTheme.effective() === 'dark' : true;
+  return dark ? POOLER_COLORS_DARK : POOLER_COLORS_LIGHT;
+}
+
+function colorFor(i) {
+  const set = poolerColors();
+  return set[i % set.length];
+}
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -372,6 +387,41 @@ function wireAutoRefresh() {
   const anchor = $('btnExport');
   if (anchor) header.insertBefore(sel, anchor); else header.append(sel);
   arm();
+}
+
+/* Light/dark control. theme.js has already applied the stored choice before
+   paint; this only puts the switch on screen and repaints the charts, whose
+   colours are picked in JS and so cannot follow a CSS variable. */
+function wireThemeToggle() {
+  const header = document.querySelector('header');
+  if (!header || !window.poolTheme) return;
+
+  const sel = document.createElement('select');
+  sel.id = 'themePick';
+  sel.title = 'Light or dark';
+  [['auto', 'Theme: auto'], ['light', 'Theme: light'], ['dark', 'Theme: dark']]
+    .forEach(([v, t]) => {
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = t;
+      sel.append(o);
+    });
+  sel.value = window.poolTheme.get();
+
+  sel.onchange = () => {
+    window.poolTheme.set(sel.value);
+    if (typeof render === 'function') render();   // re-colour the SVG charts
+  };
+
+  const anchor = $('btnExport');
+  if (anchor) header.insertBefore(sel, anchor); else header.append(sel);
+
+  // Following the OS means reacting when the OS changes under us.
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (window.poolTheme.get() === 'auto' && typeof render === 'function') render();
+    });
+  }
 }
 
 /* When the site carries a published pool, say so in the header and offer a way

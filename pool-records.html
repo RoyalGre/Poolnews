@@ -1,39 +1,10 @@
 <title>Le Livre des records du Pool News</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/theme.css">
+<script src="assets/theme.js"></script>
 <style>
-:root{
-  --ground:#F1F4F8; --surface:#FFFFFF; --surface-2:#F7F9FB;
-  --ink:#101821; --ink-2:#3A4B5C; --muted:#5C6E7F; --faint:#8296A6;
-  --line:#DCE3EA; --line-strong:#C3CFDA;
-  --blue:#1B4FA0; --blue-soft:#E6EDF7; --blue-ink:#123974;
-  --gold:#B8862A; --gold-soft:#F4EBD8;
-  --red:#C8202E;
-  --board:#132436;
-  --f-disp:"Big Shoulders Display","Archivo Narrow","Arial Narrow",Haettenschweiler,sans-serif;
-  --f-body:Newsreader,"Iowan Old Style",Georgia,serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --ground:#0B1117; --surface:#131C25; --surface-2:#18232E;
-    --ink:#E4ECF3; --ink-2:#BCCBD8; --muted:#93A6B6; --faint:#6D8395;
-    --line:#24313D; --line-strong:#334453;
-    --blue:#5B93E6; --blue-soft:#17263A; --blue-ink:#9CC0F2;
-    --gold:#B98A2B; --gold-soft:#2A2314;
-    --red:#E85560;
-    --board:#0A1119;
-  }
-}
-:root[data-theme="dark"]{
-  --ground:#0B1117; --surface:#131C25; --surface-2:#18232E;
-  --ink:#E4ECF3; --ink-2:#BCCBD8; --muted:#93A6B6; --faint:#6D8395;
-  --line:#24313D; --line-strong:#334453;
-  --blue:#5B93E6; --blue-soft:#17263A; --blue-ink:#9CC0F2;
-  --gold:#B98A2B; --gold-soft:#2A2314;
-  --red:#E85560;
-  --board:#0A1119;
-}
+/* palette and faces: assets/theme.css */
 
 *{box-sizing:border-box}
 body{
@@ -55,15 +26,12 @@ table{border-collapse:collapse; width:100%}
    English; this page is its own thing. Rather than force one look on the
    other, the bar is dressed in this page's own idiom and sits on the
    masthead's board colour so it reads as part of the paper. */
-.sitenav{background:var(--board); border-bottom:1px solid rgba(255,255,255,.10)}
 .sitenav-in{max-width:1090px; margin:0 auto; padding:9px 26px;
   display:flex; align-items:center; gap:4px; flex-wrap:wrap}
-.sitenav a,.sitenav .here{
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.14em;
-  text-transform:uppercase; text-decoration:none;
-  padding:6px 12px; border-radius:6px; border:1px solid transparent; color:#8FB4DD}
-.sitenav a:hover{color:#EAF1F8; background:rgba(255,255,255,.07)}
-.sitenav .here{color:#fff; border-color:var(--gold); background:rgba(184,134,42,.16)}
+.sitenav .spacer{flex:1}
+.sitenav select{font-family:var(--f-mono); font-size:11px; letter-spacing:.08em;
+  background:transparent; color:#8FB4DD; border:1px solid rgba(255,255,255,.22);
+  border-radius:6px; padding:5px 8px}
 
 /* ---------- masthead ---------- */
 .masthead{background:var(--board); color:#EAF1F8; border-bottom:3px solid var(--gold)}
@@ -238,6 +206,12 @@ footer b{color:var(--ink-2); font-weight:600}
     <a href="standings.html">Classement</a>
     <a href="funfacts.html">Faits saillants</a>
     <span class="here">Livre des records</span>
+    <span class="spacer"></span>
+    <select id="themePick" title="Clair ou sombre">
+      <option value="auto">Theme : auto</option>
+      <option value="light">Theme : clair</option>
+      <option value="dark">Theme : sombre</option>
+    </select>
   </div>
 </div>
 
@@ -745,4 +719,15 @@ document.addEventListener('mousemove', e=>{
   if (t) showTip(e, t.dataset.t); else hideTip();
 });
 document.addEventListener('mouseleave', hideTip);
+</script>
+
+<script>
+/* Theme picker. Shares assets/theme.js and its localStorage key with the
+   other three tabs, so a choice made here holds everywhere. */
+(function () {
+  var sel = document.getElementById('themePick');
+  if (!sel || !window.poolTheme) return;
+  sel.value = window.poolTheme.get();
+  sel.addEventListener('change', function () { window.poolTheme.set(sel.value); });
+})();
 </script>

@@ -3,37 +3,42 @@
    Loaded with a plain <link>, which works from file:// (fetch() would not).
    ========================================================================= */
 
-/* ---- Theme -------------------------------------------------------------- */
-:root {
-  --bg:        #0e1116;
-  --panel:     #161b22;
-  --panel-2:   #1c232d;
-  --border:    #2a3441;
-  --text:      #e6edf3;
-  --muted:     #8b98a5;
-  --accent:    #4a9eff;
-  --accent-dk: #1f4f85;
-  --danger:    #f85149;
-  --warn:      #d29922;
-  --ok:        #3fb950;
-  --d-color:   #d2a8ff;  /* defensemen */
-  --g-color:   #ffa657;  /* goalies */
-  --gold:      #e3b341;
-  --silver:    #c9d1d9;
-  --bronze:    #cd7f32;
-}
+/* ---- Theme --------------------------------------------------------------
+   The palette and the three faces live in theme.css, shared with the record
+   book. Load that first; this file only styles components. */
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15.5px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* Headings in the condensed display face, same as the record book. */
+h1, h2, h3 { font-family: var(--f-disp); letter-spacing: .01em; }
+
+/* Figures in the mono face so columns line up and digits stay comparable —
+   but only the figures. Putting a whole table in mono makes names read like
+   console output; the record book gets this right by tagging just the numbers. */
+.num-cell, .stamp, .move, .delta, .rank,
+table.standings th,
+table.standings td.right,
+.ptsbar .val, .slot .pts, .slot .num, .res .pts, .rline .pts,
+.pooler .ct, .fact .fl, .card .k { font-family: var(--f-mono); }
+
+/* Headline figures and names on the cards, in the display face. */
+.card .v { font-family: var(--f-disp); font-weight: 700; font-size: 25px; letter-spacing: 0; }
+
+/* Controls stay in the UI sans — a serif button reads as a typo. */
+button, input, select, .legend .item { font-family: var(--f-ui); }
+
 button {
-  font: inherit;
+  font-size: 14px;
   cursor: pointer;
   border-radius: 6px;
   border: 1px solid var(--border);
@@ -43,11 +48,11 @@ button {
 }
 button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: .4; cursor: not-allowed; }
-button.primary { background: var(--accent-dk); border-color: var(--accent); }
+button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
 
 input[type=text] {
-  font: inherit;
-  background: var(--bg);
+  font-size: 14px;
+  background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -71,37 +76,22 @@ a { color: var(--accent); }
 header {
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   padding: 10px 18px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
+  /* background, border and typography come from theme.css */
 }
-header h1 { font-size: 17px; margin: 0; white-space: nowrap; }
+header h1 { margin: 0; }
 header .spacer { flex: 1; }
-.stamp { font-size: 12px; color: var(--muted); }
+.stamp { font-size: 11.5px; color: #8FB4DD; }
 .stamp .linkbtn {
   font: inherit; padding: 1px 6px; margin-left: 2px;
-  background: transparent; border-color: var(--border); color: var(--muted);
+  background: transparent; border-color: rgba(255,255,255,.22); color: #8FB4DD;
 }
-.stamp .linkbtn:hover { color: var(--accent); border-color: var(--accent); }
+.stamp .linkbtn:hover { color: #fff; border-color: var(--gold); }
 
 /* Tabs. The current page is a <span>, not a link — nothing to click through
    to, and it keeps the active state obvious without a JS check per page. */
-nav.tabs { display: flex; gap: 4px; }
-nav.tabs a, nav.tabs span {
-  display: block;
-  padding: 6px 13px;
-  border-radius: 7px;
-  font-size: 14px;
-  text-decoration: none;
-  color: var(--muted);
-  border: 1px solid transparent;
-}
-nav.tabs a:hover { background: var(--panel-2); color: var(--text); }
-nav.tabs .active {
-  background: var(--panel-2);
-  border-color: var(--accent);
-  color: var(--text);
-  font-weight: 600;
-}
+/* Tab looks live in theme.css so every page's bar is identical. */
+nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+nav.tabs a, nav.tabs span { display: block; }
 
 main {
   padding: 18px;
@@ -132,14 +122,14 @@ main.wide { max-width: 1320px; }
 
 .banner {
   padding: 9px 12px; border-radius: 7px; margin-bottom: 12px; font-size: 14px;
-  background: rgba(210,153,34,.12); border: 1px solid var(--warn); color: #f0c674;
+  background: var(--gold-soft); border: 1px solid var(--gold); color: var(--ink);
 }
-.banner.ok { background: rgba(63,185,80,.10); border-color: var(--ok); color: #7ee787; }
+.banner.ok { background: var(--surface-2); border-color: var(--green); color: var(--ink); }
 
 .empty-state { color: var(--muted); padding: 30px 10px; text-align: center; }
 .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
-.pos { font-weight: 600; font-size: 12px; padding: 1px 5px; border-radius: 4px; background: #30363d; }
+.pos { font-weight: 600; font-size: 11px; font-family: var(--f-mono); padding: 1px 5px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); }
 .pos.D { color: var(--d-color); }
 .pos.G { color: var(--g-color); }
 
@@ -180,7 +170,7 @@ main.wide { max-width: 1320px; }
 .slot.editing .searchwrap { flex: 1; margin-bottom: 0; }
 .slot.editing .hint { margin-bottom: 0; }
 .slotbtn { padding: 7px 10px; font-size: 13px; white-space: nowrap; }
-.slotbtn.danger { color: var(--danger); border-color: #55282a; }
+.slotbtn.danger { color: var(--danger); border-color: var(--line-strong); }
 .slotbtn.danger:hover { border-color: var(--danger); }
 .slot .num {
   width: 20px; text-align: right; color: var(--muted);
@@ -204,7 +194,7 @@ main.wide { max-width: 1320px; }
   background: var(--panel-2);
   border: 1px solid var(--accent);
   border-radius: 8px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.6);
+  box-shadow: var(--shadow);
 }
 .results:empty { display: none; }
 .res {
@@ -213,7 +203,7 @@ main.wide { max-width: 1320px; }
   border-bottom: 1px solid var(--border);
 }
 .res:last-child { border-bottom: none; }
-.res.sel { background: var(--accent-dk); }
+.res.sel { background: var(--blue-soft); }
 .res .nm { flex: 1; }
 .res .team { color: var(--muted); font-size: 13px; }
 .res .pts { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); min-width: 34px; text-align: right; }
@@ -280,7 +270,7 @@ table.standings tbody tr.open td:first-child { box-shadow: inset 3px 0 0 var(--a
 }
 .ptsbar .fill {
   position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  height: 20px; border-radius: 4px; background: var(--accent-dk); opacity: .55;
+  height: 20px; border-radius: 4px; background: var(--blue-soft); opacity: .85;
 }
 .ptsbar .val { position: relative; padding-right: 6px; font-weight: 600; }
 
@@ -321,7 +311,7 @@ svg.chart .line.hot { stroke-width: 3.5; }
 svg.chart .dot.dim { opacity: .15; }
 svg.chart .bar { rx: 3; }
 svg.chart .hover-band { fill: transparent; }
-svg.chart .hover-band:hover { fill: rgba(255,255,255,.03); }
+svg.chart .hover-band:hover { fill: var(--hover-wash); }
 svg.chart .cursor-line { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 3; }
 
 .legend { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 10px; }
@@ -339,7 +329,7 @@ svg.chart .cursor-line { stroke: var(--accent); stroke-width: 1; stroke-dasharra
   position: absolute; z-index: 30; pointer-events: none;
   background: var(--panel-2); border: 1px solid var(--accent);
   border-radius: 7px; padding: 8px 10px; font-size: 12px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.6);
+  box-shadow: var(--shadow);
   white-space: nowrap;
 }
 .tooltip .t-head { font-weight: 600; margin-bottom: 4px; color: var(--text); }

@@ -580,5 +580,6 @@ function oddsAndEnds() {
 /* ---- Go ---------------------------------------------------------------- */
 wireImportExport();
 wireAutoRefresh();
+wireThemeToggle();
 wirePublishedBadge();
 render();

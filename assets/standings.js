@@ -679,5 +679,6 @@ function gainChart() {
 /* ---- Go ---------------------------------------------------------------- */
 wireImportExport();
 wireAutoRefresh();
+wireThemeToggle();
 wirePublishedBadge();
 render();
