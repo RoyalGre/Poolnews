@@ -88,18 +88,68 @@
 }
 
 /* =========================================================================
-   Shared chrome — the strip across the top of all four pages.
-   The app pages use <header> + nav.tabs; the record book uses .sitenav. Both
-   are styled here so the bar is identical wherever you are.
+   Shared chrome — the strip across the top of every page.
+
+   All four pages use the same markup now (header > .bar + .subbar), so this
+   is one rule set rather than one per page. Two lines on purpose: the first
+   carries identity, navigation and controls; the second carries the small
+   print about where the numbers came from, which no one needs to read twice.
    ========================================================================= */
-header, .sitenav {
+header {
   background: var(--board);
   border-bottom: 2px solid var(--gold);
+  color: #EAF1F8;
+  display: block;
+  padding: 0;
 }
-header { color: #EAF1F8; }
 
-nav.tabs a, nav.tabs span,
-.sitenav a, .sitenav .here {
+header .bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 9px 18px;
+}
+header .spacer { flex: 1; }
+header .controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* Second line: provenance, deliberately quiet. */
+header .subbar {
+  border-top: 1px solid rgba(255,255,255,.09);
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 4px 18px 5px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+header .subbar .stamp {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  color: #7E9DBE;
+}
+header .subbar:empty, header .subbar .stamp:empty { display: none; }
+
+/* The site name. */
+header .brand {
+  font-family: var(--f-disp);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .005em;
+  font-size: 23px;
+  line-height: 1;
+  margin: 0;
+  color: #fff;
+  white-space: nowrap;
+}
+
+nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+nav.tabs a, nav.tabs span {
+  display: block;
   font-family: var(--f-mono);
   font-size: 11px;
   letter-spacing: .14em;
@@ -110,24 +160,29 @@ nav.tabs a, nav.tabs span,
   border: 1px solid transparent;
   color: #8FB4DD;
 }
-nav.tabs a:hover, .sitenav a:hover {
-  color: #EAF1F8;
-  background: rgba(255,255,255,.07);
-}
-nav.tabs .active, .sitenav .here {
+nav.tabs a:hover { color: #EAF1F8; background: rgba(255,255,255,.07); }
+nav.tabs .active {
   color: #fff;
   border-color: var(--gold);
   background: rgba(184,134,42,.16);
   font-weight: 500;
 }
 
-/* The site name, in the display face, on both kinds of page. */
-header h1, .sitenav .brand {
-  font-family: var(--f-disp);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .01em;
-  font-size: 21px;
-  color: #fff;
-  white-space: nowrap;
+/* The three dropdowns sit on the dark bar, so they cannot use the page's
+   form styling. */
+header select {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  background: transparent;
+  color: #8FB4DD;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 6px;
+  padding: 5px 7px;
 }
+header select:hover { color: #fff; border-color: var(--gold); }
+header select option { background: var(--board); color: #EAF1F8; }
+/* A select sizes itself to its longest option, which made the Data menu
+   twice the width of its neighbours. Pin it so the three match. */
+header select { max-width: 168px; }
+header #dataMenu { width: 92px; }

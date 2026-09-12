@@ -374,9 +374,10 @@ function addPooler() {
   render();
 }
 
-wireImportExport();
-wireAutoRefresh();
+wireImportExport();   /* the hidden file input behind Data > Import */
+wireDataMenu();
 wireThemeToggle();
+wireAutoRefresh();
 wirePublishedBadge();
 
 /* ---- Go ---------------------------------------------------------------- */

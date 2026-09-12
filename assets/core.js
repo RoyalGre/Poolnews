@@ -384,8 +384,7 @@ function wireAutoRefresh() {
     arm();
   };
 
-  const anchor = $('btnExport');
-  if (anchor) header.insertBefore(sel, anchor); else header.append(sel);
+  barSlot().append(sel);
   arm();
 }
 
@@ -413,8 +412,7 @@ function wireThemeToggle() {
     if (typeof render === 'function') render();   // re-colour the SVG charts
   };
 
-  const anchor = $('btnExport');
-  if (anchor) header.insertBefore(sel, anchor); else header.append(sel);
+  barSlot().append(sel);
 
   // Following the OS means reacting when the OS changes under us.
   if (window.matchMedia) {
@@ -428,29 +426,67 @@ function wireThemeToggle() {
    back to it — a visitor who edited something locally otherwise has no clue why
    their standings disagree with everyone else's. */
 function wirePublishedBadge() {
-  if (!PUBLISHED) return;
-  const header = document.querySelector('header');
-  if (!header) return;
+  const box = $('publishedBadge');
+  if (!box || !PUBLISHED) return;
 
-  const edited = state.publishedAt !== PUBLISHED.published;
-  const wrap = el('span', 'stamp');
-  wrap.id = 'publishedBadge';
-  wrap.append(document.createTextNode(
-    edited ? 'showing your own changes · ' : 'pool published ' + (PUBLISHED.published || '') + ' '));
-
-  const btn = el('button', 'linkbtn', edited ? 'back to the published pool' : '↻');
-  btn.title = 'Discard anything changed in this browser and reload the published pool';
-  btn.onclick = () => {
-    if (edited && !confirm('Discard the changes made in this browser and reload the published pool?')) return;
-    resetToPublished();
-  };
-  wrap.append(btn);
-
-  const anchor = $('btnExport');
-  if (anchor) header.insertBefore(wrap, anchor); else header.append(wrap);
+  // Small print on the second line. The way back to the published pool lives
+  // in the Data menu, so this is text only.
+  box.textContent = state.publishedAt !== PUBLISHED.published
+    ? 'showing changes made in this browser — Data ▸ Reload published pool to undo'
+    : 'pool published ' + (PUBLISHED.published || '');
 }
 
-/* Export / Import live in the header of every page, so they are wired here. */
+/* Every header control goes in the same slot, in the order the page wires
+   them, so the bar looks the same on all four tabs. */
+function barSlot() {
+  return $('barControls') || document.querySelector('header');
+}
+
+/* A menu, not two buttons: export, import and "back to the published pool" are
+   all the same kind of rare, deliberate action, and three dropdowns in a row
+   read better than dropdowns plus loose buttons. */
+function wireDataMenu() {
+  const slot = barSlot(), fi = $('fileInput');
+  if (!slot) return;
+
+  const sel = document.createElement('select');
+  sel.id = 'dataMenu';
+  sel.title = 'Save or load the pool';
+
+  const opts = [['', 'Data…'], ['export', 'Export JSON'], ['import', 'Import JSON']];
+  if (PUBLISHED) opts.push(['published', 'Reload published pool']);
+  opts.forEach(([v, t]) => {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = t;
+    sel.append(o);
+  });
+
+  sel.onchange = () => {
+    const action = sel.value;
+    sel.value = '';               // it is a menu, not a setting: snap back
+    if (action === 'export') exportPool();
+    else if (action === 'import' && fi) fi.click();
+    else if (action === 'published') {
+      const edited = state.publishedAt !== PUBLISHED.published;
+      if (edited && !confirm('Discard the changes made in this browser and reload the published pool?')) return;
+      resetToPublished();
+    }
+  };
+
+  slot.append(sel);
+}
+
+function exportPool() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hockey-pool-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* Kept for the file-input side of importing. */
 function wireImportExport() {
   const be = $('btnExport'), bi = $('btnImport'), fi = $('fileInput');
   if (be) be.onclick = () => {

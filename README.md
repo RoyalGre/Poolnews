@@ -1,4 +1,4 @@
-# Fantasy Hockey Pool
+# Poolnews
 
 A small offline site for running your pool: enter everyone's picks, then watch
 the standings move week by week. No install, no server, no internet needed once
@@ -8,8 +8,8 @@ the data files are built.
 
 Double-click **`pool.html`**. The **Standings** tab is one click away.
 
-Want to see it with data first? Click **Import JSON** and pick
-`sample-pool.json` — 11 poolers with full 12-man rosters. It replaces whatever
+Want to see it with data first? Pick **Data ▸ Import JSON** in the header and
+choose `sample-pool.json` — 11 poolers with full 12-man rosters. It replaces whatever
 is currently saved, so export first if you have real picks in there.
 
 ## The site
@@ -57,10 +57,11 @@ independent of that — it reads only `pool-history.json`.
 ## The record book (1994–2026)
 
 A page covering the pool's whole history — palmarès, career standings,
-trajectories, head-to-heads and every player ever drafted. It is now the fourth
-tab, but it remains its own thing underneath: French, light newspaper styling,
-its own fonts, and no shared code or data with the live pages. That is
-deliberate — the tab bar links them, nothing else does.
+trajectories, head-to-heads and every player ever drafted. It is the fourth tab
+and now shares the site's bar, palette and fonts (`assets/theme.css`,
+`assets/theme.js`), but nothing else: it is written in French, keeps its
+newspaper layout, and reads only `pool-history.json`. It has no idea the live
+pool exists.
 
 **Edit the template, never `pool-records.html`.** That file is generated;
 `build-report.py` overwrites it wholesale on the next run. The nav bar lives in
@@ -124,6 +125,18 @@ Every total was recomputed from the player lists and matched against the
 Those three files and the workbook are no longer part of the build and can be deleted.
 
 ## Look and feel
+
+Every page carries the same two-line bar: **Poolnews** and the four tabs on the
+first line with the three dropdowns (Data / Theme / Auto-refresh) pushed right,
+and a small provenance line under it — player count, stats season, and when the
+data and the pool were last published. The record book shows the same shape with
+its own figures. It is one rule set in `theme.css` targeting one markup shape, so
+the bar cannot drift between pages.
+
+Export and Import live in the **Data** dropdown rather than as loose buttons:
+they are rare, deliberate actions of the same kind, and three matching
+dropdowns read better than dropdowns plus buttons. When the site carries a
+published pool, that menu also offers *Reload published pool*.
 
 All four tabs share one design, defined in **`assets/theme.css`** — change a
 colour there and it changes everywhere. Nothing else defines a palette.

@@ -26,12 +26,6 @@ table{border-collapse:collapse; width:100%}
    English; this page is its own thing. Rather than force one look on the
    other, the bar is dressed in this page's own idiom and sits on the
    masthead's board colour so it reads as part of the paper. */
-.sitenav-in{max-width:1090px; margin:0 auto; padding:9px 26px;
-  display:flex; align-items:center; gap:4px; flex-wrap:wrap}
-.sitenav .spacer{flex:1}
-.sitenav select{font-family:var(--f-mono); font-size:11px; letter-spacing:.08em;
-  background:transparent; color:#8FB4DD; border:1px solid rgba(255,255,255,.22);
-  border-radius:6px; padding:5px 8px}
 
 /* ---------- masthead ---------- */
 .masthead{background:var(--board); color:#EAF1F8; border-bottom:3px solid var(--gold)}
@@ -200,20 +194,28 @@ footer b{color:var(--ink-2); font-weight:600}
 }
 </style>
 
-<div class="sitenav">
-  <div class="sitenav-in">
-    <a href="pool.html">Repêchage</a>
-    <a href="standings.html">Classement</a>
-    <a href="funfacts.html">Faits saillants</a>
-    <span class="here">Livre des records</span>
+<header>
+  <div class="bar">
+    <h1 class="brand">🏒 Poolnews</h1>
+    <nav class="tabs">
+      <a href="pool.html">Repêchage</a>
+      <a href="standings.html">Classement</a>
+      <a href="funfacts.html">Faits saillants</a>
+      <span class="active">Livre des records</span>
+    </nav>
     <span class="spacer"></span>
-    <select id="themePick" title="Clair ou sombre">
-      <option value="auto">Theme : auto</option>
-      <option value="light">Theme : clair</option>
-      <option value="dark">Theme : sombre</option>
-    </select>
+    <span class="controls" id="barControls">
+      <select id="themePick" title="Clair ou sombre">
+        <option value="auto">Theme : auto</option>
+        <option value="light">Theme : clair</option>
+        <option value="dark">Theme : sombre</option>
+      </select>
+    </span>
   </div>
-</div>
+  <div class="subbar">
+    <span class="stamp" id="dataStamp"></span>
+  </div>
+</header>
 
 <div class="masthead">
   <div class="mast-in">
@@ -729,5 +731,15 @@ document.addEventListener('mouseleave', hideTip);
   if (!sel || !window.poolTheme) return;
   sel.value = window.poolTheme.get();
   sel.addEventListener('change', function () { window.poolTheme.set(sel.value); });
+})();
+</script>
+
+<script>
+/* Second line, same shape as the other tabs: where these numbers come from. */
+(function () {
+  var el = document.getElementById('dataStamp');
+  if (!el || typeof D === 'undefined') return;
+  el.textContent = D.meta.seasons + ' saisons · ' + D.meta.first + '-' + D.meta.last +
+    ' · ' + D.meta.poolers + ' poolers · ' + D.picksTotal + ' repêchages';
 })();
 </script>
