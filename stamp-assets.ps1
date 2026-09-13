@@ -56,7 +56,7 @@ if ($Pages.Count -eq 0) {
     # generated page would be undone by the next rebuild.
     $Pages = @(
         'index.html', 'pool.html', 'standings.html', 'poolers.html',
-        'funfacts.html', 'pool-records.html', 'pool-records.template.html'
+        'funfacts.html', 'defi.html', 'pool-records.html', 'pool-records.template.html'
     )
 }
 

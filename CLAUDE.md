@@ -24,6 +24,7 @@ published to GitHub Pages.
 | `standings.html` | Classement | `assets/standings.js` |
 | `poolers.html` | Pooleurs | `assets/poolers.js` |
 | `funfacts.html` | Faits saillants | `assets/funfacts.js` |
+| `defi.html` | Défi de la semaine | `assets/defi.js` |
 | `pool-records.html` | Livre des records | generated — see below |
 
 `index.html` redirects to the standings. `assets/core.js` is shared by all the
@@ -44,6 +45,7 @@ app pages: player index, search, saved state, **scoring**, weekly history.
 | `data/advanced.js` | ice time, shots, PIM, streaks | `build-advanced.ps1` |
 | `data/goals.js` | every goal + ice coordinates (~1.6 MB) | `build-goals.ps1` |
 | `data/pool.js` | the published pool everyone sees | `publish-pool.ps1` |
+| `data/defi.js` | mini-game predictions | **hand-written** — the one exception |
 
 ## Routine tasks
 
@@ -131,10 +133,31 @@ The strongest check: the Pooleurs page counts individual goals while
 
 - **Whether goalies should be draftable at all.** Under pure G+A a goalie scores
   ~0. They are currently in the pickable list. Unanswered since 2026-09-05.
-- **The weekend mini-game.** Poolers would predict how weekend goals split
-  between three zones (left slot / right slot / everywhere else), guessing
-  **percentages**. Boundaries validated over 966 goals: within 34 ft of the goal
-  line and inside the ±22 ft slot gives a stable ~37/44/19 split. Scoring is easy
-  now that `goals.js` is local; **the open part is how picks get collected** —
-  manual like `pool.js`, or a real backend (Firebase) that could enforce the
-  Thursday lock automatically.
+- **How the mini-game's picks get collected.** The game itself is built and
+  answered (see below); what is still open is the backend. Firebase project
+  `poolnews-846e0` exists with a web app registered, but `defi.js` still reads
+  `window.DEFI_PICKS` from a hand-written `data/defi.js`. All pick access goes
+  through `picksFor()`, so wiring Firestore touches that one function.
+- **Firestore is open with no guard, until 2026-12-31.** `firestore.rules` in
+  this repo is the source of truth. The repo is public, so anyone who finds the
+  project id can read or overwrite every pick. Deliberate and temporary — the
+  expiry date is there so it cannot stay open by forgetting. The file's comments
+  carry the two-line change that swaps it for a shared passphrase.
+
+## The weekend mini-game — settled 2026-09-13
+
+Poolers predict the **percentage** split of goals scored **Thursday, Friday and
+Sunday** across three zones: left slot / right slot / everywhere else. Scoring is
+the **sum of the three absolute errors**; lowest total wins. Saturday is excluded
+on purpose — it is the big hockey night and would swamp the other three days.
+
+A slot is within **34 ft of the goal line** (x ≥ 55, net at 89) and within
+**±22 ft** of the centre axis. Re-validated against all 8,086 goals in
+`goals.js`: 37.6 / 42.1 / 20.3 overall, and across the 26 Thu/Fri/Sun weekends
+the means are 37.4 / 43.3 / 19.3 with standard deviations 6.2 / 6.8 / 3.7.
+Stable enough to reason about, variable enough that guessing the season average
+rarely wins — which is the point.
+
+A weekend is keyed by **backing up to its Thursday**, not by ISO week. Verified:
+no bucket spans past Sunday, and the three month-crossing weekends group
+correctly.

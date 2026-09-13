@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Le Défi de la semaine. Un document par fin de semaine, nommé par la
+    // date du jeudi qui l'ouvre : defi/2026-04-16
+    //
+    // Ouvert sans garde, comme demandé : n'importe qui ayant l'adresse du
+    // projet peut lire et écrire. Le dépôt GitHub est public, alors l'identité
+    // du projet est trouvable. La date ci-dessous ferme la porte toute seule
+    // le 31 décembre 2026 — sans elle, cette ouverture resterait en place
+    // indéfiniment parce que personne ne s'en souviendrait.
+    //
+    // Pour refermer plus tôt : remplacer la ligne allow par
+    //   allow read: if true;
+    //   allow write: if request.resource.data.motDePasse == 'le-mot-choisi';
+    match /defi/{weekend} {
+      allow read, write: if request.time < timestamp.date(2026, 12, 31);
+    }
+
+    // Tout le reste de la base demeure fermé.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
