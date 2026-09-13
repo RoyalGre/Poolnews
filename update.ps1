@@ -168,6 +168,11 @@ try {
     # runs in both gears: after an evening of 10 games it costs 10 requests.
     Run-Step 'goal locations' 'build-goals.ps1' @('-Season', $Season)
 
+    # The Thu/Fri/Sun schedule behind the "Qui va gagner ?" challenge. Like the
+    # goal locations it banks finished games and only refetches weeks that still
+    # hold unplayed ones, so a nightly run costs a request or two.
+    Run-Step 'schedule + results' 'build-schedule.ps1' @('-Season', $Season)
+
     # The data files just changed, so the ?v= tags in the pages now point at
     # content that no longer exists. Restamping them is what makes a visitor's
     # browser fetch the new numbers instead of redrawing yesterday's from its

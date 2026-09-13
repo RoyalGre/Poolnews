@@ -709,6 +709,56 @@ svg.rink text.df-lbl-s {
 .df-bar2 span { display: block; height: 100%; background: var(--faint); }
 .df-row.top .df-bar2 span { background: var(--accent); }
 
+/* =========================================================================
+   « Qui va gagner ? » — la liste des matchs
+
+   Une quinzaine de matchs à remplir : chaque ligne doit se cliquer sans
+   viser, et se lire d'un coup d'œil une fois choisie. Deux boutons par
+   match, celui qu'on choisit s'allume.
+   ========================================================================= */
+.sc-games { display: flex; flex-direction: column; gap: 3px; }
+.sc-day {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 12px 0 4px; padding-bottom: 3px;
+  border-bottom: 1px solid var(--border);
+}
+.sc-day:first-child { margin-top: 0; }
+
+.sc-game { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+.sc-team {
+  flex: 1; min-width: 0;
+  font-family: var(--f-mono); font-size: 13px; font-weight: 600;
+  letter-spacing: .04em;
+  padding: 8px 10px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--panel-2);
+  color: var(--ink-2);
+  transition: border-color .12s, background .12s, color .12s;
+}
+.sc-team:hover { border-color: var(--accent); color: var(--ink); }
+.sc-team.on {
+  background: var(--blue); border-color: var(--blue); color: #fff;
+}
+.sc-team.away { text-align: right; }
+.sc-team.home { text-align: left; }
+.sc-at {
+  font-family: var(--f-mono); font-size: 10px; color: var(--faint);
+  flex: none; width: 14px; text-align: center;
+}
+/* Le pointage final, quand le match est joué. */
+.sc-res {
+  font-family: var(--f-mono); font-size: 11px; color: var(--muted);
+  flex: none; width: 62px; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-foot { margin-top: 14px; align-items: center; }
+
+@media (max-width: 520px) {
+  .sc-team { font-size: 12px; padding: 9px 6px; }
+  .sc-res  { width: 52px; }
+}
+
 .df-msg { font-size: 13px; margin-top: 9px; }
 .df-msg.ok  { color: var(--ok); }
 .df-msg.bad { color: var(--danger); }

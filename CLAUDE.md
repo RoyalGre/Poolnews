@@ -25,6 +25,7 @@ published to GitHub Pages.
 | `poolers.html` | Pooleurs | `assets/poolers.js` |
 | `funfacts.html` | Faits saillants | `assets/funfacts.js` |
 | `defi.html` | Défi de la semaine | `assets/defi.js` |
+| `defis.html` | Qui va gagner ? | `assets/defis.js` |
 | `pool-records.html` | Livre des records | generated — see below |
 
 `index.html` redirects to the standings. `assets/core.js` is shared by all the
@@ -45,7 +46,9 @@ app pages: player index, search, saved state, **scoring**, weekly history.
 | `data/advanced.js` | ice time, shots, PIM, streaks | `build-advanced.ps1` |
 | `data/goals.js` | every goal + ice coordinates (~1.6 MB) | `build-goals.ps1` |
 | `data/pool.js` | the published pool everyone sees | `publish-pool.ps1` |
-| `data/defi.js` | mini-game predictions | **hand-written** — the one exception |
+| `data/defi.js` | zone-game offline fallback | **hand-written** — the one exception |
+| `data/schedule.js` | Thu/Fri/Sun games + winners | `build-schedule.ps1` |
+| `data/defis.js` | winner-game offline fallback | **hand-written** |
 
 ## Routine tasks
 
@@ -167,3 +170,30 @@ the key's own date minus one day (`lockOf()` in `defi.js`). The page states it
 in three places, all fed from the single `LOCK_TXT` constant. Nothing enforces
 it server-side yet: the Firestore rules are open, so the deadline is currently
 an honour-based convention.
+
+## The second mini-game: « Qui va gagner ? » — added 2026-09-13
+
+`defis.html` + `assets/defis.js`. Poolers pick the winner of **every** Thu/Fri/Sun
+game; one point each, most correct wins, **ties share a rank** (no tiebreak), and
+**all games must be picked** before the form submits. OT and shootout winners
+count normally. Same Wednesday 23:59 deadline as the zone game.
+
+`build-schedule.ps1` writes `data/schedule.js`: one request **per week** (not per
+day), ~28 for a season, and finished games are banked so a nightly run costs one
+or two. 2026-27 holds **497** Thu/Fri/Sun games over 27 weekends, 7–25 per
+weekend (median 19). It runs inside `update.ps1` right after the goal locations.
+
+**Two traps this build hit, both now guarded:**
+
+- **`$home` is a read-only automatic variable in PowerShell**, and variable names
+  are case-insensitive — `$home = $g.homeTeam.abbrev` aborts the whole script
+  with "Cannot overwrite variable HOME". The builder uses `$hAb`/`$aAb`.
+- **Never derive a game's day from `startTimeUTC`.** Measured: 46 of 51 games in
+  a sample week carry a UTC date one day *later* than their real schedule day, so
+  bucketing on it scatters nearly every Thursday game into Friday. The API's own
+  `gameWeek[].date` is the local day — key on that. The builder throws if any
+  game lands outside Thu/Fri/Sun.
+
+Firestore uses a **separate top-level collection**, `defis/{weekend}/picks/{name}`.
+A rule on `/defi` does **not** cover `/defis`; they are unrelated collections and
+each needs its own `match` block, or the tab sits permanently at "hors ligne".

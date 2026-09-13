@@ -23,6 +23,15 @@ service cloud.firestore {
       allow read, write: if request.time < timestamp.date(2026, 12, 31);
     }
 
+    // « Qui va gagner ? » — les pronostics de vainqueurs.
+    // Collection SÉPARÉE de « defi » : defis/{fin de semaine}/picks/{pooleur}.
+    // Une règle sur /defi ne couvre pas /defis, ce sont deux collections de
+    // premier niveau sans lien entre elles. Sans ce bloc, l'onglet reçoit un
+    // 403 et reste éternellement « hors ligne ».
+    match /defis/{weekend}/{document=**} {
+      allow read, write: if request.time < timestamp.date(2026, 12, 31);
+    }
+
     // Tout le reste de la base demeure fermé.
     match /{document=**} {
       allow read, write: if false;

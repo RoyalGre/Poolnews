@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Poolnews — Pooleurs</title>
+<title>Poolnews — Qui va gagner ?</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/theme.css?v=5e30e58c">
@@ -18,10 +18,10 @@
     <nav class="tabs">
       <a href="pool.html">Repêchage</a>
       <a href="standings.html">Classement</a>
-      <span class="active">Pooleurs</span>
+      <a href="poolers.html">Pooleurs</a>
       <a href="funfacts.html">Faits saillants</a>
       <a href="defi.html">Défi de la semaine</a>
-      <a href="defis.html">Qui va gagner ?</a>
+      <span class="active">Qui va gagner ?</span>
       <a href="pool-records.html">Livre des records</a>
     </nav>
     <span class="spacer"></span>
@@ -31,19 +31,19 @@
     <span class="stamp" id="dataStamp"></span>
     <span class="stamp" id="publishedBadge"></span>
   </div>
-  <input type="file" id="fileInput" accept=".json,application/json" hidden>
 </header>
 
 <main class="wide">
   <div id="content"></div>
 </main>
 
-<!-- Data first, then shared code, then the page's own code. -->
+<!-- Données d'abord, puis le code partagé, puis celui de la page. defis.js lit
+     les prédictions dans Firestore ; data/defis.js est le filet hors ligne. -->
 <script src="data/players.js?v=b6c818e1"></script>
-<script src="data/history.js?v=0c6253c9"></script>
-<script src="data/goals.js?v=1d4d8aa6"></script>
+<script src="data/schedule.js?v=9783bd30"></script>
 <script src="data/pool.js?v=6ef3c206"></script>
+<script src="data/defis.js?v=c972b9e0"></script>
 <script src="assets/core.js?v=a2bf1109"></script>
-<script src="assets/poolers.js?v=7bd065ce"></script>
+<script src="assets/defis.js?v=8015ef16"></script>
 </body>
 </html>
