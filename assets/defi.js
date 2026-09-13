@@ -483,22 +483,32 @@ function buildRink(w, sp) {
     }));
   }
 
-  // L'étiquette de chaque zone, posée sur la glace.
-  svg.append(lbl(dx(72), dy(11),  sp.pct.g, 'Gauche'));
-  svg.append(lbl(dx(72), dy(-11), sp.pct.d, 'Droite'));
-  svg.append(lbl(dx(30), dy(32),  sp.pct.a, 'Ailleurs'));
+  // L'étiquette de chaque zone, posée sur la glace. Le nombre de buts vient
+  // avec : « 54,1 % » seul ne dit pas si c'est 20 buts ou 2.
+  // dy() dessine +y vers le HAUT, et zoneOf() range y > 0 dans « gauche » :
+  // l'enclave gauche est donc la bande du haut, comme la zone bleue peinte
+  // plus haut. Inverser ces deux lignes miroiterait la patinoire.
+  svg.append(lbl(dx(72), dy(11),  sp.pct.g, 'Gauche',   sp.counts.g));
+  svg.append(lbl(dx(72), dy(-11), sp.pct.d, 'Droite',   sp.counts.d));
+  svg.append(lbl(dx(34), dy(30),  sp.pct.a, 'Ailleurs', sp.counts.a));
 
   holder.append(svg);
   p.append(holder);
   return p;
 }
 
-function lbl(x, y, pct, nom) {
+/* Trois lignes empilées : le pourcentage, la zone, le compte. Le nom de la
+   zone est ce qui explique le chiffre — sans lui, « 54,1 % » ressemble à un
+   numéro de semaine. */
+function lbl(x, y, pct, nom, n) {
   const g = sv('g', {});
+
   const t = sv('text', { x: x, y: y, class: 'df-lbl', 'text-anchor': 'middle' });
-  t.textContent = pct.toFixed(1) + ' %';
-  const s = sv('text', { x: x, y: y + 15, class: 'df-lbl-s', 'text-anchor': 'middle' });
-  s.textContent = nom;
+  t.textContent = pct.toFixed(1).replace('.', ',') + ' %';
+
+  const s = sv('text', { x: x, y: y + 17, class: 'df-lbl-s', 'text-anchor': 'middle' });
+  s.textContent = nom + ' · ' + n + (n > 1 ? ' buts' : ' but');
+
   g.append(t, s);
   return g;
 }
@@ -543,31 +553,54 @@ function buildPicks(w, sp) {
     return p;
   }
 
-  const t = el('table', 'standings');
-  const head = el('tr');
-  ['', 'Pooleur', 'G', 'D', 'A', 'Écart'].forEach((h, i) => {
-    head.append(el('th', i >= 2 ? 'right' : null, h));
-  });
-  const thead = el('thead');
-  thead.append(head);
-  t.append(thead);
+  // Pas de tableau ici. La colonne fait 360 px et table.standings impose un
+  // min-width de 620 : six colonnes dans cette largeur forçaient un
+  // défilement horizontal. Une ligne par pooleur, le nom et l'écart sur la
+  // première, les trois pourcentages dessous, tient sans jamais déborder.
+  const list = el('div', 'df-board');
 
-  const tb = el('tbody');
+  // L'écart le plus grand sert d'échelle aux barres : tout est relatif au
+  // pire de la semaine, ce qui rend le peloton lisible même si personne n'a
+  // été très proche.
+  const worst = Math.max(...rows.map(r => r.score), 1);
+
   rows.forEach((r, i) => {
-    const tr = el('tr');
-    tr.append(el('td', 'rank' + (i < 3 ? ' r' + (i + 1) : ''), String(i + 1)));
-    tr.append(el('td', null, r.name));
-    ZONES.forEach(z => tr.append(el('td', 'right num-cell', r.pick[z.k] + ' %')));
-    tr.append(el('td', 'right num-cell', r.score.toFixed(1)));
-    tb.append(tr);
-  });
-  t.append(tb);
+    const row = el('div', 'df-row' + (i < 3 ? ' top' : ''));
 
-  const tw = el('div', 'tablewrap');
-  tw.append(t);
-  p.append(tw);
+    const head = el('div', 'df-rh');
+    head.append(el('span', 'rank' + (i < 3 ? ' r' + (i + 1) : ''), String(i + 1)));
+    head.append(el('span', 'df-nm', r.name));
+    head.append(el('span', 'df-sc', r.score.toFixed(1)));
+    row.append(head);
+
+    // Les trois devinettes, et sous chacune l'écart réel de cette zone.
+    const guess = el('div', 'df-guess');
+    ZONES.forEach(z => {
+      const cell = el('span', 'df-gz');
+      cell.append(el('span', 'df-gk', z.court.slice(0, 1)));
+      cell.append(el('span', 'df-gv', r.pick[z.k] + '%'));
+      const d = Math.abs(r.pick[z.k] - sp.pct[z.k]);
+      const off = el('span', 'df-go', (d < 0.05 ? '0' : d.toFixed(0)));
+      off.title = 'écart de ' + d.toFixed(1) + ' point sur ' + z.nom.toLowerCase();
+      cell.append(off);
+      guess.append(cell);
+    });
+    row.append(guess);
+
+    // Une barre : plus elle est courte, plus la prédiction était proche.
+    const track = el('div', 'df-bar2');
+    const fill = el('span');
+    fill.style.width = Math.max(2, 100 * r.score / worst).toFixed(1) + '%';
+    track.append(fill);
+    row.append(track);
+
+    list.append(row);
+  });
+
+  p.append(list);
   p.append(el('p', 'hint',
-    'Écart = somme des trois différences avec le partage réel. Le plus petit gagne.'));
+    'Écart = somme des trois différences avec le partage réel. Le plus petit gagne ; ' +
+    'le petit chiffre sous chaque pourcentage est l\'écart de cette zone.'));
   return p;
 }
 
