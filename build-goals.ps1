@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Builds data/goals.js -- every goal of the season, with the ice coordinates
     it was scored from and the players who earned points on it.

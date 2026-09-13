@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Runs the self-test suites against the site's pages in headless Chrome.
 
@@ -111,6 +111,63 @@ if (Test-Path $tpl) {
     } else {
         Write-Host 'PASS the record book template carries the nav, so rebuilds keep it' -ForegroundColor Green
     }
+}
+
+# -----------------------------------------------------------------------------
+# Cache tags: every local asset link must carry the ?v= hash of the file it
+# points at. A stale tag is the bug that makes a returning visitor load today's
+# page against yesterday's stylesheet — the page looks broken and only a hard
+# refresh fixes it, which is not something to ask ten poolers to do.
+# -----------------------------------------------------------------------------
+Write-Host ''
+Write-Host '=== Cache tags ===' -ForegroundColor Cyan
+
+$stampPages = 'index.html', 'pool.html', 'standings.html', 'poolers.html',
+              'funfacts.html', 'pool-records.html', 'pool-records.template.html'
+$tagFails = 0
+$tagSeen  = 0
+$assetTag = @{}
+
+foreach ($page in $stampPages) {
+    $p = Join-Path $root $page
+    if (-not (Test-Path $p)) { continue }
+    $text = [System.IO.File]::ReadAllText($p, [System.Text.Encoding]::UTF8)
+
+    foreach ($m in [regex]::Matches($text, '(?:href|src)="((?:assets|data)/[A-Za-z0-9._-]+)(\?v=([0-9a-f]+))?"')) {
+        $rel = $m.Groups[1].Value
+        $tag = $m.Groups[3].Value
+        $tagSeen++
+
+        if (-not $assetTag.ContainsKey($rel)) {
+            $file = Join-Path $root ($rel -replace '/', '\')
+            if (Test-Path $file) {
+                $sha = [System.Security.Cryptography.SHA256]::Create()
+                try {
+                    $h = $sha.ComputeHash([System.IO.File]::ReadAllBytes($file))
+                    $assetTag[$rel] = -join ($h[0..3] | ForEach-Object { $_.ToString('x2') })
+                } finally { $sha.Dispose() }
+            } else {
+                $assetTag[$rel] = $null
+            }
+        }
+        $want = $assetTag[$rel]
+        if ($null -eq $want) {
+            Write-Host "FAIL $page links to missing asset $rel" -ForegroundColor Red
+            $tagFails++
+        } elseif (-not $m.Groups[2].Success) {
+            Write-Host "FAIL $page : $rel has no ?v= tag — run stamp-assets.ps1" -ForegroundColor Red
+            $tagFails++
+        } elseif ($tag -ne $want) {
+            Write-Host "FAIL $page : $rel is tagged $tag but the file hashes to $want — run stamp-assets.ps1" -ForegroundColor Red
+            $tagFails++
+        }
+    }
+}
+
+if ($tagFails -eq 0) {
+    Write-Host ("PASS all {0} asset links carry the current content hash" -f $tagSeen) -ForegroundColor Green
+} else {
+    $failed++
 }
 
 foreach ($s in $suites) {

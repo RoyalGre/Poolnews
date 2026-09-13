@@ -54,6 +54,7 @@ independent of that — it reads only `pool-history.json`.
 | `build-history.ps1` | Rebuilds the weekly history behind the progression charts. |
 | `build-advanced.ps1` | Rebuilds the per-player ice-time data behind the fun-facts page. |
 | `build-goals.ps1` | Collects where every goal was scored from, behind the poolers page. |
+| `stamp-assets.ps1` | Re-tags the `?v=` on every asset link so browsers pick up changes. |
 | `run-selftest.ps1` | Checks the navigation, then runs all four browser suites. Exits 1 on failure. |
 | `_selftest.js`, `_selftest-standings.js`, `_selftest-funfacts.js`, `_selftest-poolers.js` | The checks those suites run. |
 | `sample-pool.json` | A fake but complete pool, for trying things out. |
@@ -300,6 +301,44 @@ totals. They share no code, so they are a real cross-check on each other — and
 the test suite asserts all 11 poolers × 28 weeks agree. If `goals.js` is ever
 behind `history.js`, the page says so in a banner rather than showing a total
 that quietly disagrees with the standings.
+
+## Cache tags
+
+Every local stylesheet and script is linked with a `?v=` tag that is the first
+eight hex digits of the file's own SHA-256:
+
+```html
+<link rel="stylesheet" href="assets/site.css?v=7eb348fc">
+```
+
+Without it a returning visitor loads today's page against the copy of
+`site.css` their browser cached last week. The page is then styled by rules
+that no longer match it — on the poolers page that meant a black rink and no
+roster panel — and only Ctrl+F5 fixes it, which is not something to ask ten
+poolers to do.
+
+A content hash beats a hand-typed version number because it cannot be
+forgotten: edit the file and the tag changes on its own; leave it alone and the
+tag stays, so nothing is re-downloaded needlessly.
+
+`stamp-assets.ps1` writes the tags. It is safe to run any time — running it
+twice changes nothing the second time — and it runs automatically at the end of
+`update.ps1` and `publish-pool.ps1`, which are the two things that rewrite data
+files. Run it by hand after editing anything under `assets/`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\stamp-assets.ps1
+```
+
+`run-selftest.ps1` fails if any tag is stale, so a forgotten restamp is caught
+before it reaches the web rather than after.
+
+### A note on script encoding
+
+The `.ps1` files are saved as UTF-8 **with a BOM**. Windows PowerShell 5.1
+reads a BOM-less file as ANSI, which turns every accented character and em-dash
+into mojibake and can break parsing outright. If you ever rewrite one of these
+scripts with a tool that strips the BOM, put it back.
 
 ## Putting it on the web (GitHub Pages)
 

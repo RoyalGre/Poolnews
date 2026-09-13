@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     One command to bring the whole site up to date. Safe to run on a schedule.
 
@@ -167,6 +167,12 @@ try {
     # nature -- it only ever fetches games it has not already banked -- so it
     # runs in both gears: after an evening of 10 games it costs 10 requests.
     Run-Step 'goal locations' 'build-goals.ps1' @('-Season', $Season)
+
+    # The data files just changed, so the ?v= tags in the pages now point at
+    # content that no longer exists. Restamping them is what makes a visitor's
+    # browser fetch the new numbers instead of redrawing yesterday's from its
+    # cache. Cheap, and safe to run when nothing changed.
+    Run-Step 'cache tags' 'stamp-assets.ps1' @('-Quiet')
 
     # -------------------------------------------------------------------------
     # 5. Remember where we got to
