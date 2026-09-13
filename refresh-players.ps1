@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Pulls the current NHL player list + the season's goals/assists from the
     NHL's public API and writes data/players.js.

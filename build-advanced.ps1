@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Builds data/advanced.js -- per-player ice time, shots, and the season
     details the fun-facts page needs (best game, point streaks, home/road).

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Builds data/history.js -- a week-by-week snapshot of every player's
     season-to-date goals and assists.
