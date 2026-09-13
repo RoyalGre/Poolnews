@@ -1,32 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Poolnews</title>
-<!-- GitHub Pages serves index.html at the root of the site. The standings are
-     what anyone arriving here actually wants, so send them straight there. -->
-<meta http-equiv="refresh" content="0; url=standings.html">
-<link rel="canonical" href="standings.html">
+<title>Poolnews — Pool de hockey</title>
+<meta name="description" content="Le pool de hockey de Yanick : classement, repêchage, pooleurs, faits saillants et livre des records.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/theme.css?v=c32e3b89">
-<link rel="stylesheet" href="assets/site.css?v=7eb348fc">
+<link rel="stylesheet" href="assets/theme.css?v=5e30e58c">
+<link rel="stylesheet" href="assets/site.css?v=dd89d379">
 <script src="assets/theme.js?v=30989c40"></script>
 </head>
 <body>
-<main>
-  <div class="panel">
-    <h2>Poolnews</h2>
-    <p>Redirection vers le <a href="standings.html">classement</a>…</p>
-    <p class="hint">
-      <a href="standings.html">Classement</a> ·
-      <a href="poolers.html">Pooleurs</a> ·
-      <a href="funfacts.html">Faits saillants</a> ·
-      <a href="pool-records.html">Livre des records</a> ·
-      <a href="pool.html">Repêchage</a>
-    </p>
+
+<!-- L'accueil ne porte pas la barre d'onglets des autres pages : le menu est
+     la page. Seul le sélecteur de thème vient s'ajouter ici. -->
+<header>
+  <div class="bar">
+    <h1 class="brand">🏒 Poolnews</h1>
+    <span class="spacer"></span>
+    <span class="controls" id="barControls"></span>
   </div>
+  <div class="subbar">
+    <span class="stamp" id="dataStamp"></span>
+    <span class="stamp" id="publishedBadge"></span>
+  </div>
+</header>
+
+<main class="wide">
+
+  <!-- Le titre et son logo, en pleine largeur au-dessus des deux colonnes. -->
+  <section class="lp-hero">
+    <div class="lp-wordmark">
+      <p class="lp-kicker">Pool de hockey</p>
+      <h2 class="lp-title">Poolnews</h2>
+      <p class="lp-lede" id="lede"></p>
+    </div>
+
+    <!-- Logo dessiné en SVG plutôt qu'en image : net à toutes les tailles,
+         il suit le thème par les variables CSS et ne coûte aucune requête.
+         Une rondelle sur la glace, vue des cercles de mise au jeu. -->
+    <svg class="lp-logo" viewBox="0 0 120 120" role="img" aria-label="Rondelle sur la glace">
+      <defs>
+        <clipPath id="lpDisc"><circle cx="60" cy="60" r="54"/></clipPath>
+      </defs>
+      <circle cx="60" cy="60" r="54" class="lp-ice"/>
+      <g clip-path="url(#lpDisc)">
+        <!-- Le cercle de mise au jeu et sa ligne rouge. -->
+        <circle cx="60" cy="60" r="34" class="lp-faceoff"/>
+        <path d="M6 60 H114" class="lp-redline"/>
+        <path d="M32 26 V94 M88 26 V94" class="lp-hash"/>
+      </g>
+      <circle cx="60" cy="60" r="54" class="lp-rim"/>
+      <!-- La rondelle, légèrement en relief. -->
+      <ellipse cx="60" cy="66" rx="21" ry="8" class="lp-puck-side"/>
+      <ellipse cx="60" cy="58" rx="21" ry="8" class="lp-puck-top"/>
+    </svg>
+  </section>
+
+  <div class="lp-split">
+
+    <!-- Le menu, une colonne à gauche : cinq destinations dans l'ordre
+         où on les consulte. -->
+    <nav class="lp-menu">
+      <a class="lp-card" href="standings.html">
+        <span class="lp-ico">📊</span>
+        <span class="lp-txt">
+          <span class="lp-k">Classement</span>
+          <span class="lp-d">Qui mène, semaine par semaine.</span>
+        </span>
+      </a>
+      <a class="lp-card" href="poolers.html">
+        <span class="lp-ico">🧑‍🤝‍🧑</span>
+        <span class="lp-txt">
+          <span class="lp-k">Pooleurs</span>
+          <span class="lp-d">L'alignement de chacun sur la patinoire.</span>
+        </span>
+      </a>
+      <a class="lp-card" href="pool.html">
+        <span class="lp-ico">📋</span>
+        <span class="lp-txt">
+          <span class="lp-k">Repêchage</span>
+          <span class="lp-d">Les 12 choix de chaque pooleur.</span>
+        </span>
+      </a>
+      <a class="lp-card" href="funfacts.html">
+        <span class="lp-ico">✨</span>
+        <span class="lp-txt">
+          <span class="lp-k">Faits saillants</span>
+          <span class="lp-d">Les chiffres qui sortent de l'ordinaire.</span>
+        </span>
+      </a>
+      <a class="lp-card" href="pool-records.html">
+        <span class="lp-ico">🏆</span>
+        <span class="lp-txt">
+          <span class="lp-k">Livre des records</span>
+          <span class="lp-d">Les saisons passées et leurs sommets.</span>
+        </span>
+      </a>
+    </nav>
+
+    <!-- Le classement, une colonne à droite. -->
+    <div class="panel lp-podium">
+      <h2>Classement <span class="note">— meilleurs 10 des 12, un défenseur minimum</span></h2>
+      <div id="podium"></div>
+      <p class="hint"><a href="standings.html">Semaine par semaine →</a></p>
+    </div>
+
+  </div>
+
 </main>
+
+<!-- Données d'abord, puis le code partagé, puis celui de la page. -->
+<script src="data/players.js?v=b6c818e1"></script>
+<script src="data/history.js?v=0c6253c9"></script>
+<script src="data/pool.js?v=6ef3c206"></script>
+<script src="assets/core.js?v=a2bf1109"></script>
+<script src="assets/landing.js?v=d8ea4651"></script>
 </body>
 </html>
