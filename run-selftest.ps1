@@ -28,7 +28,8 @@ if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
 $suites = @(
     @{ Name = 'Draft page';     Page = 'pool.html';      Test = '_selftest.js' },
     @{ Name = 'Standings page'; Page = 'standings.html'; Test = '_selftest-standings.js' },
-    @{ Name = 'Fun facts page'; Page = 'funfacts.html';  Test = '_selftest-funfacts.js' }
+    @{ Name = 'Fun facts page'; Page = 'funfacts.html';  Test = '_selftest-funfacts.js' },
+    @{ Name = 'Poolers page';   Page = 'poolers.html';   Test = '_selftest-poolers.js' }
 )
 
 foreach ($s in $suites) {
@@ -60,7 +61,7 @@ $failed = 0
 Write-Host ''
 Write-Host '=== Navigation ===' -ForegroundColor Cyan
 
-$pages = 'pool.html', 'standings.html', 'funfacts.html', 'pool-records.html'
+$pages = 'pool.html', 'standings.html', 'poolers.html', 'funfacts.html', 'pool-records.html'
 # index.html is the published site's landing page: it only has to point at
 # pages that exist, not link to all of them.
 $linkOnly = @('index.html')

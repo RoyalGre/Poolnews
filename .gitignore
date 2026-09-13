@@ -3,6 +3,7 @@
 
 # Local run state and logs — nothing a visitor needs, and it changes constantly
 update.log
+_goalsbuild.log
 data/update-state.json
 
 # Throwaway copies the test runner builds next to the pages

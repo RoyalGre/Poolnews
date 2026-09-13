@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Poolnews — Classement</title>
+<title>Poolnews — Pooleurs</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/theme.css">
@@ -17,8 +17,8 @@
     <h1 class="brand">🏒 Poolnews</h1>
     <nav class="tabs">
       <a href="pool.html">Repêchage</a>
-      <span class="active">Classement</span>
-      <a href="poolers.html">Pooleurs</a>
+      <a href="standings.html">Classement</a>
+      <span class="active">Pooleurs</span>
       <a href="funfacts.html">Faits saillants</a>
       <a href="pool-records.html">Livre des records</a>
     </nav>
@@ -33,16 +33,15 @@
 </header>
 
 <main class="wide">
-  <div class="toolbar" id="toolbar"></div>
   <div id="content"></div>
 </main>
 
-<!-- Data first, then shared code, then the page's own code. Plain <script src>
-     tags load fine from file://; fetch() of a local .json would not. -->
+<!-- Data first, then shared code, then the page's own code. -->
 <script src="data/players.js"></script>
 <script src="data/history.js"></script>
+<script src="data/goals.js"></script>
 <script src="data/pool.js"></script>
 <script src="assets/core.js"></script>
-<script src="assets/standings.js"></script>
+<script src="assets/poolers.js"></script>
 </body>
 </html>

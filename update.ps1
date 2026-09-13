@@ -163,6 +163,11 @@ try {
         }
     }
 
+    # Goal coordinates behind the Poolers page. This one is incremental by
+    # nature -- it only ever fetches games it has not already banked -- so it
+    # runs in both gears: after an evening of 10 games it costs 10 requests.
+    Run-Step 'goal locations' 'build-goals.ps1' @('-Season', $Season)
+
     # -------------------------------------------------------------------------
     # 5. Remember where we got to
     # -------------------------------------------------------------------------
@@ -176,7 +181,7 @@ try {
     [System.IO.File]::WriteAllText($stateFile,
         ($newState | ConvertTo-Json), (New-Object System.Text.UTF8Encoding $false))
 
-    $sizes = foreach ($f in 'players.js', 'history.js', 'advanced.js') {
+    $sizes = foreach ($f in 'players.js', 'history.js', 'advanced.js', 'goals.js') {
         $p = Join-Path $root "data\$f"
         if (Test-Path $p) { '{0} {1} KB' -f $f, [math]::Round((Get-Item $p).Length / 1KB) }
     }

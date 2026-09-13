@@ -361,3 +361,113 @@ svg.chart .cursor-line { stroke: var(--accent); stroke-width: 1; stroke-dasharra
 .card .k { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
 .card .v { font-size: 20px; font-weight: 700; margin-top: 3px; }
 .card .s { font-size: 12px; color: var(--muted); }
+
+/* =========================================================================
+   Pooleurs page — la patinoire et l'alignement
+
+   Les teintes de la glace vivent ici plutôt que dans theme.css : elles ne
+   servent qu'à cette page, et une patinoire doit rester une patinoire dans
+   les deux thèmes — pâle sur fond clair, sourde sur fond sombre, jamais
+   l'inverse d'elle-même.
+   ========================================================================= */
+:root {
+  --rink-ice:    #F7FAFC;
+  --rink-ice2:   #E9F1F8;
+  --rink-board:  #101821;
+  --rink-red:    #C8202E;
+  --rink-blue:   #1B4FA0;
+  --rink-crease: #CFE4F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --rink-ice:    #C6D4E0;
+    --rink-ice2:   #B4C5D4;
+    --rink-board:  #05090E;
+    --rink-red:    #C8202E;
+    --rink-blue:   #1B4FA0;
+    --rink-crease: #A6C4DC;
+  }
+}
+:root[data-theme="dark"] {
+  --rink-ice:    #C6D4E0;
+  --rink-ice2:   #B4C5D4;
+  --rink-board:  #05090E;
+  --rink-red:    #C8202E;
+  --rink-blue:   #1B4FA0;
+  --rink-crease: #A6C4DC;
+}
+
+/* La patinoire à gauche, l'alignement à droite ; empilés sur un téléphone. */
+.pl-split { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+.pl-split > .panel { margin-top: 0; }
+@media (max-width: 900px) { .pl-split { grid-template-columns: 1fr; } }
+
+.rink-holder { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+svg.rink { display: block; width: 100%; min-width: 460px; height: auto; }
+svg.rink .puck { cursor: pointer; transition: opacity .14s; }
+svg.rink .puck:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Boutons segmentés de la barre d'outils. */
+.pl-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+.pl-seg button {
+  border: 0; border-right: 1px solid var(--border); border-radius: 0;
+  padding: 6px 11px; font-size: 12px;
+}
+.pl-seg button:last-child { border-right: 0; }
+.pl-seg button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pl-seg button.on:hover { border-color: var(--accent); }
+
+.pl-nav { display: inline-flex; gap: 4px; }
+.pl-nav button { padding: 5px 11px; font-size: 15px; line-height: 1; }
+
+/* L'alignement, une ligne par choix. */
+.pl-roster { display: flex; flex-direction: column; }
+.pl-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 4px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.pl-row:last-child { border-bottom: 0; }
+.pl-row:hover { background: var(--hover-wash); }
+.pl-row.on { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--pc); }
+.pl-row.zero { opacity: .45; }
+.pl-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pl-row .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--pc); flex: none; }
+.pl-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.pl-row .ga { font-family: var(--f-mono); font-size: 11px; color: var(--muted); width: 56px; text-align: right; flex: none; }
+.pl-row .pt { font-family: var(--f-mono); font-size: 14px; font-weight: 600; width: 22px; text-align: right; flex: none; }
+
+/* La semaine, jour par jour. */
+.pl-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
+@media (max-width: 620px) { .pl-days { grid-template-columns: repeat(4, 1fr); } }
+.pl-day {
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 9px;
+  padding: 8px 6px; text-align: center; cursor: pointer;
+}
+.pl-day:hover { border-color: var(--accent); }
+.pl-day.on { border-color: var(--accent); background: var(--blue-soft); }
+.pl-day:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pl-day .dw { font-family: var(--f-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.pl-day .dn { font-family: var(--f-disp); font-weight: 700; font-size: 21px; line-height: 1.1; margin-top: 2px; }
+.pl-day .dd { font-size: 11px; color: var(--muted); }
+.pl-day.empty .dn { color: var(--faint); }
+
+/* Légende des rondelles. */
+.pl-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+.pl-legend .item { display: flex; align-items: center; gap: 7px; }
+.pl-legend .ring { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.pl-legend .ring.full   { background: var(--accent); }
+.pl-legend .ring.hollow { background: var(--panel); border: 2.5px solid var(--accent); }
+.pl-legend .ring.any    { background: linear-gradient(90deg, var(--gold) 50%, var(--purple) 50%); }
+
+.pl-note { margin-top: 14px; }
+
+/* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
+.tooltip.pl-tip { white-space: normal; max-width: 280px; }
+.tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.tooltip.pl-tip hr { border: 0; border-top: 1px solid var(--border); margin: 7px 0; }
+.tooltip.pl-tip .t-row { justify-content: space-between; gap: 14px; }
+.tooltip.pl-tip .t-row span:first-child { color: var(--muted); }
+.tooltip.pl-tip .mine { margin-top: 5px; font-size: 12px; }
+.tooltip.pl-tip .mine i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+.tooltip.pl-tip .t-hint { font-size: 11px; color: var(--muted); margin-top: 7px; font-style: italic; }

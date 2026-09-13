@@ -18,6 +18,7 @@ is currently saved, so export first if you have real picks in there.
 |---|---|
 | `pool.html` | Draft — add poolers, enter and change their 12 picks. |
 | `standings.html` | Standings — table, rosters, and the season's progression charts. |
+| `poolers.html` | Poolers — each pooler's own points, plotted on the ice week by week. |
 | `funfacts.html` | Fun facts — points per 60 minutes, ice time, and season oddities. |
 | `pool-records.html` | Record book — every season since 1994. Built separately; see below. |
 
@@ -32,7 +33,7 @@ independent of that — it reads only `pool-history.json`.
 
 | File | What it is |
 |---|---|
-| `pool.html`, `standings.html`, `funfacts.html` | The three pages. |
+| `pool.html`, `standings.html`, `poolers.html`, `funfacts.html` | The four app pages. |
 | `assets/theme.css` | **The palette and the three faces.** Shared by all four pages, light + dark. |
 | `assets/theme.js` | Applies the reader's light/dark choice before the page paints. |
 | `assets/site.css` | Component styling for the three app pages. |
@@ -40,9 +41,11 @@ independent of that — it reads only `pool-history.json`.
 | `assets/draft.js` | Draft-page code: the search box, the 12 slots. |
 | `assets/standings.js` | Standings-page code: table, cards, charts. |
 | `assets/funfacts.js` | Fun-facts code: P/60, efficiency charts, odds and ends. |
+| `assets/poolers.js` | Poolers-page code: the rink, the roster panel, the week picker. |
 | `data/players.js` | Every NHL player + season goals/assists. Built by `refresh-players.ps1`. |
 | `data/history.js` | Season-to-date goals/assists after each week. Built by `build-history.ps1`. |
 | `data/advanced.js` | Ice time, shots, PIM, streaks, home/road. Built by `build-advanced.ps1`. |
+| `data/goals.js` | Every goal with its ice coordinates. Built by `build-goals.ps1`. |
 | `index.html` | Landing page for the published site; redirects to the standings. |
 | `data/pool.js` | The pool as published, so visitors see it. Built by `publish-pool.ps1`. |
 | `update.ps1` | **The one to schedule.** Checks for new games, then refreshes what needs it. |
@@ -50,8 +53,9 @@ independent of that — it reads only `pool-history.json`.
 | `refresh-players.ps1` | Re-pulls rosters and stats, rewrites `data/players.js`. |
 | `build-history.ps1` | Rebuilds the weekly history behind the progression charts. |
 | `build-advanced.ps1` | Rebuilds the per-player ice-time data behind the fun-facts page. |
-| `run-selftest.ps1` | Checks the navigation, then runs all three browser suites. Exits 1 on failure. |
-| `_selftest.js`, `_selftest-standings.js`, `_selftest-funfacts.js` | The checks those suites run. |
+| `build-goals.ps1` | Collects where every goal was scored from, behind the poolers page. |
+| `run-selftest.ps1` | Checks the navigation, then runs all four browser suites. Exits 1 on failure. |
+| `_selftest.js`, `_selftest-standings.js`, `_selftest-funfacts.js`, `_selftest-poolers.js` | The checks those suites run. |
 | `sample-pool.json` | A fake but complete pool, for trying things out. |
 
 ## The record book (1994–2026)
@@ -261,6 +265,42 @@ pooler's **counting 10** are included — the same 10 the standings score.
 Defensemen sit low on a P/60 list by nature — heavy minutes, fewer points. That
 is the measure working, not failing.
 
+## Poolers
+
+Each pooler's own page. Pick a name and a week, and every point that roster
+earned is drawn on a rink at the spot the shot was taken.
+
+- **The rink** — one puck per goal the roster had a hand in. A **filled** puck
+  means one of their players scored it; a **hollow** one means a player earned
+  an assist, so the puck sits where *someone else* shot from. The colour says
+  which of the 12 picks earned the point.
+- **The roster panel** — the week's goals and assists per pick, best first.
+  Click a name to isolate that player on the ice.
+- **Day by day** — the week's seven days, with the points each produced. Click
+  one to isolate it.
+- **Buts / Passes** — split the view by how the point was earned.
+- Click a puck to open the NHL highlight for that goal.
+
+It opens on the pooler's **best week** of the season, and the week menu labels
+it. The last week played is usually a three-day stub; opening there makes a
+working page look broken.
+
+### One goal can be worth two points
+
+The pool counts goals *and* assists, so a goal scored by one of a roster's
+players and assisted by another is **two points on one puck**. There were 523
+of them this season across the eleven poolers. The summary card says how many
+a week contained, and the tooltip lists each player who earned a point on it.
+Counting pucks instead of roles would quietly undercount every such week.
+
+### Checked against the standings
+
+The page walks individual goals; `data/history.js` sums weekly cumulative
+totals. They share no code, so they are a real cross-check on each other — and
+the test suite asserts all 11 poolers × 28 weeks agree. If `goals.js` is ever
+behind `history.js`, the page says so in a banner rather than showing a total
+that quietly disagrees with the standings.
+
 ## Putting it on the web (GitHub Pages)
 
 The whole site is static files, so GitHub Pages serves it as-is. About 600 KB
@@ -395,6 +435,7 @@ corner updates itself.
 powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\refresh-players.ps1
 powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-history.ps1
 powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-advanced.ps1
+powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-goals.ps1
 ```
 
 `refresh-players.ps1 -StatsOnly` skips the roster walk and refreshes only
@@ -405,11 +446,36 @@ The first pulls all 32 current rosters plus the season's goals/assists into
 `data/players.js` (~1 minute). The second rebuilds `data/history.js`, the
 week-by-week snapshots behind the progression charts (~40 seconds). The third
 rebuilds `data/advanced.js`, the ice-time data behind the fun-facts page
-(~20 seconds).
+(~20 seconds). The fourth collects where every goal was scored from into
+`data/goals.js` — about 7 minutes the first time, then seconds (see below).
 
 All of them walk back to the most recent season that actually has data, so once
 2026-27 is under way they pick up live numbers on their own. Pin a season with
 `-Season 20262027` if you ever need to override that.
+
+### Goal locations, without 1,300 requests every night
+
+`data/goals.js` is the only file built from the **per-game** play-by-play feed:
+coordinates exist nowhere else, and there is one request per game — about 1,300
+for a full season, roughly 7 minutes.
+
+That cost is paid once. Finished games never change, so `build-goals.ps1` keeps
+every game already in the file and fetches only the ones it has not seen. After
+an evening of 10 games it makes 10 requests and finishes in seconds, which is
+why `update.ps1` runs it in **both** gears rather than only the full one.
+
+A game is banked only once the API reports it final, so a game still in progress
+is refetched next run instead of being frozen half-scored.
+
+```powershell
+# refetch the whole season from scratch
+powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-goals.ps1 -Rebuild
+```
+
+The file is about 1.6 MB, which GitHub Pages gzips to roughly 320 KB over the
+wire. Most of what is left is the highlight-video slugs. They look redundant,
+but `nhl.com/video/<id>` alone redirects to a not-found page — the slug is
+load-bearing, so they stay.
 
 ### Starting a new season
 
