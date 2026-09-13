@@ -209,10 +209,22 @@ function savePick(key, p) {
   });
 }
 
-/* La date limite : le jeudi à 18 h, heure de l'Est. Une prédiction envoyée
-   après ne compte pas. Pour l'instant c'est une politesse affichée à l'écran :
-   les règles Firestore sont ouvertes, alors rien ne l'impose côté serveur. */
-function lockOf(key) { return key + ' 18:00'; }
+/* La date limite : le mercredi soir à 23 h 59, la veille des premiers matchs.
+   La clé d'une fin de semaine EST son jeudi, alors la limite tombe la veille :
+   on recule d'un jour. Calculé en UTC comme weekendKey(), sinon un fuseau
+   déplacerait la limite d'une journée.
+
+   Pour l'instant c'est une politesse affichée à l'écran : les règles Firestore
+   sont ouvertes, alors rien ne l'impose côté serveur. */
+function lockOf(key) {
+  const p = key.split('-');
+  const d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10) + ' 23:59';
+}
+
+/* « mercredi 23 h 59 », pour l'afficher partout de la même façon. */
+const LOCK_TXT = 'le mercredi à 23 h 59';
 
 /* =========================================================================
    Rendu
@@ -344,7 +356,8 @@ function buildForm(w) {
   };
 
   p.append(el('p', 'hint',
-    'Renvoyer une prédiction remplace la précédente. Les prédictions ferment le jeudi à 18 h.'));
+    'Renvoyer une prédiction remplace la précédente. Les prédictions ferment ' +
+    LOCK_TXT + ', la veille des premiers matchs.'));
   return p;
 }
 
@@ -406,7 +419,8 @@ function buildRules() {
     SLOT_HALFW + ' pi de chaque côté de l\'axe. Le pointage est la somme des ' +
     'trois écarts : <b>le plus petit total gagne</b>. Sur la saison, le partage ' +
     'tourne autour de <b>37 / 43 / 19</b> — deviner la moyenne est honnête, ' +
-    'mais rarement gagnant. Les prédictions ferment le <b>jeudi à 18 h</b>.';
+    'mais rarement gagnant. Les prédictions ferment <b>' + LOCK_TXT + '</b>, ' +
+    'soit la veille des premiers matchs.';
   p.append(d);
   return p;
 }
@@ -549,7 +563,8 @@ function buildPicks(w, sp) {
 
   if (!rows.length) {
     p.append(el('div', 'empty-state',
-      'Aucune prédiction pour cette fin de semaine. Les prédictions ferment le jeudi à 18 h.'));
+      'Aucune prédiction pour cette fin de semaine. Les prédictions ferment ' +
+      LOCK_TXT + '.'));
     return p;
   }
 

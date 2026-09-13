@@ -161,3 +161,9 @@ rarely wins — which is the point.
 A weekend is keyed by **backing up to its Thursday**, not by ISO week. Verified:
 no bucket spans past Sunday, and the three month-crossing weekends group
 correctly.
+
+Predictions close **Wednesday at 23:59**, the night before the first games — so
+the key's own date minus one day (`lockOf()` in `defi.js`). The page states it
+in three places, all fed from the single `LOCK_TXT` constant. Nothing enforces
+it server-side yet: the Firestore rules are open, so the deadline is currently
+an honour-based convention.
