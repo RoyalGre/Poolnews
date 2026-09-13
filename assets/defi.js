@@ -114,22 +114,104 @@ function scorePick(pick, pct) {
 /* =========================================================================
    Les prédictions
 
-   TOUTE lecture et écriture des prédictions passe par ici. Aujourd'hui c'est
-   data/defi.js (publié à la main, comme data/pool.js) ; demain ce sera
-   Firestore. Le reste de la page ne sait pas d'où viennent les prédictions et
-   n'a pas à le savoir, alors brancher le serveur ne touchera que ce bloc.
-   ========================================================================= */
-const PICKS_DATA = window.DEFI_PICKS || null;
+   TOUTE lecture et écriture des prédictions passe par ici. Le reste de la page
+   ne sait pas d'où elles viennent et n'a pas à le savoir.
 
-/* Les prédictions d'une fin de semaine : [{ name, g, d, a }]. */
-function picksFor(key) {
-  if (!PICKS_DATA || !PICKS_DATA.weekends) return [];
-  const w = PICKS_DATA.weekends[key];
-  return Array.isArray(w) ? w : [];
+   Deux sources, dans cet ordre :
+     1. Firestore, quand le réseau répond — c'est la source vivante ;
+     2. data/defi.js, sinon — le filet hors ligne.
+
+   On parle à Firestore par son API REST plutôt que par le SDK : un fetch()
+   suffit, alors que le SDK exigerait un import de module depuis un CDN. Ce
+   site charge ses scripts par <script src> et s'ouvre depuis le disque ; une
+   dépendance de plus pour trois requêtes ne se justifiait pas.
+
+   La clé d'API n'est pas un secret : elle identifie le projet, elle n'autorise
+   rien. Ce sont les règles Firestore (firestore.rules) qui décident de tout.
+   ========================================================================= */
+const FB = {
+  projectId: 'poolnews-846e0',
+  apiKey:    'AIzaSyAJo3rezXijZ6JAnbMBzPMnF5-cDqMINL8'
+};
+const FB_BASE = 'https://firestore.googleapis.com/v1/projects/' + FB.projectId +
+                '/databases/(default)/documents/defi';
+
+/* Le filet hors ligne, chargé par <script src> comme toutes les données. */
+const PICKS_LOCAL = window.DEFI_PICKS || null;
+
+/* Ce que la page affiche : clé de fin de semaine -> [{ name, g, d, a }].
+   Rempli par le fichier local au démarrage, puis écrasé par Firestore dès que
+   le réseau répond. La lecture reste synchrone pour que render() n'attende
+   jamais : la page s'affiche tout de suite, les prédictions arrivent après. */
+const PICKS = new Map();
+let netState = 'chargement';    // chargement | en ligne | hors ligne
+
+if (PICKS_LOCAL && PICKS_LOCAL.weekends) {
+  for (const k in PICKS_LOCAL.weekends) {
+    const v = PICKS_LOCAL.weekends[k];
+    if (Array.isArray(v)) PICKS.set(k, v);
+  }
+}
+
+function picksFor(key) { return PICKS.get(key) || []; }
+
+/* Firestore encode chaque champ avec son type. Deux petits traducteurs
+   évitent de répandre cette forme dans le reste du fichier. */
+function fromFields(f) {
+  const num = v => v ? Number(v.integerValue !== undefined ? v.integerValue : v.doubleValue) : 0;
+  return {
+    name: f.name ? String(f.name.stringValue || '') : '',
+    g: num(f.g), d: num(f.d), a: num(f.a)
+  };
+}
+function toFields(p) {
+  return {
+    fields: {
+      name: { stringValue: p.name },
+      g: { integerValue: String(p.g) },
+      d: { integerValue: String(p.d) },
+      a: { integerValue: String(p.a) }
+    }
+  };
+}
+
+/* Un document par fin de semaine : defi/2026-04-16, avec une sous-collection
+   « picks » d'un document par pooleur. Un document par pooleur plutôt qu'un
+   tableau dans un seul : deux pooleurs qui répondent en même temps ne
+   s'écrasent pas l'un l'autre. */
+function loadPicks(key) {
+  return fetch(FB_BASE + '/' + key + '/picks?key=' + FB.apiKey)
+    .then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(j => {
+      const rows = (j.documents || []).map(d => fromFields(d.fields || {}))
+        .filter(p => p.name);
+      PICKS.set(key, rows);
+      netState = 'en ligne';
+      return rows;
+    })
+    .catch(() => { netState = 'hors ligne'; return null; });
+}
+
+function savePick(key, p) {
+  // Le nom du pooleur sert d'identifiant : renvoyer sa prédiction remplace la
+  // précédente au lieu d'en ajouter une deuxième.
+  const id = encodeURIComponent(p.name);
+  return fetch(FB_BASE + '/' + key + '/picks/' + id + '?key=' + FB.apiKey, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(toFields(p))
+  }).then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  });
 }
 
 /* La date limite : le jeudi à 18 h, heure de l'Est. Une prédiction envoyée
-   après ne compte pas — c'est la règle que Firestore appliquera tout seul. */
+   après ne compte pas. Pour l'instant c'est une politesse affichée à l'écran :
+   les règles Firestore sont ouvertes, alors rien ne l'impose côté serveur. */
 function lockOf(key) { return key + ' 18:00'; }
 
 /* =========================================================================
@@ -164,11 +246,106 @@ function render() {
 
   box.append(buildToolbar(list, cur));
   box.append(buildRules());
+  box.append(buildForm(cur));
 
   const split = el('div', 'df-split');
   split.append(buildRink(cur, sp));
   split.append(buildBoard(cur, sp));
   box.append(split);
+}
+
+/* ---- Le formulaire ------------------------------------------------------
+   Trois pourcentages qui doivent totaliser 100. Le total se recalcule à
+   chaque frappe : la seule règle du jeu se vérifie à l'œil, sans avoir à
+   soumettre pour se faire dire non. */
+function buildForm(w) {
+  const p = el('div', 'panel');
+  p.append(el('h2', null, 'Votre prédiction'));
+
+  const form = el('div', 'df-form');
+
+  // Le nom vient du pool publié : pas de champ libre, donc pas de « Yanick »
+  // et « yanick m. » qui deviennent deux pooleurs.
+  const who = el('div', 'df-field');
+  who.append(el('label', null, 'Pooleur'));
+  const sel = el('select');
+  sel.append(el('option', null, '— choisir —'));
+  state.poolers.forEach(pl => {
+    const o = el('option', null, pl.name);
+    o.value = pl.name;
+    sel.append(o);
+  });
+  who.append(sel);
+  form.append(who);
+
+  const inputs = {};
+  ZONES.forEach(z => {
+    const f = el('div', 'df-field');
+    f.append(el('label', null, z.court));
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.min = 0; inp.max = 100; inp.step = 1;
+    inp.placeholder = '0';
+    f.append(inp);
+    form.append(f);
+    inputs[z.k] = inp;
+  });
+
+  const total = el('span', 'df-total', 'Total 0 %');
+  form.append(total);
+
+  const send = el('button', 'primary', 'Envoyer');
+  form.append(send);
+  p.append(form);
+
+  const msg = el('div', 'df-msg');
+  p.append(msg);
+
+  const read = () => ZONES.reduce((o, z) => {
+    o[z.k] = Math.max(0, Math.min(100, parseInt(inputs[z.k].value, 10) || 0));
+    return o;
+  }, {});
+
+  const refresh = () => {
+    const v = read();
+    const t = v.g + v.d + v.a;
+    total.textContent = 'Total ' + t + ' %';
+    total.className = 'df-total ' + (t === 100 ? 'ok' : 'bad');
+    return t;
+  };
+  ZONES.forEach(z => inputs[z.k].addEventListener('input', refresh));
+  refresh();
+
+  send.onclick = () => {
+    const v = read();
+    const t = v.g + v.d + v.a;
+    msg.className = 'df-msg';
+    if (!sel.value || sel.selectedIndex === 0) {
+      msg.className = 'df-msg bad'; msg.textContent = 'Choisissez votre nom.'; return;
+    }
+    if (t !== 100) {
+      msg.className = 'df-msg bad';
+      msg.textContent = 'Les trois pourcentages doivent totaliser 100 — le vôtre fait ' + t + '.';
+      return;
+    }
+
+    const pick = { name: sel.value, g: v.g, d: v.d, a: v.a };
+    send.disabled = true;
+    msg.textContent = 'Envoi…';
+
+    savePick(w.key, pick)
+      .then(() => loadPicks(w.key))
+      .then(() => { curKey = w.key; render(); })
+      .catch(() => {
+        send.disabled = false;
+        msg.className = 'df-msg bad';
+        msg.textContent = 'Envoi impossible — vérifiez votre connexion.';
+      });
+  };
+
+  p.append(el('p', 'hint',
+    'Renvoyer une prédiction remplace la précédente. Les prédictions ferment le jeudi à 18 h.'));
+  return p;
 }
 
 /* ---- La barre d'outils : quelle fin de semaine ------------------------- */
@@ -178,15 +355,19 @@ function buildToolbar(list, cur) {
   const nav = el('span', 'pl-nav');
   const i = list.findIndex(w => w.key === cur.key);
 
+  // Changer de fin de semaine redessine tout de suite avec ce qu'on a en
+  // mémoire, puis va chercher les prédictions de celle-là.
+  const goTo = k => { curKey = k; render(); refreshPicks(k); };
+
   const prev = el('button', null, '‹');
   prev.title = 'Fin de semaine précédente';
   prev.disabled = i >= list.length - 1;
-  prev.onclick = () => { curKey = list[i + 1].key; render(); };
+  prev.onclick = () => goTo(list[i + 1].key);
 
   const next = el('button', null, '›');
   next.title = 'Fin de semaine suivante';
   next.disabled = i <= 0;
-  next.onclick = () => { curKey = list[i - 1].key; render(); };
+  next.onclick = () => goTo(list[i - 1].key);
 
   nav.append(prev, next);
 
@@ -197,12 +378,14 @@ function buildToolbar(list, cur) {
     sel.append(o);
   });
   sel.value = cur.key;
-  sel.onchange = () => { curKey = sel.value; render(); };
+  sel.onchange = () => goTo(sel.value);
 
   bar.append(nav, sel, el('span', 'grow'));
   const nj = cur.days.size;
   bar.append(el('span', 'hint',
     cur.goals.length + ' buts · ' + nj + (nj > 1 ? ' jours' : ' jour')));
+  bar.append(el('span', 'df-net' + (netState === 'hors ligne' ? ' off' : ''),
+    'prédictions : ' + netState));
   return bar;
 }
 
@@ -388,8 +571,16 @@ function buildPicks(w, sp) {
   return p;
 }
 
+/* Va chercher les prédictions d'une fin de semaine, puis redessine. La page
+   est déjà à l'écran quand cet appel part : le réseau ne retarde jamais
+   l'affichage de la règle, de la patinoire ni du partage réel. */
+function refreshPicks(key) {
+  loadPicks(key).then(() => { if (curKey === key) render(); });
+}
+
 /* ---- Go ---------------------------------------------------------------- */
 wireThemeToggle();
 wirePublishedBadge();
 renderStamp(G_DATA ? (G_LIST.length.toLocaleString('fr-CA') + ' buts localisés') : null);
 render();
+if (curKey) refreshPicks(curKey);

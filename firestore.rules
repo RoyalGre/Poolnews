@@ -15,7 +15,11 @@ service cloud.firestore {
     // Pour refermer plus tôt : remplacer la ligne allow par
     //   allow read: if true;
     //   allow write: if request.resource.data.motDePasse == 'le-mot-choisi';
-    match /defi/{weekend} {
+    // Le {document=**} est essentiel : les règles Firestore ne descendent PAS
+    // toutes seules dans les sous-collections. Sans lui, defi/2026-04-16 est
+    // accessible mais defi/2026-04-16/picks/Yanick ne l'est pas, et la page
+    // reçoit un 403 sans explication.
+    match /defi/{weekend}/{document=**} {
       allow read, write: if request.time < timestamp.date(2026, 12, 31);
     }
 

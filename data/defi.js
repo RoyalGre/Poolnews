@@ -1,20 +1,20 @@
-/* Les prédictions du Défi de la semaine.
+/* Filet hors ligne du Défi de la semaine.
 
-   Pour l'instant ce fichier est écrit à la main, comme data/pool.js l'était
-   avant publish-pool.ps1. Quand Firestore sera branché, defi.js ira les lire
-   en ligne et ce fichier ne servira plus que de secours hors ligne.
+   Les vraies prédictions vivent maintenant dans Firestore
+   (defi/{fin de semaine}/picks/{pooleur}) et c'est defi.js qui va les y
+   chercher. Ce fichier ne sert plus qu'à deux choses :
+
+     1. afficher quelque chose quand le réseau ne répond pas ;
+     2. ouvrir la page depuis le disque sans rien casser.
+
+   Dès que Firestore répond, ce qu'il renvoie REMPLACE ce qui est ici — même
+   une collection vide. C'est voulu : une fois en ligne, la base est la vérité,
+   et montrer de vieilles prédictions à côté d'une base vide tromperait.
 
    Une clé par fin de semaine : la date du JEUDI qui l'ouvre. Les trois
    pourcentages doivent totaliser 100.
        g = enclave gauche, d = enclave droite, a = partout ailleurs
 */
 window.DEFI_PICKS = {
-  weekends: {
-    "2026-04-16": [
-      { name: "Yanick M.",     g: 37, d: 44, a: 19 },
-      { name: "Steve T.",      g: 30, d: 50, a: 20 },
-      { name: "Frédérick D.",  g: 40, d: 40, a: 20 },
-      { name: "Martin Pr.",    g: 33, d: 48, a: 19 }
-    ]
-  }
+  weekends: {}
 };
