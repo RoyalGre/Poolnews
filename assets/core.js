@@ -14,7 +14,7 @@ const COUNTING_SIZE = 10;   // of those, how many count toward the total
 const STORAGE_KEY   = 'hockeyPool.v1';
 
 /* ---- Player index ------------------------------------------------------- */
-const DATA    = window.NHL_DATA || { players: [], updated: 'never' };
+const DATA    = window.NHL_DATA || { players: [], updated: 'jamais' };
 const PLAYERS = DATA.players || [];
 const BY_ID   = new Map(PLAYERS.map(p => [p.i, p]));
 
@@ -103,7 +103,7 @@ function load() {
       if (s && Array.isArray(s.poolers)) local = migrate(s);
     }
   } catch (e) {
-    console.warn('Could not read saved pool, starting fresh.', e);
+    console.warn('Pool sauvegardé illisible, on repart à neuf.', e);
   }
 
   // Take the published pool when this browser has nothing saved, or when the
@@ -132,7 +132,7 @@ function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
-    alert('Could not save to this browser. Use Export JSON to keep your picks.');
+    alert('Impossible de sauvegarder dans ce navigateur. Utilisez Données ▸ Exporter JSON pour conserver vos choix.');
   }
 }
 
@@ -216,7 +216,7 @@ function scoreRoster(ids, statOf) {
       const p = BY_ID.get(id) || null;
       const s = statOf(id) || { g: 0, a: 0 };
       const g = s.g | 0, a = s.a | 0;
-      return { id, p, name: p ? p.n : 'Unknown player', pos: p ? p.p : '?', team: p ? p.t : '', g, a, pts: g + a };
+      return { id, p, name: p ? p.n : 'Joueur inconnu', pos: p ? p.p : '?', team: p ? p.t : '', g, a, pts: g + a };
     });
 
   const byPts = (x, y) => y.pts - x.pts || x.name.localeCompare(y.name);
@@ -338,10 +338,10 @@ function renderStamp(extra) {
   const box = $('dataStamp');
   if (!box) return;
   const bits = [];
-  if (PLAYERS.length) bits.push(PLAYERS.length + ' NHL players');
-  if (DATA.statsSeason) bits.push('pts = ' + DATA.statsSeason + ' G+A');
+  if (PLAYERS.length) bits.push(PLAYERS.length + ' joueurs LNH');
+  if (DATA.statsSeason) bits.push('pts = ' + DATA.statsSeason + ' B+A');
   if (extra) bits.push(extra);
-  bits.push('updated ' + (DATA.updated || 'never'));
+  bits.push('mis à jour ' + (DATA.updated || 'never'));
   box.textContent = bits.join(' · ');
 }
 
@@ -359,8 +359,8 @@ function wireAutoRefresh() {
 
   const sel = document.createElement('select');
   sel.id = 'autoRefresh';
-  sel.title = 'Reload this page periodically so freshly built data shows up';
-  [[0, 'Auto-refresh: off'], [5, 'Refresh: 5 min'], [15, 'Refresh: 15 min'], [60, 'Refresh: hourly']]
+  sel.title = 'Recharger la page périodiquement pour voir les données fraîches';
+  [[0, 'Rafraîchir : jamais'], [5, 'Rafraîchir : 5 min'], [15, 'Rafraîchir : 15 min'], [60, 'Rafraîchir : 1 h']]
     .forEach(([v, t]) => {
       const o = document.createElement('option');
       o.value = String(v);
@@ -397,8 +397,8 @@ function wireThemeToggle() {
 
   const sel = document.createElement('select');
   sel.id = 'themePick';
-  sel.title = 'Light or dark';
-  [['auto', 'Theme: auto'], ['light', 'Theme: light'], ['dark', 'Theme: dark']]
+  sel.title = 'Clair ou sombre';
+  [['auto', 'Thème : auto'], ['light', 'Thème : clair'], ['dark', 'Thème : sombre']]
     .forEach(([v, t]) => {
       const o = document.createElement('option');
       o.value = v;
@@ -429,11 +429,11 @@ function wirePublishedBadge() {
   const box = $('publishedBadge');
   if (!box || !PUBLISHED) return;
 
-  // Small print on the second line. The way back to the published pool lives
+  // Small print on the second line. The way retour au pool publié lives
   // in the Data menu, so this is text only.
   box.textContent = state.publishedAt !== PUBLISHED.published
-    ? 'showing changes made in this browser — Data ▸ Reload published pool to undo'
-    : 'pool published ' + (PUBLISHED.published || '');
+    ? 'modifications propres à ce navigateur — Données ▸ Recharger le pool publié pour annuler'
+    : 'pool publié ' + (PUBLISHED.published || '');
 }
 
 /* Every header control goes in the same slot, in the order the page wires
@@ -442,7 +442,7 @@ function barSlot() {
   return $('barControls') || document.querySelector('header');
 }
 
-/* A menu, not two buttons: export, import and "back to the published pool" are
+/* A menu, not two buttons: export, import and "retour au pool publié" are
    all the same kind of rare, deliberate action, and three dropdowns in a row
    read better than dropdowns plus loose buttons. */
 function wireDataMenu() {
@@ -451,10 +451,10 @@ function wireDataMenu() {
 
   const sel = document.createElement('select');
   sel.id = 'dataMenu';
-  sel.title = 'Save or load the pool';
+  sel.title = 'Sauvegarder ou charger le pool';
 
-  const opts = [['', 'Data…'], ['export', 'Export JSON'], ['import', 'Import JSON']];
-  if (PUBLISHED) opts.push(['published', 'Reload published pool']);
+  const opts = [['', 'Données…'], ['export', 'Exporter JSON'], ['import', 'Importer JSON']];
+  if (PUBLISHED) opts.push(['published', 'Recharger le pool publié']);
   opts.forEach(([v, t]) => {
     const o = document.createElement('option');
     o.value = v;
@@ -469,7 +469,7 @@ function wireDataMenu() {
     else if (action === 'import' && fi) fi.click();
     else if (action === 'published') {
       const edited = state.publishedAt !== PUBLISHED.published;
-      if (edited && !confirm('Discard the changes made in this browser and reload the published pool?')) return;
+      if (edited && !confirm('Abandonner les modifications faites dans ce navigateur et recharger le pool publié ?')) return;
       resetToPublished();
     }
   };
@@ -506,13 +506,13 @@ function wireImportExport() {
       reader.onload = () => {
         try {
           const s = JSON.parse(reader.result);
-          if (!s || !Array.isArray(s.poolers)) throw new Error('Not a pool file');
-          if (!confirm('Replace the current pool with the contents of this file?')) return;
+          if (!s || !Array.isArray(s.poolers)) throw new Error('Ce fichier n’est pas un pool');
+          if (!confirm('Remplacer le pool actuel par le contenu de ce fichier ?')) return;
           state = migrate(s);   // accepts exports from before slots existed
           save();
           if (typeof onPoolImported === 'function') onPoolImported();
         } catch (err) {
-          alert('Could not read that file: ' + err.message);
+          alert('Impossible de lire ce fichier : ' + err.message);
         }
       };
       reader.readAsText(file);

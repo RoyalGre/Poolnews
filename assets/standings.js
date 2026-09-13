@@ -33,8 +33,8 @@ function svgEl(tag, attrs) {
 }
 
 function weekLabel(w) {
-  if (w < 0 || !WEEKS[w]) return DATA.statsSeason ? DATA.statsSeason + ' final' : 'season totals';
-  return 'Week ' + WEEKS[w].w + ' · ' + WEEKS[w].d;
+  if (w < 0 || !WEEKS[w]) return DATA.statsSeason ? DATA.statsSeason + ' (fin de saison)' : 'totaux de la saison';
+  return 'Semaine ' + WEEKS[w].w + ' · ' + WEEKS[w].d;
 }
 function shortDate(d) { return d.slice(5).replace('-', '/'); }   // 2026-01-12 -> 01/12
 
@@ -129,13 +129,13 @@ function tableRows() {
    Render
    ========================================================================= */
 function render() {
-  renderStamp(WEEK_COUNT ? WEEK_COUNT + ' weeks of history' : null);
+  renderStamp(WEEK_COUNT ? WEEK_COUNT + ' semaines d’historique' : null);
 
   if (!state.poolers.length) {
     $('content').innerHTML =
-      '<div class="panel"><div class="empty-state">No poolers yet.<br><br>' +
-      'Add them on the <a href="pool.html">Draft</a> page, or use <b>Import JSON</b> ' +
-      'above to load a saved pool.</div></div>';
+      '<div class="panel"><div class="empty-state">Aucun pooler.<br><br>' +
+      'Ajoutez-les dans l’onglet <a href="pool.html">Repêchage</a>, ou utilisez ' +
+      '<b>Données ▸ Importer JSON</b> ci-dessus pour charger un pool sauvegardé.</div></div>';
     $('toolbar').style.display = 'none';
     return;
   }
@@ -146,16 +146,16 @@ function render() {
 
   $('content').innerHTML = '';
   $('content').append(cardsPanel(), tablePanel(), chartPanel(
-    'Points over the season',
-    'Counting-10 total after each week. Click a name to isolate it.',
+    'Points au fil de la saison',
+    'Total des 10 qui comptent après chaque semaine. Cliquez un nom pour l’isoler.',
     lineChart()
   ), chartPanel(
-    'Position over the season',
-    'Where each pooler sat in the standings, week by week. Higher is better.',
+    'Position au fil de la saison',
+    'La place de chaque pooler au classement, semaine par semaine. Plus haut est mieux.',
     bumpChart()
   ), chartPanel(
-    'Points gained — ' + weekLabel(Math.max(0, weekIdx)),
-    'What each pooler added during the selected week alone.',
+    'Points gagnés — ' + weekLabel(Math.max(0, weekIdx)),
+    'Ce que chaque pooler a ajouté durant la semaine choisie seulement.',
     gainChart()
   ));
 }
@@ -174,11 +174,11 @@ function renderToolbar() {
 
   if (!WEEK_COUNT) {
     bar.append(el('div', 'hint',
-      'No weekly history loaded — showing season totals. Run build-history.ps1 to get the progression charts.'));
+      'Aucun historique hebdomadaire — affichage des totaux de la saison. Exécutez build-history.ps1 pour les graphiques de progression.'));
     return;
   }
 
-  bar.append(el('label', null, 'As of'));
+  bar.append(el('label', null, 'En date de'));
 
   const slider = document.createElement('input');
   slider.type = 'range';
@@ -194,23 +194,23 @@ function renderToolbar() {
   bar.append(lab);
 
   const prev = el('button', null, '‹');
-  prev.title = 'Previous week';
+  prev.title = 'Semaine précédente';
   prev.disabled = weekIdx <= 0;
   prev.onclick = () => { weekIdx = Math.max(0, weekIdx - 1); render(); };
 
   const next = el('button', null, '›');
-  next.title = 'Next week';
+  next.title = 'Semaine suivante';
   next.disabled = weekIdx >= WEEK_COUNT - 1;
   next.onclick = () => { weekIdx = Math.min(WEEK_COUNT - 1, weekIdx + 1); render(); };
 
-  const last = el('button', null, 'Latest');
+  const last = el('button', null, 'Dernière');
   last.disabled = weekIdx >= WEEK_COUNT - 1;
   last.onclick = () => { weekIdx = WEEK_COUNT - 1; render(); };
 
   bar.append(prev, next, last);
   bar.append(el('span', 'grow'));
-  bar.append(el('span', 'hint', state.poolers.length + ' poolers · best ' +
-    COUNTING_SIZE + ' of ' + ROSTER_SIZE + ' count, at least one D'));
+  bar.append(el('span', 'hint', state.poolers.length + ' poolers · les ' +
+    COUNTING_SIZE + ' meilleurs de ' + ROSTER_SIZE + ' comptent, au moins un D'));
 }
 
 /* ---- Summary cards ------------------------------------------------------ */
@@ -231,20 +231,20 @@ function cardsPanel() {
   const box = el('div', 'cards');
 
   const gap = lead.length > 1 ? lead[0].sc.pts - lead[1].sc.pts : 0;
-  box.append(card('Leader', lead[0].pl.name,
-    lead[0].sc.pts + ' pts' + (lead.length > 1 ? ' · +' + gap + ' on ' + lead[1].pl.name : '')));
+  box.append(card('Meneur', lead[0].pl.name,
+    lead[0].sc.pts + ' pts' + (lead.length > 1 ? ' · +' + gap + ' sur ' + lead[1].pl.name : '')));
 
   if (WEEK_COUNT && weekIdx > 0) {
-    box.append(card('Best week', hot.pl.name, '+' + hot.gain + ' pts this week'));
+    box.append(card('Meilleure semaine', hot.pl.name, '+' + hot.gain + ' pts cette semaine'));
   }
 
   if (star) {
-    box.append(card('Top player', star.p.name,
+    box.append(card('Meilleur joueur', star.p.name,
       star.p.pts + ' pts · ' + star.p.pos + ' ' + star.p.team + ' · ' + star.owner.name));
   }
 
   const spread = lead.length ? lead[0].sc.pts - lead[lead.length - 1].sc.pts : 0;
-  box.append(card('Spread', spread + ' pts', 'first to last'));
+  box.append(card('Écart', spread + ' pts', 'du premier au dernier'));
 
   return box;
 }
@@ -258,8 +258,8 @@ function card(k, v, s) {
 /* ---- The standings table ------------------------------------------------ */
 function tablePanel() {
   const panel = el('div', 'panel');
-  const h = el('h2', null, 'Standings ');
-  h.append(el('span', 'note', '— ' + weekLabel(Math.max(0, weekIdx)) + ' · click a row for the roster'));
+  const h = el('h2', null, 'Classement ');
+  h.append(el('span', 'note', '— ' + weekLabel(Math.max(0, weekIdx)) + ' · cliquez une ligne pour l’alignement'));
   panel.append(h);
 
   const table = el('table', 'standings');
@@ -270,11 +270,11 @@ function tablePanel() {
     { k: 'rank',  t: '#',        cls: '' },
     { k: 'name',  t: 'Pooler',   cls: '' },
     { k: 'pts',   t: 'Points',   cls: 'right' },
-    { k: 'g',     t: 'G',        cls: 'right' },
+    { k: 'g',     t: 'B',        cls: 'right' },
     { k: 'a',     t: 'A',        cls: 'right' },
-    { k: 'gain',  t: 'Δ week',   cls: 'right' },
-    { k: 'bench', t: 'Left off', cls: 'right' },
-    { k: null,    t: 'Best player', cls: '' }
+    { k: 'gain',  t: 'Δ semaine', cls: 'right' },
+    { k: 'bench', t: 'Sur le banc', cls: 'right' },
+    { k: null,    t: 'Meilleur joueur', cls: '' }
   ];
 
   for (const c of cols) {
@@ -305,7 +305,7 @@ function tablePanel() {
       const d = r.prev - r.rank;
       const mv = el('span', 'move ' + (d > 0 ? 'up' : d < 0 ? 'down' : 'flat'),
         d > 0 ? ' ▲' + d : d < 0 ? ' ▼' + (-d) : ' –');
-      mv.title = d === 0 ? 'No change from last week' : 'Was ' + r.prev + ' last week';
+      mv.title = d === 0 ? 'Aucun changement depuis la semaine dernière' : 'Était ' + r.prev + ' la semaine dernière';
       tdRank.append(mv);
     }
     tr.append(tdRank);
@@ -318,9 +318,9 @@ function tablePanel() {
     const nm = el('div');
     nm.append(el('div', 'nm', r.pl.name));
     const notes = [];
-    if (!r.sc.complete) notes.push(r.sc.rows.length + '/' + ROSTER_SIZE + ' picks');
-    if (!r.sc.legal)    notes.push('no defenseman — not scorable');
-    else if (r.sc.forcedD) notes.push('D rule cost ' + r.sc.forcedD.cost + ' pts');
+    if (!r.sc.complete) notes.push(r.sc.rows.length + '/' + ROSTER_SIZE + ' choix');
+    if (!r.sc.legal)    notes.push('aucun défenseur — non pointable');
+    else if (r.sc.forcedD) notes.push('la règle du D coûte ' + r.sc.forcedD.cost + ' pts');
     if (notes.length) nm.append(el('div', 'sub', notes.join(' · ')));
     who.append(chip, nm);
     tdName.append(who);
@@ -370,18 +370,18 @@ function rosterDetail(r) {
 
   const head = el('div', 'hint');
   head.style.marginBottom = '8px';
-  head.textContent = 'Counting ' + r.sc.counting.length + ' · ' +
+  head.textContent = 'Les ' + r.sc.counting.length + ' qui comptent · ' +
     r.sc.pts + ' pts (' + r.sc.g + 'G ' + r.sc.a + 'A) · ' +
-    (r.sc.total12 - r.sc.pts) + ' pts left on the bench';
+    (r.sc.total12 - r.sc.pts) + ' pts laissés sur le banc';
   inner.append(head);
 
   if (r.sc.forcedD) {
-    inner.append(banner('The best 10 were all forwards, so ' + r.sc.forcedD.in.name +
-      ' (D, ' + r.sc.forcedD.in.pts + ') takes the last spot from ' +
-      r.sc.forcedD.out.name + ' (' + r.sc.forcedD.out.pts + '). Cost: ' +
+    inner.append(banner('Les 10 meilleurs étaient tous des avants, donc ' + r.sc.forcedD.in.name +
+      ' (D, ' + r.sc.forcedD.in.pts + ') prend la dernière place à ' +
+      r.sc.forcedD.out.name + ' (' + r.sc.forcedD.out.pts + '). Coût : ' +
       r.sc.forcedD.cost + ' pts.'));
   } else if (!r.sc.legal) {
-    inner.append(banner('⚠ No defenseman on this roster, so it cannot be scored legally.'));
+    inner.append(banner('⚠ Aucun défenseur dans cet alignement : il ne peut pas être pointé légalement.'));
   }
 
   const grid = el('div', 'rosterGrid');
@@ -391,8 +391,8 @@ function rosterDetail(r) {
     // Only the D the rule dragged in gets the tag. A defenseman who made the
     // top 10 on points alone is there on merit and needs no explanation.
     if (counts && r.sc.forcedD && r.sc.forcedD.in.id === p.id) {
-      const t = el('span', 'tag', 'D slot');
-      t.title = 'In the counting 10 only because at least one D is required';
+      const t = el('span', 'tag', 'case D');
+      t.title = 'Dans les 10 qui comptent uniquement parce qu’au moins un D est exigé';
       d.append(t);
     }
     const pts = el('span', 'pts', String(p.pts));
@@ -406,7 +406,7 @@ function rosterDetail(r) {
 
   const foot = el('div', 'hint');
   foot.style.marginTop = '8px';
-  foot.textContent = 'Highlighted rows are the ' + COUNTING_SIZE + ' that count; faded rows are left off.';
+  foot.textContent = 'Les lignes en surbrillance sont les ' + COUNTING_SIZE + ' qui comptent ; les lignes pâles sont laissées de côté.';
   inner.append(foot);
 
   td.append(inner);
@@ -445,7 +445,7 @@ function legend() {
     const chip = el('span', 'chip');
     chip.style.background = poolerColor(pl);
     item.append(chip, el('span', null, pl.name));
-    item.title = 'Click to show/hide · double-click to isolate';
+    item.title = 'Cliquez pour afficher/masquer · double-cliquez pour isoler';
     item.onclick = () => {
       if (hidden.has(pl.id)) hidden.delete(pl.id); else hidden.add(pl.id);
       render();
@@ -476,7 +476,7 @@ function repaintHighlight() {
 
 /* ---- 1. Cumulative points, week by week -------------------------------- */
 function lineChart() {
-  if (!WEEK_COUNT) return el('div', 'hint', 'No weekly history loaded.');
+  if (!WEEK_COUNT) return el('div', 'hint', 'Aucun historique hebdomadaire.');
 
   const wrap = el('div', 'chartwrap');
   const W = 920, H = 360, m = { l: 46, r: 18, t: 14, b: 30 };
@@ -578,7 +578,7 @@ function lineChart() {
 
 /* ---- 2. Rank over time (bump chart) ------------------------------------ */
 function bumpChart() {
-  if (!WEEK_COUNT) return el('div', 'hint', 'No weekly history loaded.');
+  if (!WEEK_COUNT) return el('div', 'hint', 'Aucun historique hebdomadaire.');
 
   const poolers = shownPoolers();
   const n = state.poolers.length;
@@ -640,8 +640,8 @@ function bumpChart() {
 /* ---- 3. Points gained in the selected week ----------------------------- */
 function gainChart() {
   const w = Math.max(0, weekIdx);
-  if (!WEEK_COUNT) return el('div', 'hint', 'No weekly history loaded.');
-  if (w === 0) return el('div', 'hint', 'Week 1 is the first snapshot — there is no previous week to compare against.');
+  if (!WEEK_COUNT) return el('div', 'hint', 'Aucun historique hebdomadaire.');
+  if (w === 0) return el('div', 'hint', 'La semaine 1 est le premier relève — il n’y a pas de semaine précédente à comparer.');
 
   const rows = state.poolers
     .map(pl => ({ pl, gain: weekGain(pl, w) }))

@@ -109,18 +109,18 @@ function shown() { return POOLER_ROWS.filter(r => !hidden.has(r.pl.id)); }
    Render
    ========================================================================= */
 function render() {
-  renderStamp(ADV ? 'ice time from ' + ADV.label : null);
+  renderStamp(ADV ? 'temps de jeu ' + ADV.label : null);
   const box = $('content');
   box.innerHTML = '';
 
   if (!state.poolers.length) {
-    box.innerHTML = '<div class="panel"><div class="empty-state">No poolers yet.<br><br>' +
-      'Add them on the <a href="pool.html">Draft</a> page, or use <b>Import JSON</b> above.</div></div>';
+    box.innerHTML = '<div class="panel"><div class="empty-state">Aucun pooler.<br><br>' +
+      'Ajoutez-les dans l’onglet <a href="pool.html">Repêchage</a>, ou utilisez <b>Données ▸ Importer JSON</b> ci-dessus.</div></div>';
     return;
   }
   if (!ADV) {
     box.innerHTML = '<div class="panel"><div class="empty-state">' +
-      'No ice-time data loaded.<br><br>Run <code>build-advanced.ps1</code> to create ' +
+      'Aucune donnée de temps de jeu.<br><br>Exécutez <code>build-advanced.ps1</code> pour créer ' +
       '<code>data/advanced.js</code>.</div></div>';
     return;
   }
@@ -130,11 +130,11 @@ function render() {
   box.append(
     cards(),
     explainer(),
-    chartPanel('Most efficient players', 'Points per 60 minutes of ice time, counting-10 players only.',
+    chartPanel('Les joueurs les plus efficaces', 'Points par 60 minutes de jeu, seulement les 10 qui comptent.',
                playerChart(), legend()),
-    chartPanel('Most efficient poolers', 'Points per 60 minutes across each roster’s combined ice time.',
+    chartPanel('Les poolers les plus efficaces', 'Points par 60 minutes sur le temps de jeu combiné de chaque alignement.',
                poolerChart()),
-    chartPanel('Ice time vs efficiency', 'Right = more minutes. Up = more done with them. Bubble size = points.',
+    chartPanel('Temps de jeu contre efficacité', 'Vers la droite = plus de minutes. Vers le haut = plus fait avec. Taille = points.',
                bubbleChart()),
     tablePanel(),
     oddsAndEnds()
@@ -152,13 +152,13 @@ function cards() {
   const game = PLAYER_ROWS.slice().sort((a, b) => b.bestPts - a.bestPts ||
                                                   a.bestDate.localeCompare(b.bestDate))[0];
 
-  if (eff)  box.append(card('Most efficient pooler', eff.pl.name, fmt(eff.p60) + ' P/60'));
-  if (best) box.append(card('Most efficient player', best.name,
+  if (eff)  box.append(card('Pooler le plus efficace', eff.pl.name, fmt(eff.p60) + ' P/60'));
+  if (best) box.append(card('Joueur le plus efficace', best.name,
                             fmt(best.p60) + ' P/60 · ' + best.pooler.name));
-  if (most) box.append(card('Most ice time', most.pl.name,
+  if (most) box.append(card('Plus de temps de jeu', most.pl.name,
                             mins(most.toi).toLocaleString() + ' minutes'));
-  if (game) box.append(card('Best single game', game.name,
-                            game.bestPts + ' pts vs ' + game.bestOpp + ' · ' + game.bestDate));
+  if (game) box.append(card('Meilleur match', game.name,
+                            game.bestPts + ' pts contre ' + game.bestOpp + ' · ' + game.bestDate));
   return box;
 }
 
@@ -171,15 +171,15 @@ function card(k, v, s) {
 function explainer() {
   const p = el('div', 'panel');
   p.innerHTML =
-    '<h2>What P/60 means</h2>' +
-    '<div class="prose"><b>Points per 60 minutes</b> measures what a player does with the ice time he ' +
-    'gets, instead of rewarding whoever simply plays the most. A player with 2 points in 20 minutes ' +
-    'rates ahead of one with 3 points in 60.<br><br>' +
-    'Formula: <code>points ÷ seconds on ice × 3600</code>. Only each pooler’s ' +
-    '<b>counting 10</b> are included — the same 10 the standings score, best by points with at ' +
-    'least one defenseman.<br><br>' +
-    'Defensemen sit low on this list by nature: heavy minutes, fewer points. That is the measure ' +
-    'working, not failing.</div>';
+    '<h2>Ce que signifie le P/60</h2>' +
+    '<div class="prose"><b>Les points par 60 minutes</b> mesurent ce qu’un joueur fait avec le temps de ' +
+    'jeu qu’on lui donne, au lieu de récompenser celui qui joue simplement le plus. Un joueur avec ' +
+    '2 points en 20 minutes passe devant un joueur avec 3 points en 60.<br><br>' +
+    'Formule : <code>points ÷ secondes de jeu × 3600</code>. Seuls les ' +
+    '<b>10 qui comptent</b> de chaque pooler sont inclus — les mêmes 10 que le classement pointe, ' +
+    'les meilleurs par points avec au moins un défenseur.<br><br>' +
+    'Les défenseurs sont bas dans cette liste par nature : beaucoup de minutes, moins de points. ' +
+    'C’est la mesure qui fonctionne, pas qui échoue.</div>';
   return p;
 }
 
@@ -222,7 +222,7 @@ function legend() {
 function playerChart() {
   const all  = PLAYER_ROWS.filter(r => !hidden.has(r.pooler.id));
   const rows = showAll ? all : all.slice(0, 25);
-  if (!rows.length) return el('div', 'hint', 'Nothing to show — every pooler is hidden.');
+  if (!rows.length) return el('div', 'hint', 'Rien à afficher — tous les poolers sont masqués.');
 
   const rowH = 22, W = 920, m = { l: 190, r: 56, t: 6, b: 6 };
   const H = m.t + m.b + rows.length * rowH;
@@ -243,8 +243,8 @@ function playerChart() {
     const bar = svgEl('rect', { class: 'bar', x: m.l, y: y + 3, width: bw, height: rowH - 8,
                                 fill: poolerColor(r.pooler), opacity: .82 });
     const tip = svgEl('title', {});
-    tip.textContent = r.name + ' — ' + r.pooler.name + '\n' + r.pts + ' pts in ' + mins(r.toi) +
-                      ' min over ' + r.gp + ' games\n' + fmt(r.p60) + ' P/60';
+    tip.textContent = r.name + ' — ' + r.pooler.name + '\n' + r.pts + ' pts en ' + mins(r.toi) +
+                      ' min en ' + r.gp + ' matchs\n' + fmt(r.p60) + ' P/60';
     bar.append(tip);
     svg.append(bar);
 
@@ -260,7 +260,7 @@ function playerChart() {
   holder.append(wrap);
 
   if (all.length > 25) {
-    const btn = el('button', null, showAll ? 'Show top 25' : 'Show all ' + all.length + ' players');
+    const btn = el('button', null, showAll ? 'Afficher le top 25' : 'Afficher les ' + all.length + ' joueurs');
     btn.style.marginTop = '10px';
     btn.onclick = () => { showAll = !showAll; render(); };
     holder.append(btn);
@@ -271,7 +271,7 @@ function playerChart() {
 /* Bars, one per pooler. */
 function poolerChart() {
   const rows = shown();
-  if (!rows.length) return el('div', 'hint', 'Nothing to show.');
+  if (!rows.length) return el('div', 'hint', 'Rien à afficher.');
 
   const rowH = 28, W = 920, m = { l: 190, r: 90, t: 6, b: 6 };
   const H = m.t + m.b + rows.length * rowH;
@@ -304,7 +304,7 @@ function poolerChart() {
 /* Ice time on x, efficiency on y, points as the bubble. */
 function bubbleChart() {
   const rows = shown();
-  if (rows.length < 2) return el('div', 'hint', 'Needs at least two poolers.');
+  if (rows.length < 2) return el('div', 'hint', 'Il faut au moins deux poolers.');
 
   const W = 920, H = 420, m = { l: 60, r: 24, t: 18, b: 46 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
@@ -337,7 +337,7 @@ function bubbleChart() {
   }
 
   const ax = svgEl('text', { x: m.l + iw / 2, y: H - 6, 'text-anchor': 'middle' });
-  ax.textContent = 'Total ice time of the counting 10 (minutes)';
+  ax.textContent = 'Temps de jeu total des 10 qui comptent (minutes)';
   svg.append(ax);
 
   const ay = svgEl('text', { x: 14, y: m.t + ih / 2, 'text-anchor': 'middle',
@@ -404,8 +404,8 @@ function bubbleChart() {
 /* ---- The table: points rank vs efficiency rank -------------------------- */
 function tablePanel() {
   const panel = el('div', 'panel');
-  const h = el('h2', null, 'Points vs minutes ');
-  h.append(el('span', 'note', '— who got the most out of their ice time'));
+  const h = el('h2', null, 'Points contre minutes ');
+  h.append(el('span', 'note', '— qui a tiré le plus de son temps de jeu'));
   panel.append(h);
 
   // Rank by each measure before sorting for display, so the ranks stay fixed.
@@ -419,10 +419,10 @@ function tablePanel() {
     { k: 'pts',    t: 'Points',  cls: 'right' },
     { k: 'toi',    t: 'Minutes', cls: 'right' },
     { k: 'p60',    t: 'P/60',    cls: 'right' },
-    { k: 'swing',  t: 'Pts rank → P/60 rank', cls: 'right' },
-    { k: 'sh',     t: 'Shots',   cls: 'right' },
-    { k: 'ppShare',t: 'PP share',cls: 'right' },
-    { k: 'pim',    t: 'PIM',     cls: 'right' }
+    { k: 'swing',  t: 'Rang pts → rang P/60', cls: 'right' },
+    { k: 'sh',     t: 'Tirs',    cls: 'right' },
+    { k: 'ppShare',t: 'Part AN', cls: 'right' },
+    { k: 'pim',    t: 'Min. pén.', cls: 'right' }
   ];
 
   const key = {
@@ -481,9 +481,9 @@ function tablePanel() {
     td.append(el('span', null, pr + ' → ' + er + ' '));
     const badge = el('span', 'move ' + (swing > 0 ? 'up' : swing < 0 ? 'down' : 'flat'),
       swing > 0 ? '▲' + swing : swing < 0 ? '▼' + (-swing) : '–');
-    badge.title = swing > 0 ? 'Ranks better on efficiency than on points'
-                : swing < 0 ? 'Ranks worse on efficiency than on points'
-                : 'Same rank either way';
+    badge.title = swing > 0 ? 'Mieux classé en efficacité qu’en points'
+                : swing < 0 ? 'Moins bien classé en efficacité qu’en points'
+                : 'Même rang des deux façons';
     td.append(badge);
     tr.append(td);
 
@@ -499,8 +499,8 @@ function tablePanel() {
   panel.append(wrap);
 
   const note = el('div', 'hint',
-    'Points is the standings total (the counting 10). Minutes, shots, PP share and PIM cover those ' +
-    'same 10 players. PP share is how much of the roster’s scoring came on the power play.');
+    'Les points sont le total du classement (les 10 qui comptent). Minutes, tirs, part AN et minutes ' +
+    'de pénalité couvrent ces mêmes 10 joueurs. La part AN est la portion des points obtenue en avantage numérique.');
   panel.append(note);
   return panel;
 }
@@ -508,8 +508,8 @@ function tablePanel() {
 /* ---- Odds and ends ------------------------------------------------------ */
 function oddsAndEnds() {
   const panel = el('div', 'panel');
-  const h = el('h2', null, 'Odds and ends ');
-  h.append(el('span', 'note', '— counting-10 players only'));
+  const h = el('h2', null, 'En vrac ');
+  h.append(el('span', 'note', '— seulement les 10 qui comptent'));
   panel.append(h);
 
   const list = el('div', 'facts');
@@ -538,39 +538,39 @@ function oddsAndEnds() {
                                    (p60(a.rPts, a.rToi) - p60(a.hPts, a.hToi)))[0];
   const workhorse = best(P, r => r.toi / Math.max(1, r.gp));
 
-  fact('Longest point streak',
-       streak.streak + ' games — ' + streak.name + ' (' + streak.pooler.name + ')');
-  fact('Longest drought',
-       drought.drought + ' games without a point — ' + drought.name + ' (' + drought.pooler.name + ')');
-  fact('Most shots',
-       gunner.sh + ' shots, ' + gunner.pts + ' pts — ' + gunner.name + ' (' + gunner.pooler.name + ')');
-  fact('Most ice time per game',
-       fmt(workhorse.toi / Math.max(1, workhorse.gp) / 60, 1) + ' min a night — ' +
+  fact('Plus longue séquence de points',
+       streak.streak + ' matchs — ' + streak.name + ' (' + streak.pooler.name + ')');
+  fact('Plus longue disette',
+       drought.drought + ' matchs sans point — ' + drought.name + ' (' + drought.pooler.name + ')');
+  fact('Plus de tirs',
+       gunner.sh + ' tirs, ' + gunner.pts + ' pts — ' + gunner.name + ' (' + gunner.pooler.name + ')');
+  fact('Plus de temps de jeu par match',
+       fmt(workhorse.toi / Math.max(1, workhorse.gp) / 60, 1) + ' min par soir — ' +
        workhorse.name + ' (' + workhorse.pooler.name + ')');
   if (clutch.gwg > 0) {
-    fact('Most game-winners', clutch.gwg + ' — ' + clutch.name + ' (' + clutch.pooler.name + ')');
+    fact('Plus de buts gagnants', clutch.gwg + ' — ' + clutch.name + ' (' + clutch.pooler.name + ')');
   }
-  fact('Most penalty minutes',
-       goon.pim + ' PIM — ' + goon.name + ' (' + goon.pooler.name + ')');
+  fact('Plus de minutes de pénalité',
+       goon.pim + ' min — ' + goon.name + ' (' + goon.pooler.name + ')');
   if (ppMan) {
-    fact('Most power-play dependent',
-         Math.round((ppMan.ppp / ppMan.pts) * 100) + '% of his points on the PP — ' +
+    fact('Le plus dépendant de l’avantage numérique',
+         Math.round((ppMan.ppp / ppMan.pts) * 100) + ' % de ses points en AN — ' +
          ppMan.name + ' (' + ppMan.pooler.name + ')');
   }
   if (evenMan) {
-    fact('Least power-play dependent',
-         Math.round((evenMan.ppp / evenMan.pts) * 100) + '% on the PP — ' +
+    fact('Le moins dépendant de l’avantage numérique',
+         Math.round((evenMan.ppp / evenMan.pts) * 100) + ' % en AN — ' +
          evenMan.name + ' (' + evenMan.pooler.name + ')');
   }
   if (homer) {
-    fact('Best at home',
-         fmt(p60(homer.hPts, homer.hToi)) + ' P/60 at home vs ' +
-         fmt(p60(homer.rPts, homer.rToi)) + ' on the road — ' + homer.name);
+    fact('Meilleur à domicile',
+         fmt(p60(homer.hPts, homer.hToi)) + ' P/60 à domicile contre ' +
+         fmt(p60(homer.rPts, homer.rToi)) + ' à l’étranger — ' + homer.name);
   }
   if (roadie) {
-    fact('Best on the road',
-         fmt(p60(roadie.rPts, roadie.rToi)) + ' P/60 away vs ' +
-         fmt(p60(roadie.hPts, roadie.hToi)) + ' at home — ' + roadie.name);
+    fact('Meilleur à l’étranger',
+         fmt(p60(roadie.rPts, roadie.rToi)) + ' P/60 à l’étranger contre ' +
+         fmt(p60(roadie.hPts, roadie.hToi)) + ' à domicile — ' + roadie.name);
   }
 
   panel.append(list);

@@ -33,7 +33,7 @@
     /* ---- 1. data ---- */
     ok(PLAYERS.length > 1000, 'player data loaded (' + PLAYERS.length + ')');
     ok(BY_ID.get(8478402) && BY_ID.get(8478402).n === 'Connor McDavid', 'lookup by id works');
-    ok(document.getElementById('dataStamp').textContent.indexOf('NHL players') > -1,
+    ok(document.getElementById('dataStamp').textContent.indexOf('joueurs LNH') > -1,
        'header stamp rendered: "' + document.getElementById('dataStamp').textContent + '"');
 
     /* ---- 2. search tiers ---- */
@@ -205,7 +205,7 @@
     /* 10d. "Keep" button also cancels */
     slots()[0].querySelector('.editbtn').click();
     const keepBtn = slots()[0].querySelector('.slotbtn');
-    ok(keepBtn && keepBtn.textContent === 'Keep', 'editor offers a Keep button');
+    ok(keepBtn && keepBtn.textContent === 'Garder', 'editor offers a Keep button');
     keepBtn.click();
     ok(editingSlot === null && JSON.stringify(YAN.picks) === JSON.stringify(keep),
        'Keep cancels without changing anything');
@@ -213,7 +213,7 @@
     /* 10e. "Empty" clears only that slot, no reorder */
     slots()[1].querySelector('.editbtn').click();
     const emptyBtn = slots()[1].querySelector('.slotbtn.danger');
-    ok(!!emptyBtn && emptyBtn.textContent === 'Empty', 'editor offers an Empty button');
+    ok(!!emptyBtn && emptyBtn.textContent === 'Vider', 'editor offers an Empty button');
     emptyBtn.click();
     ok(YAN.picks[1] === null, 'Empty clears slot 2');
     ok(YAN.picks[0] === keep[0], 'Empty leaves slot 1 in place');
@@ -244,20 +244,20 @@
     YAN.picks = normalizePicks(forwards);
     render();
     let banner = document.querySelector('#rosterPanel .banner');
-    ok(!!banner && /No defenseman/i.test(banner.textContent),
+    ok(!!banner && /Aucun défenseur/i.test(banner.textContent),
        'full roster with zero D raises the warning');
 
     YAN.picks = normalizePicks(forwards.slice(0, 11));
     render();
     banner = document.querySelector('#rosterPanel .banner');
-    ok(!!banner && /last pick must be a D/i.test(banner.textContent),
+    ok(!!banner && /dernier choix doit être un D/i.test(banner.textContent),
        '11 picks + no D warns that the last pick must be a D');
 
     const someD = PLAYERS.find(p => p.p === 'D');
     YAN.picks = normalizePicks(forwards.slice(0, 11).concat([someD.i]));
     render();
     banner = document.querySelector('#rosterPanel .banner');
-    ok(!!banner && /Roster complete/i.test(banner.textContent),
+    ok(!!banner && /Alignement complet/i.test(banner.textContent),
        'complete roster with a D shows the OK banner');
     ok(!document.querySelector('.searchwrap'), 'top search box hidden once roster is full');
     ok(document.querySelectorAll('#rosterPanel .slot.empty').length === 0,
@@ -279,8 +279,8 @@
     /* ---- 14. unknown player id degrades gracefully ---- */
     MARC.picks = normalizePicks([999999999]);
     selectedPoolerId = MARC.id; editingSlot = null; render();
-    ok(/Unknown player/.test(document.getElementById('rosterPanel').textContent),
-       'unrecognised player id renders as "Unknown player" instead of crashing');
+    ok(/Joueur inconnu/.test(document.getElementById('rosterPanel').textContent),
+       'unrecognised player id renders as "Joueur inconnu" instead of crashing');
 
     /* ---- 15. the published pool ----
        What a pooler opening the site on their own machine gets. */

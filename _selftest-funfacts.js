@@ -139,7 +139,7 @@
     /* ---- 11. empty pool ---- */
     state = { version: 2, rosterSize: 12, poolers: [] };
     render();
-    ok(/No poolers yet/.test(document.getElementById('content').textContent),
+    ok(/Aucun pooler/.test(document.getElementById('content').textContent),
        'an empty pool shows guidance instead of empty charts');
     ok(document.querySelectorAll('svg.chart').length === 0, 'no charts for an empty pool');
 

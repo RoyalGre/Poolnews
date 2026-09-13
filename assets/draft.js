@@ -38,7 +38,7 @@ function renderPoolers() {
   box.innerHTML = '';
 
   if (!state.poolers.length) {
-    box.innerHTML = '<div class="hint">No poolers yet.</div>';
+    box.innerHTML = '<div class="hint">Aucun pooler.</div>';
     return;
   }
 
@@ -60,7 +60,7 @@ function renderPoolers() {
     row.append(nm, ct);
     if (noD) {
       const f = el('span', 'flag', '⚠');
-      f.title = 'No defenseman on this roster';
+      f.title = 'Aucun défenseur dans cet alignement';
       row.append(f);
     }
     box.append(row);
@@ -72,7 +72,7 @@ function renderRoster() {
   const pl = state.poolers.find(p => p.id === selectedPoolerId);
 
   if (!pl) {
-    panel.innerHTML = '<div class="empty-state">Add a pooler on the left to start entering picks.</div>';
+    panel.innerHTML = '<div class="empty-state">Ajoutez un pooler à gauche pour commencer à entrer les choix.</div>';
     return;
   }
 
@@ -84,10 +84,10 @@ function renderRoster() {
   const h = el('h2');
   h.style.cssText = 'margin:0;flex:1;font-size:16px;text-transform:none;letter-spacing:0;color:var(--text)';
   const filled = filledCount(pl);
-  h.textContent = pl.name + ' — ' + filled + ' of ' + ROSTER_SIZE;
-  const del = el('button', null, 'Delete pooler');
+  h.textContent = pl.name + ' — ' + filled + ' sur ' + ROSTER_SIZE;
+  const del = el('button', null, 'Supprimer le pooler');
   del.onclick = () => {
-    if (!confirm('Delete "' + pl.name + '" and all ' + filled + ' picks?')) return;
+    if (!confirm('Supprimer « ' + pl.name + ' » et ses ' + filled + ' choix ?')) return;
     state.poolers = state.poolers.filter(x => x.id !== pl.id);
     selectedPoolerId = state.poolers[0] ? state.poolers[0].id : null;
     editingSlot = null;
@@ -99,12 +99,12 @@ function renderRoster() {
   /* --- warnings --- */
   const dCount = filledIds(pl).filter(id => (BY_ID.get(id) || {}).p === 'D').length;
   if (filled >= ROSTER_SIZE && dCount === 0) {
-    panel.append(banner('⚠ No defenseman on this roster. Scoring requires at least one D among the counting ' + COUNTING_SIZE + ' — this roster can never be scored legally.'));
+    panel.append(banner('⚠ Aucun défenseur dans cet alignement. Le pointage exige au moins un D parmi les ' + COUNTING_SIZE + ' qui comptent — cet alignement ne pourra jamais être pointé légalement.'));
   } else if (filled === ROSTER_SIZE - 1 && dCount === 0) {
-    panel.append(banner('⚠ One pick left and no defenseman yet — the last pick must be a D.'));
+    panel.append(banner('⚠ Un choix restant et toujours aucun défenseur — le dernier choix doit être un D.'));
   } else if (filled >= ROSTER_SIZE && dCount > 0) {
-    panel.append(banner('✓ Roster complete — ' + dCount + ' ' +
-      (dCount > 1 ? 'defensemen' : 'defenseman') + ' on board.', true));
+    panel.append(banner('✓ Alignement complet — ' + dCount + ' ' +
+      (dCount > 1 ? 'défenseurs' : 'défenseur') + ' en place.', true));
   }
 
   /* --- top search box: fills the first empty slot ---
@@ -136,18 +136,18 @@ function buildSlot(pl, i) {
     const num = el('span', 'num', String(i + 1));
     const search = buildSearch(pl, i);
 
-    const cancel = el('button', 'slotbtn', id === null ? 'Cancel' : 'Keep');
+    const cancel = el('button', 'slotbtn', id === null ? 'Annuler' : 'Garder');
     cancel.title = id === null
-      ? 'Leave this slot empty'
-      : 'Cancel and keep the current player';
+      ? 'Laisser cette case vide'
+      : 'Annuler et garder le joueur actuel';
     cancel.onclick = () => { editingSlot = null; render(); };
 
     row.append(num, search, cancel);
 
     // Only offer "Empty" when there's actually somebody to clear out.
     if (id !== null) {
-      const clear = el('button', 'slotbtn danger', 'Empty');
-      clear.title = 'Clear this slot without replacing the player';
+      const clear = el('button', 'slotbtn danger', 'Vider');
+      clear.title = 'Vider cette case sans remplacer le joueur';
       clear.onclick = () => {
         pl.picks[i] = null;
         editingSlot = null;
@@ -162,8 +162,8 @@ function buildSlot(pl, i) {
   if (id === null || id === undefined) {
     row.className = 'slot empty';
     row.innerHTML = '<span class="num">' + (i + 1) +
-                    '</span><span class="who">— click to pick —</span>';
-    row.title = 'Pick a player for slot ' + (i + 1);
+                    '</span><span class="who">— cliquez pour choisir —</span>';
+    row.title = 'Choisir un joueur pour la case ' + (i + 1);
     row.onclick = () => { editingSlot = i; render(); };
     return row;
   }
@@ -181,17 +181,17 @@ function buildSlot(pl, i) {
   } else {
     // Player id isn't in the current data file (traded away, retired, or the
     // data was refreshed since the pick was made). Keep the pick, flag it.
-    who.innerHTML = '<div>Unknown player</div><div class="sub">id ' + id + ' — not in current NHL data</div>';
+    who.innerHTML = '<div>Joueur inconnu</div><div class="sub">id ' + id + ' — absent des données LNH actuelles</div>';
   }
 
   const pts = el('span', 'pts', p ? p._pts + ' pt' : '');
-  if (p) pts.title = (p.g || 0) + 'G + ' + (p.a || 0) + 'A (' + (DATA.statsSeason || 'prev season') + ')';
+  if (p) pts.title = (p.g || 0) + 'G + ' + (p.a || 0) + 'A (' + (DATA.statsSeason || 'saison précédente') + ')';
 
   // Opens an in-place search for THIS slot rather than deleting the pick.
   // Nothing is changed until a replacement is chosen (or "Empty" is clicked),
   // so a mis-click costs nothing and the rest of the roster never shifts.
   const edit = el('button', 'editbtn', '✎');
-  edit.title = 'Change this pick';
+  edit.title = 'Changer ce choix';
   edit.onclick = () => { editingSlot = i; render(); };
 
   row.append(num, pos, who, pts, edit);
@@ -212,14 +212,14 @@ function buildSearch(pl, slotIndex) {
   const input = document.createElement('input');
   input.type = 'text';
   input.placeholder = currentPlayer
-    ? 'Replace ' + currentPlayer.n + ' in slot ' + (slotIndex + 1) + '…'
-    : 'Type a player name, then Enter  (slot ' + (slotIndex + 1) + ')';
+    ? 'Remplacer ' + currentPlayer.n + ' dans la case ' + (slotIndex + 1) + '…'
+    : 'Tapez un nom de joueur, puis Entrée  (case ' + (slotIndex + 1) + ')';
 
   const list = el('div', 'results');
 
   const hint = el('div', 'hint', currentPlayer
-    ? '↑ ↓ to move · Enter to replace · Esc to keep ' + currentPlayer.n
-    : '↑ ↓ to move · Enter to draft · Esc to clear · greyed-out players are already owned');
+    ? '↑ ↓ pour naviguer · Entrée pour remplacer · Échap pour garder ' + currentPlayer.n
+    : '↑ ↓ pour naviguer · Entrée pour repêcher · Échap pour effacer · les joueurs grisés sont déjà pris');
 
   wrap.append(input, list, hint);
 
@@ -291,7 +291,7 @@ function buildSearch(pl, slotIndex) {
     const p = results[idx];
     if (!p) return;
     if (owners.get(p.i)) {
-      flash(input, 'Already owned by ' + owners.get(p.i).name);
+      flash(input, 'Déjà pris par ' + owners.get(p.i).name);
       return;
     }
     if (slotIndex < 0 || slotIndex >= ROSTER_SIZE) return;
@@ -362,7 +362,7 @@ function addPooler() {
   const name = box.value.trim();
   if (!name) { box.focus(); return; }
   if (state.poolers.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-    alert('There is already a pooler named "' + name + '".');
+    alert('Il y a déjà un pooler nommé « ' + name + ' ».');
     return;
   }
   const pooler = { id: newPoolerId(), name: name, picks: emptyPicks() };
@@ -383,7 +383,7 @@ wirePublishedBadge();
 /* ---- Go ---------------------------------------------------------------- */
 if (!PLAYERS.length) {
   document.querySelector('main').insertAdjacentHTML('afterbegin',
-    '<div class="banner" style="grid-column:1/-1">No NHL player data loaded. ' +
-    'Run <code>refresh-players.ps1</code> to populate <code>data/players.js</code>.</div>');
+    '<div class="banner" style="grid-column:1/-1">Aucune donnée de joueurs LNH chargée. ' +
+    'Exécutez <code>refresh-players.ps1</code> pour remplir <code>data/players.js</code>.</div>');
 }
 render();
