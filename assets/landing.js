@@ -81,6 +81,7 @@ function render() {
 
 renderLede();
 renderPodium();
+wireSeasonBadge();
 wireThemeToggle();
 wirePublishedBadge();
 renderStamp();

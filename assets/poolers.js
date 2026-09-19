@@ -705,6 +705,7 @@ function onPoolImported() { curPooler = null; curPlayer = null; curDay = null; r
 /* ---- Go ---------------------------------------------------------------- */
 wireImportExport();
 wireDataMenu();
+wireSeasonBadge();
 wireThemeToggle();
 wireAutoRefresh();
 wirePublishedBadge();

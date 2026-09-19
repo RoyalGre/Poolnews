@@ -376,6 +376,7 @@ function addPooler() {
 
 wireImportExport();   /* the hidden file input behind Data > Import */
 wireDataMenu();
+wireSeasonBadge();
 wireThemeToggle();
 wireAutoRefresh();
 wirePublishedBadge();

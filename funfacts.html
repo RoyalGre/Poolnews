@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/theme.css?v=5e30e58c">
 <link rel="stylesheet" href="assets/site.css?v=bbfc9d55">
+<script src="data/seasons.js?v=ea0aa1ee"></script>
+<script src="assets/season.js?v=821f05b4"></script>
 <script src="assets/theme.js?v=30989c40"></script>
 </head>
 <body>
@@ -28,6 +30,7 @@
     <span class="controls" id="barControls"></span>
   </div>
   <div class="subbar">
+    <span class="stamp" id="seasonBadge"></span>
     <span class="stamp" id="dataStamp"></span>
     <span class="stamp" id="publishedBadge"></span>
   </div>
@@ -39,11 +42,8 @@
 </main>
 
 <!-- Data first, then shared code, then the page's own code. -->
-<script src="data/2025-26/players.js?v=bad792d8"></script>
-<script src="data/2025-26/history.js?v=6f305a92"></script>
-<script src="data/2025-26/advanced.js?v=1850109b"></script>
-<script src="data/2025-26/pool.js?v=6ef3c206"></script>
-<script src="assets/core.js?v=a2bf1109"></script>
-<script src="assets/funfacts.js?v=1afaa876"></script>
+<script>poolSeason.load(['players', 'history', 'advanced', 'pool']);</script>
+<script src="assets/core.js?v=480086be"></script>
+<script src="assets/funfacts.js?v=70308a02"></script>
 </body>
 </html>

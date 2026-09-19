@@ -59,6 +59,27 @@ is lost now: each build writes into its own season's folder.
 The two mini-game fallbacks stay at the root on purpose: their picks are keyed
 by weekend date, so they span seasons.
 
+**Pages load their season through `assets/season.js`**, which runs in `<head>`
+before `core.js` and emits the data `<script>` tags with `document.write`.
+That looks archaic on purpose: `core.js` reads `window.NHL_DATA` on its very
+first lines, so the globals must exist *before* it executes. A `fetch()` would
+resolve after, leaving `DATA` permanently empty, and deferring the indexing
+would mean rewriting every page and the self-test. `document.write` keeps the
+exact synchronous order the site already depends on, and works from `file://`.
+Each page declares what it needs: `poolSeason.load(['players','history','pool'])`.
+
+**A season need not hold every file.** 2026-27 has only `schedule` until the
+season starts, so the loader falls back per file to the newest season that has
+it, and records that in `poolSeason.borrowed`. The header badge then says so —
+*"chiffres de 2025-26 — la saison 2026-27 n'a pas encore commencé"* — because
+silently showing last season's standings under this season's name is the one
+genuinely misleading outcome. On an archived season it instead offers the way
+back to the current one.
+
+The reader's choice lives in `localStorage` under `hockeyPool.season`, beside
+the theme, so it follows them from tab to tab. `poolSeason.set()` reloads, since
+data is loaded at parse time.
+
 `season-path.ps1` holds the shared helpers — `Get-SeasonPath` builds the path,
 `Update-SeasonIndex` rewrites `data/seasons.js` from what is really on disk.
 **Resolve `$OutPath` only AFTER the season is known**: four scripts used to

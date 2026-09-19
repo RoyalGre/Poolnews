@@ -422,6 +422,39 @@ function wireThemeToggle() {
   }
 }
 
+/* The season being viewed, shown in the header of every page.
+
+   Silent on the current season -- saying "2026-27" all year is noise. It only
+   speaks up when the reader is looking at an archived season, where the risk
+   is real: standings that look wrong because they are last year's. */
+function wireSeasonBadge() {
+  var box = $('seasonBadge');
+  if (!box || !window.poolSeason || !poolSeason.label) return;
+  box.textContent = '';
+
+  // Looking at an archived season: say which, and offer the way back.
+  if (poolSeason.isPast()) {
+    box.textContent = 'saison ' + poolSeason.label + ' — ';
+    var back = el('button', 'linkbtn', 'revenir à ' + poolSeason.current);
+    back.title = 'Afficher la saison en cours';
+    back.onclick = function () { poolSeason.set(poolSeason.current); };
+    box.append(back);
+    return;
+  }
+
+  // On the current season, but some files came from an older one because
+  // this season has not produced them yet. Before opening night that is
+  // EVERY number on the page. Saying nothing would let a pooler read last
+  // season's standings as if they were this season's.
+  var from = poolSeason.borrowed || {};
+  var seasons = [];
+  for (var k in from) if (seasons.indexOf(from[k]) < 0) seasons.push(from[k]);
+  if (seasons.length) {
+    box.textContent = 'chiffres de ' + seasons.join(' et ') +
+                      " — la saison " + poolSeason.label + " n'a pas encore commencé";
+  }
+}
+
 /* When the site carries a published pool, say so in the header and offer a way
    back to it — a visitor who edited something locally otherwise has no clue why
    their standings disagree with everyone else's. */
