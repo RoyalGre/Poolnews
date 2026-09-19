@@ -49,7 +49,8 @@ $ProgressPreference    = 'SilentlyContinue'   # progress bars make web calls cra
 
 $root = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
-if ([string]::IsNullOrWhiteSpace($OutPath)) { $OutPath = Join-Path $root 'data\goals.js' }
+. (Join-Path $root 'season-path.ps1')
+# $OutPath is resolved once $Season is known (see section 1).
 
 $WEB  = 'https://api-web.nhle.com/v1'
 $STAT = 'https://api.nhle.com/stats/rest/en'
@@ -89,6 +90,13 @@ if ([string]::IsNullOrWhiteSpace($Season)) {
     }
 }
 if ([string]::IsNullOrWhiteSpace($Season)) { throw 'Could not determine a season with games.' }
+# Now that the season is known, point the output at its own folder. Data files
+# used to sit directly in data/ and hold one season, so a new season overwrote
+# the last one in place; they now live in data/<label>/ and nothing is lost.
+if ([string]::IsNullOrWhiteSpace($OutPath)) {
+    $OutPath = Get-SeasonPath -Root $root -Season $Season -Name 'goals'
+}
+
 
 $label = '{0}-{1}' -f $Season.Substring(0, 4), $Season.Substring(6, 2)
 Write-Host ("Season {0} ({1})" -f $Season, $label) -ForegroundColor Cyan

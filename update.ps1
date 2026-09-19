@@ -171,12 +171,27 @@ try {
     # The Thu/Fri/Sun schedule behind the "Qui va gagner ?" challenge. Like the
     # goal locations it banks finished games and only refetches weeks that still
     # hold unplayed ones, so a nightly run costs a request or two.
-    Run-Step 'schedule + results' 'build-schedule.ps1' @('-Season', $Season)
+    # The schedule belongs to the season being PLAYED, which is not the same as
+    # $Season above: that one is "the newest season with completed games", so
+    # before opening night it is still last season. Building the schedule for a
+    # finished season would produce a form nobody can pick.
+    $now       = Get-Date
+    $playYr    = if ($now.Month -ge 9) { $now.Year } else { $now.Year - 1 }
+    $playSeason = '{0}{1}' -f $playYr, ($playYr + 1)
+    Run-Step 'schedule + results' 'build-schedule.ps1' @('-Season', $playSeason)
 
     # The data files just changed, so the ?v= tags in the pages now point at
     # content that no longer exists. Restamping them is what makes a visitor's
     # browser fetch the new numbers instead of redrawing yesterday's from its
     # cache. Cheap, and safe to run when nothing changed.
+    # Data now lives in data/<label>/, so refresh the index of which seasons
+    # exist. Rebuilt from what is actually on disk, never hand-maintained.
+    . (Join-Path $root 'season-path.ps1')
+    # "current" is the season a visitor should land on -- the one being played,
+    # not the last one with finished stats.
+    $idx = Update-SeasonIndex -Root $root -Current (Get-SeasonLabel -Season $playSeason)
+    Log ("  season index: {0}" -f (Split-Path -Leaf $idx))
+
     Run-Step 'cache tags' 'stamp-assets.ps1' @('-Quiet')
 
     # -------------------------------------------------------------------------

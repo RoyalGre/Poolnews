@@ -133,7 +133,7 @@ foreach ($page in $stampPages) {
     if (-not (Test-Path $p)) { continue }
     $text = [System.IO.File]::ReadAllText($p, [System.Text.Encoding]::UTF8)
 
-    foreach ($m in [regex]::Matches($text, '(?:href|src)="((?:assets|data)/[A-Za-z0-9._-]+)(\?v=([0-9a-f]+))?"')) {
+    foreach ($m in [regex]::Matches($text, '(?:href|src)="((?:assets|data)/(?:[A-Za-z0-9._-]+/)?[A-Za-z0-9._-]+)(\?v=([0-9a-f]+))?"')) {
         $rel = $m.Groups[1].Value
         $tag = $m.Groups[3].Value
         $tagSeen++

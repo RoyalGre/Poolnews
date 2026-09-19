@@ -49,7 +49,9 @@ if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
 
 $WEB  = 'https://api-web.nhle.com/v1'
 $STAT = 'https://api.nhle.com/stats/rest/en'
-$OUT  = Join-Path $root 'data\schedule.js'
+# Resolved once the season is known -- the file lives in data/<label>/.
+$OUT  = ''
+. (Join-Path $root 'season-path.ps1')
 
 # The four days the challenge covers, Thursday through Sunday.
 $DEFI_DAYS = @('Thursday', 'Friday', 'Saturday', 'Sunday')
@@ -89,6 +91,9 @@ if (-not $info) { throw "Season $Season is unknown to the API." }
 $start = [datetime]$info.startDate
 $end   = [datetime]$info.regularSeasonEndDate
 $label = '{0}-{1}' -f $Season.Substring(0, 4), $Season.Substring(6, 2)
+if ([string]::IsNullOrWhiteSpace($OUT)) {
+    $OUT = Get-SeasonPath -Root $root -Season $Season -Name 'schedule'
+}
 
 Say ("Season {0} ({1}) : {2} -> {3}" -f $Season, $label,
      $start.ToString('yyyy-MM-dd'), $end.ToString('yyyy-MM-dd')) 'Cyan'

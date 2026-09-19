@@ -39,16 +39,37 @@ app pages: player index, search, saved state, **scoring**, weekly history.
 
 ## Data files — all generated, none hand-edited
 
+**Season data lives in `data/<label>/`** — `data/2025-26/players.js`,
+`data/2026-27/players.js`. It used to sit flat in `data/` with one file per
+kind, so starting a new season **overwrote the previous one in place**. Nothing
+is lost now: each build writes into its own season's folder.
+
 | File | Contents | Built by |
 |---|---|---|
-| `data/players.js` | every player + season G/A | `refresh-players.ps1` |
-| `data/history.js` | 28 weekly cumulative snapshots | `build-history.ps1` |
-| `data/advanced.js` | ice time, shots, PIM, streaks | `build-advanced.ps1` |
-| `data/goals.js` | every goal + ice coordinates (~1.6 MB) | `build-goals.ps1` |
-| `data/pool.js` | the published pool everyone sees | `publish-pool.ps1` |
-| `data/defi.js` | zone-game offline fallback | **hand-written** — the one exception |
-| `data/schedule.js` | Thu–Sun games + winners | `build-schedule.ps1` |
+| `data/<season>/players.js` | every player + season G/A | `refresh-players.ps1` |
+| `data/<season>/history.js` | weekly cumulative snapshots | `build-history.ps1` |
+| `data/<season>/advanced.js` | ice time, shots, PIM, streaks | `build-advanced.ps1` |
+| `data/<season>/goals.js` | every goal + ice coordinates (~1.7 MB) | `build-goals.ps1` |
+| `data/<season>/pool.js` | the published pool everyone sees | `publish-pool.ps1` |
+| `data/<season>/schedule.js` | Thu–Sun games + winners | `build-schedule.ps1` |
+| `data/seasons.js` | which seasons exist, which is current | rebuilt by every run |
+| `data/defi.js` | zone-game offline fallback | **hand-written** |
 | `data/defis.js` | winner-game offline fallback | **hand-written** |
+
+The two mini-game fallbacks stay at the root on purpose: their picks are keyed
+by weekend date, so they span seasons.
+
+`season-path.ps1` holds the shared helpers — `Get-SeasonPath` builds the path,
+`Update-SeasonIndex` rewrites `data/seasons.js` from what is really on disk.
+**Resolve `$OutPath` only AFTER the season is known**: four scripts used to
+default it near the top of the file, long before they probe the API, and doing
+that now bakes in the wrong folder. `-StatsOnly` in `refresh-players.ps1` reads
+`$OutPath` early, so that one resolves before the branch.
+
+Two seasons are not the same thing: **the season with finished stats** (what
+`update.ps1` detects) and **the season being played** (the calendar one). Before
+opening night they differ, so `update.ps1` builds the schedule for the latter
+and marks it `current` in the index.
 
 ## Routine tasks
 

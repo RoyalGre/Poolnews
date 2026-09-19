@@ -36,7 +36,8 @@ $ProgressPreference    = 'SilentlyContinue'
 
 $root = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
-if ([string]::IsNullOrWhiteSpace($OutPath)) { $OutPath = Join-Path $root 'data\advanced.js' }
+. (Join-Path $root 'season-path.ps1')
+# $OutPath is resolved once $Season is known (see section 1).
 
 $STAT = 'https://api.nhle.com/stats/rest/en'
 
@@ -68,6 +69,13 @@ if ([string]::IsNullOrWhiteSpace($Season)) {
     }
 }
 if (-not $Season) { throw 'No season with stats found.' }
+# Now that the season is known, point the output at its own folder. Data files
+# used to sit directly in data/ and hold one season, so a new season overwrote
+# the last one in place; they now live in data/<label>/ and nothing is lost.
+if ([string]::IsNullOrWhiteSpace($OutPath)) {
+    $OutPath = Get-SeasonPath -Root $root -Season $Season -Name 'advanced'
+}
+
 
 Write-Host "Season $Season" -ForegroundColor Cyan
 $exp     = [uri]::EscapeDataString("seasonId=$Season and gameTypeId=2")

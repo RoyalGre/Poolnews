@@ -24,14 +24,35 @@
 param(
     [string] $PoolFile = '',
     [string] $OutPath  = '',
-    [string] $Label    = ''      # shown in the header; defaults to today's date
+    [string] $Label    = '',     # shown in the header; defaults to today's date
+    [string] $Season   = ''      # 20262027; empty = the current season in data/seasons.js
 )
 
 $ErrorActionPreference = 'Stop'
 
 $root = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
-if ([string]::IsNullOrWhiteSpace($OutPath)) { $OutPath = Join-Path $root 'data\pool.js' }
+. (Join-Path $root 'season-path.ps1')
+
+# A pool belongs to one season: the 2025-26 draft is not the 2026-27 draft.
+# Without this the new season's rosters would overwrite last year's in place.
+if ([string]::IsNullOrWhiteSpace($Season)) {
+    $idx = Join-Path $root 'data\seasons.js'
+    if (Test-Path $idx) {
+        $txt  = [System.IO.File]::ReadAllText($idx, [Text.Encoding]::UTF8)
+        $j    = $txt.Substring($txt.IndexOf('{')).TrimEnd() -replace ';\s*$', '' | ConvertFrom-Json
+        $cur  = [string]$j.current                       # e.g. 2026-27
+        $yr   = [int]$cur.Substring(0, 4)
+        $Season = '{0}{1}' -f $yr, ($yr + 1)
+    } else {
+        $now  = Get-Date
+        $yr   = if ($now.Month -ge 9) { $now.Year } else { $now.Year - 1 }
+        $Season = '{0}{1}' -f $yr, ($yr + 1)
+    }
+}
+if ([string]::IsNullOrWhiteSpace($OutPath)) {
+    $OutPath = Get-SeasonPath -Root $root -Season $Season -Name 'pool'
+}
 if ([string]::IsNullOrWhiteSpace($Label))   { $Label   = Get-Date -Format 'yyyy-MM-dd HH:mm' }
 
 if ([string]::IsNullOrWhiteSpace($PoolFile)) { throw 'Pass -PoolFile: the JSON exported from the site.' }
@@ -42,7 +63,7 @@ $pool = [System.IO.File]::ReadAllText($PoolFile, [System.Text.Encoding]::UTF8) |
 if (-not $pool.poolers) { throw "$PoolFile does not look like a pool export (no 'poolers')." }
 
 # ---- check it against the player data before publishing it ------------------
-$playersPath = Join-Path $root 'data\players.js'
+$playersPath = Get-SeasonPath -Root $root -Season $Season -Name 'players'
 $known = @{}
 if (Test-Path $playersPath) {
     $txt = [System.IO.File]::ReadAllText($playersPath, [System.Text.Encoding]::UTF8)

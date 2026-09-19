@@ -36,11 +36,13 @@ $ProgressPreference     = 'SilentlyContinue'   # progress bars make web calls cr
 
 # Resolve here rather than in the param() default: $PSScriptRoot isn't reliably
 # populated in a default-value expression under Windows PowerShell 5.1.
-if ([string]::IsNullOrWhiteSpace($OutPath)) {
-    $root = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
-    if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
-    $OutPath = Join-Path $root 'data\players.js'
-}
+$root = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
+
+. (Join-Path $root 'season-path.ps1')
+
+# $OutPath stays empty here on purpose: the season is not known until the probe
+# below, and the file now lives in data/<label>/. Resolved right after that.
 
 $WEB  = 'https://api-web.nhle.com/v1'
 $STAT = 'https://api.nhle.com/stats/rest/en'
@@ -60,6 +62,20 @@ $players = [System.Collections.Generic.List[object]]::new()
 $seen    = [System.Collections.Generic.HashSet[int]]::new()
 $failed  = @()
 $teams   = @()
+
+# data/<label>/players.js -- one folder per season, nothing overwritten. This
+# must be resolved BEFORE the -StatsOnly branch below, which reads $OutPath to
+# load the existing list. When -StatsSeason was not passed it is still empty
+# here; the probe further down fills it, so fall back to the calendar season.
+if ([string]::IsNullOrWhiteSpace($OutPath)) {
+    $seasonForPath = $StatsSeason
+    if ([string]::IsNullOrWhiteSpace($seasonForPath)) {
+        $nowY = Get-Date
+        $yrP  = if ($nowY.Month -ge 9) { $nowY.Year } else { $nowY.Year - 1 }
+        $seasonForPath = '{0}{1}' -f $yrP, ($yrP + 1)
+    }
+    $OutPath = Get-SeasonPath -Root $root -Season $seasonForPath -Name 'players'
+}
 
 if ($StatsOnly) {
     # -------------------------------------------------------------------------

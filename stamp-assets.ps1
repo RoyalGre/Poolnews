@@ -71,7 +71,7 @@ function Get-Tag([string] $Path) {
 
 # href="assets/site.css"  or  src="data/goals.js?v=deadbeef"
 # Captures: 1 attribute, 2 path, 3 any existing ?v=...
-$rx = [regex]'(href|src)="((?:assets|data)/[A-Za-z0-9._-]+)(\?v=[0-9a-f]+)?"'
+$rx = [regex]'(href|src)="((?:assets|data)/(?:[A-Za-z0-9._-]+/)?[A-Za-z0-9._-]+)(\?v=[0-9a-f]+)?"'
 
 $tagCache = @{}
 $changed  = 0
