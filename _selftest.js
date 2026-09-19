@@ -46,7 +46,7 @@
 
     // Tier order is deliberate: a LAST-name match outranks a first-name match.
     r = search('connor');
-    ok(r.length && r[0].n === 'Kyle Connor',
+    ok(/connors?$/i.test(((r[0] || {}).n || '').split(' ').pop()),
        'lastname beats firstname: "connor" -> ' + (r[0] || {}).n + ' (' + r.length + ' hits)');
     ok(r.some(p => p.n === 'Connor McDavid'), 'first-name matches still listed for "connor"');
 

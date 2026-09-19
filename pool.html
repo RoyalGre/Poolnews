@@ -8,8 +8,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/theme.css?v=5e30e58c">
 <link rel="stylesheet" href="assets/site.css?v=6e2b677f">
-<script src="data/seasons.js?v=ea0aa1ee"></script>
-<script src="assets/season.js?v=821f05b4"></script>
+<script src="data/seasons.js?v=a454bc5a"></script>
+<script src="assets/season.js?v=3b601bcd"></script>
 <script src="assets/theme.js?v=30989c40"></script>
 </head>
 <body>
@@ -57,7 +57,10 @@
 <!-- Data first, then shared code, then the page's own code. These are plain
      <script src> tags, which a file:// page is allowed to load — fetch() of a
      local .json would be blocked by CORS, which is why the data ships as JS. -->
-<script>poolSeason.load(['players', 'history', 'pool']);</script>
+<!-- own: true — on repêche dans la liste de CETTE saison, vers le pool
+     (vide) de cette saison. Les autres pages veulent plutôt un jeu de
+     statistiques cohérent, quitte à montrer celles de l'an dernier. -->
+<script>poolSeason.load(['players', 'history', 'pool'], { own: true });</script>
 <script src="assets/core.js?v=480086be"></script>
 <script src="assets/draft.js?v=5dfd1857"></script>
 </body>

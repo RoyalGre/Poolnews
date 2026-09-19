@@ -65,8 +65,39 @@
      So: prefer the chosen season, and fall back to the newest season that
      does have the file. Genuinely absent everywhere -> skip it, because the
      pages already cope with a missing global ("run build-goals.ps1"). */
+  function holds(lbl, name) {
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].label === lbl) return all[i].files.indexOf(name) >= 0;
+    }
+    return false;
+  }
+
+  /* Stats files only make sense together. players.js carries the points,
+     advanced.js the ice time, history.js the weekly totals, goals.js the
+     coordinates -- mixing seasons gives nonsense like 2025-26 ice time
+     divided by 2026-27 points (all zero before the first game), so P/60
+     reads 0 and the page looks broken rather than not-yet-started.
+
+     So: if the chosen season has no history of its own, the whole stats
+     family follows whichever season does, and the pool with it. Only the
+     schedule stays on the chosen season -- that one is about games to come,
+     not results. */
+  var STATS = ['players', 'history', 'advanced', 'goals', 'pool'];
+
+  function statsHome() {
+    if (holds(label, 'history')) return label;
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].files.indexOf('history') >= 0) return all[i].label;
+    }
+    return label;
+  }
+
   function folderFor(name) {
-    if (rec && rec.files.indexOf(name) >= 0) return label;
+    if (STATS.indexOf(name) >= 0) {
+      var home = statsHome();
+      return holds(home, name) ? home : (holds(label, name) ? label : null);
+    }
+    if (holds(label, name)) return label;
     for (var i = 0; i < all.length; i++) {
       if (all[i].files.indexOf(name) >= 0) return all[i].label;
     }
@@ -77,11 +108,17 @@
      use this to say so rather than quietly showing last year's numbers. */
   window.poolSeason.borrowed = {};
 
-  window.poolSeason.load = function (names) {
+  /* Pages that SHOW results want a coherent set of stats, even if that means
+     last season's. The draft page wants the opposite: this season's roster
+     and this season's (empty) pool, because that is what you are drafting
+     into. Passing { own: true } asks for the chosen season wherever it has
+     the file, with no family rule. */
+  window.poolSeason.load = function (names, opts) {
     if (!label) return;
+    var own = !!(opts && opts.own);
     for (var i = 0; i < names.length; i++) {
       var n = names[i];
-      var from = folderFor(n);
+      var from = own ? (holds(label, n) ? label : folderFor(n)) : folderFor(n);
       if (!from) continue;
       if (from !== label) window.poolSeason.borrowed[n] = from;
       document.write('<scr' + 'ipt src="data/' + from + '/' + n + '.js"></scr' + 'ipt>');
