@@ -847,6 +847,31 @@ svg.rink text.df-lbl-s {
 .rg-split .prose p { margin: 0 0 10px; }
 .rg-split .prose p:last-child { margin-bottom: 0; }
 
+/* Le classement final de la saison précédente : une ligne par pooleur, ce
+   qu'il a touché à droite. Le vert et le rouge portent l'information —
+   qui a encaissé, qui a remis — sans avoir à lire les chiffres. */
+.rg-final { display: flex; flex-direction: column; }
+.rg-frow {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 6px 2px; border-bottom: 1px solid var(--border);
+}
+.rg-frow:last-child { border-bottom: 0; }
+.rg-frow .rank { width: 20px; font-size: 13px; flex: none; }
+.rg-fnm { flex: 1; font-size: 14px; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rg-frow.top .rg-fnm { font-weight: 600; }
+.rg-fpts {
+  font-family: var(--f-mono); font-size: 12px; color: var(--muted);
+  font-variant-numeric: tabular-nums; flex: none;
+}
+.rg-fcash {
+  font-family: var(--f-mono); font-size: 13px; font-weight: 600;
+  width: 62px; text-align: right; flex: none;
+  font-variant-numeric: tabular-nums; color: var(--muted);
+}
+.rg-frow.top .rg-fcash { color: var(--ok); }
+.rg-frow.pay .rg-fcash { color: var(--danger); }
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }

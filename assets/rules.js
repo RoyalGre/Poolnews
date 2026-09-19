@@ -11,7 +11,7 @@
    ========================================================================= */
 
 const REGLES = {
-  saison: '2025-26',
+  saison: '2026-27',
   cotisation: { base: 80, poolexpert: 2 },
   bourses: [
     { rang: '1re position', montant: 540 },
@@ -20,14 +20,17 @@ const REGLES = {
     { rang: '4e position',  montant: 0 }
   ],
   // Le bas du classement paie : c'est ce qui garde la fin de saison vivante.
+  // 12 pooleurs en 2026-27 au lieu de 11 : la 6e position ne paie plus rien
+  // et le barème glisse d'un rang, jusqu'à la 12e.
   penalites: [
     { rang: '5e',  montant: 0 },
-    { rang: '6e',  montant: 10 },
-    { rang: '7e',  montant: 15 },
-    { rang: '8e',  montant: 20 },
-    { rang: '9e',  montant: 25 },
-    { rang: '10e', montant: 30 },
-    { rang: '11e', montant: 35 }
+    { rang: '6e',  montant: 0 },
+    { rang: '7e',  montant: 10 },
+    { rang: '8e',  montant: 15 },
+    { rang: '9e',  montant: 20 },
+    { rang: '10e', montant: 25 },
+    { rang: '11e', montant: 30 },
+    { rang: '12e', montant: 35 }
   ],
   ballottage: {
     maxJoueurs: 2,
@@ -35,6 +38,27 @@ const REGLES = {
     cout: 10,
     penaliteNonComptant: 10
   }
+};
+
+/* Le classement final de la saison précédente, avec ce que chacun a touché
+   ou remis. Les points viennent de data/2025-26/, recalculés avec la règle
+   du pool ; les montants suivent le barème de CETTE saison-là, à 11
+   pooleurs, pas celui de 2026-27. */
+const SAISON_PRECEDENTE = {
+  saison: '2025-26',
+  poolers: [
+    { rang: 1,  nom: 'Steve T.',     pts: 778, bourse: 540 },
+    { rang: 2,  nom: 'Frédérick D.', pts: 756, bourse: 220 },
+    { rang: 3,  nom: 'Martin M.',    pts: 752, bourse: 120 },
+    { rang: 4,  nom: 'Martin Pr.',   pts: 734, bourse: 0   },
+    { rang: 5,  nom: 'Yanick M.',    pts: 712, bourse: 0   },
+    { rang: 6,  nom: 'Eric C.',      pts: 709, bourse: -10 },
+    { rang: 7,  nom: 'Pascal R.',    pts: 699, bourse: -15 },
+    { rang: 8,  nom: 'François C.',  pts: 696, bourse: -20 },
+    { rang: 9,  nom: 'Dany P.',      pts: 692, bourse: -25 },
+    { rang: 10, nom: 'Manuel T.',    pts: 681, bourse: -30 },
+    { rang: 11, nom: 'Patrick C.',   pts: 634, bourse: -35 }
+  ]
 };
 
 function euro(n) { return n + ' $'; }
@@ -86,8 +110,27 @@ function render() {
 
   split.append(gauche);
 
-  /* ---- Colonne de droite : les règles ---- */
+  /* ---- Colonne de droite : la saison précédente, puis les règles ---- */
   const droite = el('div');
+
+  // Ce que le barème a réellement donné l'an dernier : plus parlant qu'un
+  // tableau de montants théoriques, et ça rappelle que le bas paie.
+  const sp = SAISON_PRECEDENTE;
+  const tbl = el('div', 'rg-final');
+  sp.poolers.forEach(p => {
+    const r = el('div', 'rg-frow' + (p.rang <= 3 ? ' top' : '') +
+                        (p.bourse < 0 ? ' pay' : ''));
+    r.append(el('span', 'rank' + (p.rang <= 3 ? ' r' + p.rang : ''), String(p.rang)));
+    r.append(el('span', 'rg-fnm', p.nom));
+    r.append(el('span', 'rg-fpts', p.pts + ' pts'));
+    r.append(el('span', 'rg-fcash',
+      p.bourse > 0 ? '+' + euro(p.bourse) : (p.bourse < 0 ? euro(p.bourse) : '—')));
+    tbl.append(r);
+  });
+  const noteFin = el('p', 'hint',
+    'Les gagnants se partagent en plus la bourse du ballottage, en quatre ' +
+    'parts égales. Barème de ' + sp.saison + ', à 11 pooleurs.');
+  droite.append(bloc('Bourses finales ' + sp.saison, [tbl, noteFin]));
 
   const reg = el('div', 'prose');
   reg.innerHTML =
