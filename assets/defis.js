@@ -2,13 +2,19 @@
    defis.js — « Qui va gagner ? », le défi des vainqueurs.
 
    Chaque semaine, les pooleurs choisissent l'équipe gagnante de chaque match
-   du jeudi, du vendredi et du dimanche. Le plus grand nombre de bonnes
-   réponses l'emporte. Les égalités partagent le même rang, comme au
-   classement : avec une quinzaine de matchs, elles sont fréquentes et un
-   bris d'égalité artificiel récompenserait autre chose que le pronostic.
+   du jeudi au dimanche. Le plus grand nombre de bonnes réponses l'emporte.
+   Les égalités partagent le même rang, comme au classement : avec une
+   trentaine de matchs, elles sont fréquentes et un bris d'égalité artificiel
+   récompenserait autre chose que le pronostic.
 
-   Les mêmes trois jours que le défi des zones, et la même limite : mercredi
-   23 h 59. Un pooleur remplit les deux formulaires dans la même visite.
+   Le samedi a d'abord été exclu — c'est le gros soir de hockey et il double
+   presque le formulaire, 18 matchs par fin de semaine sans lui contre 31 avec
+   — mais c'est justement le soir que les pooleurs regardent. D'où les boutons
+   réduits à un écusson et trois lettres : trente rangées doivent tenir sans
+   noyer la page.
+
+   Même limite que le défi des zones : mercredi 23 h 59. Un pooleur remplit
+   les deux formulaires dans la même visite.
 
    Les matchs viennent de data/schedule.js (build-schedule.ps1), qui porte
    déjà le vainqueur de chaque match joué. La page ne calcule donc rien de
@@ -17,6 +23,41 @@
 
 const SCHED    = window.NHL_SCHEDULE || null;
 const SCH_GAMES = SCHED ? SCHED.games : [];
+const SCH_TEAMS = SCHED ? (SCHED.teams || {}) : {};
+const LOGO_PRE  = SCHED ? (SCHED.logoPrefix || '') : '';
+
+/* ---- Les équipes --------------------------------------------------------
+   build-schedule.ps1 range le nom de ville et le surnom de chaque équipe
+   dans le fichier, déjà en français quand la LNH le fournit (Montréal,
+   Philadelphie, Caroline). Si une équipe manquait à la table — une nouvelle
+   concession, par exemple — on retombe sur l'abréviation plutôt que sur du
+   vide. */
+function teamName(ab) {
+  const t = SCH_TEAMS[ab];
+  return t && t.p ? t.p : ab;
+}
+function teamFull(ab) {
+  const t = SCH_TEAMS[ab];
+  return t && t.p && t.c ? t.p + ' ' + t.c : ab;
+}
+
+/* L'écusson vient du CDN de la LNH. Deux variantes existent, claire et
+   sombre : la sombre est dessinée POUR un fond sombre, alors on la sert
+   quand le thème est sombre. Le <img> est décoratif — le nom de l'équipe est
+   juste à côté en toutes lettres — donc alt vide, et il se retire tout seul
+   s'il ne charge pas plutôt que d'afficher une icône brisée. */
+function teamLogo(ab) {
+  const img = document.createElement('img');
+  img.className = 'sc-logo';
+  img.alt = '';
+  img.loading = 'lazy';
+  img.width = 22;
+  img.height = 22;
+  const dark = window.poolTheme && window.poolTheme.effective() === 'dark';
+  img.src = LOGO_PRE + ab + (dark ? '_dark.svg' : '_light.svg');
+  img.onerror = () => { img.remove(); };
+  return img;
+}
 
 /* ---- Les fins de semaine -----------------------------------------------
    Même découpage que le défi des zones : une fin de semaine est identifiée
@@ -159,7 +200,7 @@ function render() {
   const list = schWeekends();
   if (!list.length) {
     const p = el('div', 'panel');
-    p.append(el('div', 'empty-state', 'Aucun match de jeudi, vendredi ou dimanche au calendrier.'));
+    p.append(el('div', 'empty-state', 'Aucun match du jeudi au dimanche au calendrier.'));
     box.append(p);
     return;
   }
@@ -170,7 +211,10 @@ function render() {
   box.append(schToolbar(list, cur));
   box.append(schRules(cur));
 
-  const split = el('div', 'df-split');
+  // sc-split, pas df-split : ici la colonne étroite est à GAUCHE (la liste des
+  // matchs, réduite à des écussons) et la large à droite, pour les résultats
+  // et le cumul des semaines.
+  const split = el('div', 'sc-split');
   split.append(schForm(cur));
   split.append(schBoard(cur));
   box.append(split);
@@ -215,8 +259,8 @@ function schRules(cur) {
   p.append(el('h2', null, 'La règle'));
   const d = el('div', 'prose');
   d.innerHTML =
-    'Choisissez l\'équipe gagnante de <b>chaque match</b> du jeudi, du vendredi ' +
-    'et du dimanche. Une bonne réponse vaut un point, et <b>le plus grand ' +
+    'Choisissez l\'équipe gagnante de <b>chaque match</b> du jeudi au ' +
+    'dimanche. Une bonne réponse vaut un point, et <b>le plus grand ' +
     'total gagne</b>. Une victoire en prolongation ou en tirs de barrage ' +
     'compte comme n\'importe quelle autre. Les égalités partagent le même ' +
     'rang. Les prédictions ferment <b>' + SCH_LOCK_TXT + '</b>, la veille des ' +
@@ -271,9 +315,15 @@ function schForm(w) {
     rows.append(el('div', 'sc-day', JOURS[dt.getUTCDay()] + ' ' + pr[2] + '/' + pr[1]));
 
     games.forEach(g => {
+      // L'écusson et l'abréviation suffisent : avec le samedi, une fin de
+      // semaine compte une trentaine de matchs, et trois lignes de « New
+      // Jersey » par rangée noieraient la liste. Le nom de ville complet
+      // reste dans l'infobulle, et la colonne de droite récupère la place.
       const line = el('div', 'sc-game');
       const mk = (team, cls) => {
-        const b = el('button', 'sc-team ' + cls, team);
+        const b = el('button', 'sc-team ' + cls);
+        b.append(teamLogo(team), el('span', 'sc-ab', team));
+        b.title = teamFull(team);
         b.onclick = () => { chosen[g.id] = team; paint(); };
         buttons.push({ btn: b, gid: g.id, team: team });
         return b;

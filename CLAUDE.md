@@ -47,7 +47,7 @@ app pages: player index, search, saved state, **scoring**, weekly history.
 | `data/goals.js` | every goal + ice coordinates (~1.6 MB) | `build-goals.ps1` |
 | `data/pool.js` | the published pool everyone sees | `publish-pool.ps1` |
 | `data/defi.js` | zone-game offline fallback | **hand-written** — the one exception |
-| `data/schedule.js` | Thu/Fri/Sun games + winners | `build-schedule.ps1` |
+| `data/schedule.js` | Thu–Sun games + winners | `build-schedule.ps1` |
 | `data/defis.js` | winner-game offline fallback | **hand-written** |
 
 ## Routine tasks
@@ -136,11 +136,11 @@ The strongest check: the Pooleurs page counts individual goals while
 
 - **Whether goalies should be draftable at all.** Under pure G+A a goalie scores
   ~0. They are currently in the pickable list. Unanswered since 2026-09-05.
-- **How the mini-game's picks get collected.** The game itself is built and
-  answered (see below); what is still open is the backend. Firebase project
-  `poolnews-846e0` exists with a web app registered, but `defi.js` still reads
-  `window.DEFI_PICKS` from a hand-written `data/defi.js`. All pick access goes
-  through `picksFor()`, so wiring Firestore touches that one function.
+- **Cumulative standings across weekends.** Both mini-games score one weekend
+  at a time; nothing yet adds them up over a season, so a pooler who misses two
+  weeks has nothing to come back to. The wide right column of `defis.html` was
+  laid out with this in mind. Undecided: whether a missed week counts as zero or
+  is skipped.
 - **Firestore is open with no guard, until 2026-12-31.** `firestore.rules` in
   this repo is the source of truth. The repo is public, so anyone who finds the
   project id can read or overwrite every pick. Deliberate and temporary — the
@@ -173,15 +173,24 @@ an honour-based convention.
 
 ## The second mini-game: « Qui va gagner ? » — added 2026-09-13
 
-`defis.html` + `assets/defis.js`. Poolers pick the winner of **every** Thu/Fri/Sun
-game; one point each, most correct wins, **ties share a rank** (no tiebreak), and
-**all games must be picked** before the form submits. OT and shootout winners
-count normally. Same Wednesday 23:59 deadline as the zone game.
+`defis.html` + `assets/defis.js`. Poolers pick the winner of **every** game from
+**Thursday to Sunday**; one point each, most correct wins, **ties share a rank**
+(no tiebreak), and **all games must be picked** before the form submits. OT and
+shootout winners count normally. Same Wednesday 23:59 deadline as the zone game.
+
+Saturday was excluded at first — it is the big hockey night and nearly doubles
+the form, **18 games a weekend without it against 31 with** — but it is the night
+poolers actually watch, so it was added on 2026-09-13. That is why each team is
+just a crest and a three-letter code: thirty rows have to fit without drowning
+the page, and the full city name lives in the tooltip. The match list sits in a
+narrow **left** column (`.sc-split`, the mirror of the zone game's `.df-split`)
+so results and week-over-week standings get the wide side.
 
 `build-schedule.ps1` writes `data/schedule.js`: one request **per week** (not per
 day), ~28 for a season, and finished games are banked so a nightly run costs one
-or two. 2026-27 holds **497** Thu/Fri/Sun games over 27 weekends, 7–25 per
-weekend (median 19). It runs inside `update.ps1` right after the goal locations.
+or two. 2026-27 holds **839** Thu–Sun games over 27 weekends. It runs inside
+`update.ps1` right after the goal locations. Changing which weekdays count means
+rerunning it with **`-Full`** — the bank is keyed to the old day set.
 
 **Two traps this build hit, both now guarded:**
 
@@ -192,7 +201,7 @@ weekend (median 19). It runs inside `update.ps1` right after the goal locations.
   a sample week carry a UTC date one day *later* than their real schedule day, so
   bucketing on it scatters nearly every Thursday game into Friday. The API's own
   `gameWeek[].date` is the local day — key on that. The builder throws if any
-  game lands outside Thu/Fri/Sun.
+  game lands outside Thu–Sun.
 
 Firestore uses a **separate top-level collection**, `defis/{weekend}/picks/{name}`.
 A rule on `/defi` does **not** cover `/defis`; they are unrelated collections and

@@ -20,3 +20,7 @@ Historique_PoolNews_1994-2025.xlsx
 historique-1994-2025.json
 build-historique-json.py
 migrate-to-source-json.py
+
+# Feuille de comptes du pool — donnees personnelles, jamais dans un depot public.
+Comptes.xlsx
+*.xlsx

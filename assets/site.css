@@ -572,7 +572,15 @@ svg.rink .puck:focus-visible { outline: 2px solid var(--accent); outline-offset:
    La patinoire à gauche, le pointage à droite, comme la page Pooleurs : les
    deux pages parlent des mêmes buts, elles doivent se lire pareil.
    ========================================================================= */
+/* Défi des zones : la patinoire à gauche, le pointage à droite. */
 .df-split { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+
+/* « Qui va gagner ? » : l'inverse. Depuis que les boutons se résument à un
+   écusson et trois lettres, la liste des matchs tient dans une colonne
+   étroite — et tout ce qui reste va aux résultats et au cumul des semaines. */
+.sc-split { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 18px; align-items: start; }
+.sc-split > .panel { margin-top: 0; }
+@media (max-width: 980px) { .sc-split { grid-template-columns: 1fr; } }
 .df-split > .panel { margin-top: 0; }
 .df-split > div > .panel:first-child { margin-top: 0; }
 @media (max-width: 980px) { .df-split { grid-template-columns: 1fr; } }
@@ -725,22 +733,31 @@ svg.rink text.df-lbl-s {
 }
 .sc-day:first-child { margin-top: 0; }
 
-.sc-game { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+/* Une trentaine de matchs par fin de semaine depuis l'ajout du samedi : la
+   rangée doit rester courte. L'écusson porte l'identité, l'abréviation la
+   confirme, et le nom de ville complet vit dans l'infobulle. */
+.sc-game { display: flex; align-items: center; gap: 5px; padding: 1px 0; }
 .sc-team {
-  flex: 1; min-width: 0;
-  font-family: var(--f-mono); font-size: 13px; font-weight: 600;
+  flex: none; width: 96px;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--f-mono); font-size: 12px; font-weight: 600;
   letter-spacing: .04em;
-  padding: 8px 10px; border-radius: 7px;
+  padding: 5px 8px; border-radius: 6px;
   border: 1px solid var(--border); background: var(--panel-2);
   color: var(--ink-2);
   transition: border-color .12s, background .12s, color .12s;
 }
 .sc-team:hover { border-color: var(--accent); color: var(--ink); }
-.sc-team.on {
-  background: var(--blue); border-color: var(--blue); color: #fff;
-}
-.sc-team.away { text-align: right; }
-.sc-team.home { text-align: left; }
+.sc-team.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+/* Le visiteur se lit vers la droite, le local vers la gauche : les deux
+   écussons se rejoignent au « @ », comme dans un vrai calendrier. */
+.sc-team.away { flex-direction: row-reverse; justify-content: flex-start; }
+.sc-team.home { justify-content: flex-start; }
+
+/* Hauteur fixe : les 32 écussons n'ont pas du tout les mêmes proportions. */
+.sc-logo { width: 19px; height: 19px; flex: none; object-fit: contain; }
+.sc-ab { flex: none; }
+.sc-team.on .sc-ab { color: #fff; }
 .sc-at {
   font-family: var(--f-mono); font-size: 10px; color: var(--faint);
   flex: none; width: 14px; text-align: center;
