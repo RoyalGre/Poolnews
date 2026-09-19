@@ -49,17 +49,47 @@
     ok(statsAtWeek(5)(-1).g === 0, 'unknown id at a given week scores 0 rather than throwing');
 
     /* ---- 3. scoring: best 10 of 12 ---- */
-    // Ten forwards worth 100..91, two more worth 90 and 89: the top 10 count.
-    let ids = fwd.slice(0, 12).map(p => p.i);
+    // Eleven forwards and one real defenceman, worth 100..89. The D sits
+    // 5th, so the natural top 10 is already legal and no swap is needed.
+    let ids = fwd.slice(0, 11).map(p => p.i);
+    ids.splice(4, 0, def[0].i);
     let map = {};
     ids.forEach((id, i) => { map[id] = { g: 100 - i, a: 0 }; });
-    // ...but give one of them a D position by using a real D instead.
     let sc = scoreRoster(ids, stub(map));
     ok(sc.rows.length === 12, 'all 12 picks scored');
     ok(sc.counting.length === 10, 'exactly 10 count');
     ok(sc.pts === 955, 'counting total is the best 10 (100..91 = 955), got ' + sc.pts);
     ok(sc.total12 === 1134, 'all-12 total kept separately, got ' + sc.total12);
     ok(sc.bench.length === 2 && sc.bench[0].pts === 90, 'the two weakest are benched');
+    ok(!sc.shortHanded, 'a roster with a defenceman is not short-handed');
+
+    /* ---- 3b. no defenceman at all: only the 9 best count ----
+       The written rule: "Si un participant n'a pas de defenseur dans son
+       alignement, il devra se contenter du total de ses 9 meilleurs
+       pointeurs." Twelve forwards, 100..89: 100..92 = 864, not 955. */
+    let allFwd = fwd.slice(0, 12).map(p => p.i);
+    let fmap = {};
+    allFwd.forEach((id, i) => { fmap[id] = { g: 100 - i, a: 0 }; });
+    let fsc = scoreRoster(allFwd, stub(fmap));
+    ok(fsc.shortHanded, 'a roster with no defenceman is flagged short-handed');
+    ok(fsc.counting.length === 9, 'only 9 count without a defenceman, got ' + fsc.counting.length);
+    ok(fsc.pts === 864, 'the 10th slot is forfeited (100..92 = 864), got ' + fsc.pts);
+    ok(!fsc.legal, 'and the roster is still flagged illegal');
+
+    /* ---- 3c. tiebreak on the 11th then the 12th pick ---- */
+    // Same ten counting players, different 11th and 12th: equal totals, but
+    // the rule says the better 11th pick takes the higher rank.
+    let aIds = fwd.slice(0, 11).map(p => p.i); aIds.splice(4, 0, def[0].i);
+    let bIds = fwd.slice(0, 11).map(p => p.i); bIds.splice(4, 0, def[1].i);
+    let amap = {}, bmap = {};
+    aIds.forEach((id, i) => { amap[id] = { g: 100 - i, a: 0 }; });
+    bIds.forEach((id, i) => { bmap[id] = { g: 100 - i, a: 0 }; });
+    amap[aIds[10]] = { g: 90, a: 0 }; amap[aIds[11]] = { g: 89, a: 0 };
+    bmap[bIds[10]] = { g: 80, a: 0 }; bmap[bIds[11]] = { g: 79, a: 0 };
+    let aSc = scoreRoster(aIds, stub(amap)), bSc = scoreRoster(bIds, stub(bmap));
+    ok(aSc.pts === bSc.pts, 'both rosters total the same, got ' + aSc.pts + ' and ' + bSc.pts);
+    ok(aSc.p11 === 90 && bSc.p11 === 80, 'the 11th picks differ (' + aSc.p11 + ' vs ' + bSc.p11 + ')');
+    ok(aSc.p11 > bSc.p11, 'the better 11th pick wins the tiebreak');
 
     /* ---- 4. the defenseman rule ---- */
     // Top 10 are all forwards; the only D is 12th. He must be promoted, and

@@ -228,6 +228,8 @@ function scoreRoster(ids, statOf) {
 
   const isD = r => r.pos === 'D';
 
+  let shortHanded = false;   // no defenceman anywhere: only 9 count
+
   if (!counting.some(isD) && counting.length === COUNTING_SIZE) {
     // bench is already sorted, so its first D is the best one available.
     const k = bench.findIndex(isD);
@@ -239,6 +241,16 @@ function scoreRoster(ids, statOf) {
       counting.sort(byPts);
       bench.sort(byPts);
       forcedD = { in: promoted, out: dropped, cost: dropped.pts - promoted.pts };
+    } else {
+      // The written rule: "Si un participant n'a pas de défenseur dans son
+      // alignement, il devra se contenter du total de ses 9 meilleurs
+      // pointeurs." No D to promote, so the 10th slot is simply forfeited --
+      // a penalty, not a technicality. Scoring 10 here would quietly reward
+      // an illegal roster.
+      const dropped = counting[counting.length - 1];
+      counting = counting.slice(0, -1);
+      bench    = [dropped].concat(bench).sort(byPts);
+      shortHanded = true;
     }
   }
 
@@ -252,10 +264,17 @@ function scoreRoster(ids, statOf) {
     g:       sum(counting, r => r.g),
     a:       sum(counting, r => r.a),
     total12: sum(rows, r => r.pts),
+    /* Tiebreak, as written: "En cas d'égalité, c'est le 11e choix qui
+       détermine l'avance et si l'égalité persiste c'est le 12e choix."
+       rows is sorted best-first, so the 11th and 12th picks are the two
+       weakest -- exactly the ones the rule points at. */
+    p11:     rows[10] ? rows[10].pts : 0,
+    p12:     rows[11] ? rows[11].pts : 0,
     dCount:  rows.filter(isD).length,
     gCount:  rows.filter(r => r.pos === 'G').length,
     forcedD,
     legal:   counting.some(isD),             // false only when the roster has no D at all
+    shortHanded,                             // true: no D anywhere, so 9 count instead of 10
     complete: rows.length >= ROSTER_SIZE
   };
 }

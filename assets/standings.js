@@ -61,14 +61,22 @@ function computeSeries() {
 
   for (let w = 0; w < nWeeks; w++) {
     const sorted = state.poolers
-      .map(pl => ({ id: pl.id, pts: SERIES.get(pl.id)[w].pts }))
-      .sort((a, b) => b.pts - a.pts);
+      .map(pl => {
+        const sc = SERIES.get(pl.id)[w];
+        return { id: pl.id, pts: sc.pts, p11: sc.p11, p12: sc.p12 };
+      })
+      // Le règlement : à égalité de points, c'est le 11e choix qui
+      // départage, puis le 12e.
+      .sort((a, b) => b.pts - a.pts || b.p11 - a.p11 || b.p12 - a.p12);
 
     const m = new Map();
     sorted.forEach((row, i) => {
-      // Competition ranking: equal totals share the better rank (1,1,3...).
+      // Competition ranking: a TRUE tie shares the better rank (1,1,3...) --
+      // true meaning the 11th and 12th picks could not separate them either.
       const prev = i > 0 ? sorted[i - 1] : null;
-      m.set(row.id, prev && prev.pts === row.pts ? m.get(prev.id) : i + 1);
+      const tied = prev && prev.pts === row.pts &&
+                   prev.p11 === row.p11 && prev.p12 === row.p12;
+      m.set(row.id, tied ? m.get(prev.id) : i + 1);
     });
     RANKS.push(m);
   }

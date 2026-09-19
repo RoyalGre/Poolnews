@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Poolnews — Défi de la semaine</title>
+<title>Poolnews — Règlements</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/theme.css?v=5e30e58c">
@@ -22,10 +22,10 @@
       <a href="standings.html">Classement</a>
       <a href="poolers.html">Pooleurs</a>
       <a href="funfacts.html">Faits saillants</a>
-      <span class="active">Défi de la semaine</span>
+      <a href="defi.html">Défi de la semaine</a>
       <a href="defis.html">Qui va gagner ?</a>
       <a href="pool-records.html">Livre des records</a>
-      <a href="reglements.html">Règlements</a>
+      <span class="active">Règlements</span>
     </nav>
     <span class="spacer"></span>
     <span class="controls" id="barControls"></span>
@@ -35,18 +35,16 @@
     <span class="stamp" id="dataStamp"></span>
     <span class="stamp" id="publishedBadge"></span>
   </div>
+  <input type="file" id="fileInput" accept=".json,application/json" hidden>
 </header>
 
 <main class="wide">
   <div id="content"></div>
 </main>
 
-<!-- Données d'abord, puis le code partagé, puis celui de la page. defi.js lit
-     les prédictions dans window.DEFI_PICKS ; data/defi.js est optionnel, la
-     page affiche la règle et le partage réel même sans lui. -->
-<script>poolSeason.load(['players', 'goals', 'pool']);</script>
-<script src="data/defi.js?v=496d8381"></script>
+<!-- Aucune donnée de saison ici : les règlements ne dépendent pas
+     d'une année. Seul core.js est requis, pour el() et l'entête. -->
 <script src="assets/core.js?v=f34735a3"></script>
-<script src="assets/defi.js?v=227dfe0b"></script>
+<script src="assets/rules.js?v=6d0159c5"></script>
 </body>
 </html>

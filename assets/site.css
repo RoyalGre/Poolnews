@@ -818,6 +818,35 @@ svg.rink text.df-lbl-s {
 .df-net { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
 .df-net.off { color: var(--warn); }
 
+/* =========================================================================
+   Règlements — reglements.html
+
+   L'argent à gauche, les règles à droite : on vient soit vérifier un montant,
+   soit relire une règle, rarement les deux.
+   ========================================================================= */
+.rg-split { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
+.rg-split > div > .panel:first-child { margin-top: 0; }
+@media (max-width: 860px) { .rg-split { grid-template-columns: 1fr; } }
+
+.rg-row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
+}
+.rg-row:last-of-type { border-bottom: 0; }
+.rg-k { flex: 1; font-size: 14px; }
+.rg-v {
+  font-family: var(--f-mono); font-size: 13px; font-weight: 600;
+  color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+/* Le total se détache du détail qui le compose. */
+.rg-row.rg-total { border-top: 2px solid var(--line-strong); border-bottom: 0; margin-top: 4px; padding-top: 8px; }
+.rg-row.rg-total .rg-k { font-weight: 600; }
+/* Ce qu'on doit payer, en rouge : c'est l'information qui pique. */
+.rg-row.rg-pay .rg-v { color: var(--danger); }
+
+.rg-split .prose p { margin: 0 0 10px; }
+.rg-split .prose p:last-child { margin-bottom: 0; }
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
