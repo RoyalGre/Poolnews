@@ -76,6 +76,13 @@ silently showing last season's standings under this season's name is the one
 genuinely misleading outcome. On an archived season it instead offers the way
 back to the current one.
 
+**The picker lives on the home page only** (`#seasonPick`, built by
+`renderSeasons()` in `landing.js`): one pill per season, newest first, the
+current one tagged *en cours* and inert. It builds itself from
+`data/seasons.js`, so adding a season never means editing `index.html`. With
+only one season it hides itself rather than offering a choice of one. From any
+other tab the way back is the header badge's *revenir à …* button.
+
 The reader's choice lives in `localStorage` under `hockeyPool.season`, beside
 the theme, so it follows them from tab to tab. `poolSeason.set()` reloads, since
 data is loaded at parse time.

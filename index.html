@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/theme.css?v=5e30e58c">
-<link rel="stylesheet" href="assets/site.css?v=bbfc9d55">
+<link rel="stylesheet" href="assets/site.css?v=6e2b677f">
 <script src="data/seasons.js?v=ea0aa1ee"></script>
 <script src="assets/season.js?v=821f05b4"></script>
 <script src="assets/theme.js?v=30989c40"></script>
@@ -60,6 +60,11 @@
       <ellipse cx="60" cy="58" rx="21" ry="8" class="lp-puck-top"/>
     </svg>
   </section>
+
+  <!-- Le choix de la saison. Rempli par landing.js à partir de
+       data/seasons.js, pour qu'ajouter une saison ne demande jamais de
+       toucher à cette page. -->
+  <nav class="lp-seasons" id="seasonPick" aria-label="Choisir la saison"></nav>
 
   <div class="lp-split">
 
@@ -131,6 +136,6 @@
 <!-- Données d'abord, puis le code partagé, puis celui de la page. -->
 <script>poolSeason.load(['players', 'history', 'pool']);</script>
 <script src="assets/core.js?v=480086be"></script>
-<script src="assets/landing.js?v=d2a1e375"></script>
+<script src="assets/landing.js?v=57f74138"></script>
 </body>
 </html>

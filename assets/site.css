@@ -547,6 +547,40 @@ svg.rink .puck:focus-visible { outline: 2px solid var(--accent); outline-offset:
 }
 .lp-d { font-size: 13.5px; color: var(--muted); line-height: 1.45; }
 
+/* ---- Le choix de la saison ---------------------------------------------
+   Une bande discrète entre le titre et les deux colonnes : présente sans
+   voler la vedette au menu, qui reste ce qu'on vient chercher. */
+.lp-seasons {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  margin: 0 0 16px;
+}
+.lp-seasons-lbl {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted); margin-right: 2px;
+}
+.lp-season {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  padding: 6px 13px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel);
+  color: var(--ink-2); cursor: pointer;
+  transition: border-color .14s, background .14s, color .14s;
+}
+.lp-season:hover { border-color: var(--accent); color: var(--ink); }
+.lp-season.on {
+  background: var(--blue); border-color: var(--blue); color: #fff;
+  cursor: default;
+}
+.lp-season-yr {
+  font-family: var(--f-disp); font-weight: 700; font-size: 17px;
+  letter-spacing: .01em;
+}
+/* « en cours » / « à venir » : une étiquette, pas un second titre. */
+.lp-season-tag {
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--faint);
+}
+.lp-season.on .lp-season-tag { color: rgba(255,255,255,.75); }
+
 /* Le classement reprend les puces et les rangs de la page Classement. */
 .lp-podium { position: sticky; top: 18px; }
 .lp-podium .hint { margin-top: 11px; }

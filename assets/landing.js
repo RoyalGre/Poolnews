@@ -79,7 +79,44 @@ function render() {
   renderPodium();
 }
 
+/* ---- Le choix de la saison ---------------------------------------------
+   Une pastille par saison, la courante en premier. Construite à partir de
+   data/seasons.js : ajouter une saison ne demande de toucher ni cette
+   fonction ni index.html.
+
+   Une saison qui n'a encore aucune donnée propre — 2026-27 avant le premier
+   match — le dit plutôt que de faire croire à une page vide. */
+function renderSeasons() {
+  const box = $('seasonPick');
+  if (!box || !window.poolSeason) return;
+
+  const all = poolSeason.all || [];
+  // Une seule saison : le choix n'en est pas un, on n'affiche rien.
+  if (all.length < 2) { box.hidden = true; return; }
+
+  box.textContent = '';
+  box.append(el('span', 'lp-seasons-lbl', 'Saison'));
+
+  all.forEach(sn => {
+    const on  = sn.label === poolSeason.label;
+    const b   = el('button', 'lp-season' + (on ? ' on' : ''));
+    b.append(el('span', 'lp-season-yr', sn.label));
+
+    if (sn.label === poolSeason.current) {
+      b.append(el('span', 'lp-season-tag', 'en cours'));
+    } else if (!sn.files.length) {
+      b.append(el('span', 'lp-season-tag', 'à venir'));
+    }
+
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.title = on ? 'Saison affichée' : 'Afficher la saison ' + sn.label;
+    if (!on) b.onclick = () => poolSeason.set(sn.label);
+    box.append(b);
+  });
+}
+
 renderLede();
+renderSeasons();
 renderPodium();
 wireSeasonBadge();
 wireThemeToggle();
