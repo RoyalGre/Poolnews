@@ -13,7 +13,7 @@
 
 const REGLES = {
   saison: '2026-27',
-  cotisation: { base: 80, poolexpert: 2 },
+  cotisation: { base: 80, poolexpert: 3 },
   bourses: [
     { rang: '1re position', montant: 540 },
     { rang: '2e position',  montant: 220 },
@@ -56,6 +56,8 @@ const REGLES = {
    rangs sont recalculés depuis data/2025-26/. */
 const SAISON_PRECEDENTE = {
   saison: '2025-26',
+  // Ce qui a REELLEMENT ete verse en 2025-26 : 80 + 2 + 20. PoolExpert
+  // est passe a 3 $ pour 2026-27, mais l'historique ne se recrit pas.
   prepaye: 102,
   poolers: [
     { rang: 1,  nom: 'Steve T.',     pts: 778, trades: 1, pena: 0,  pos: 0,  bourse: 540, ballot: 42.5 },
@@ -262,7 +264,32 @@ function render() {
     'au menu du repêchage ' + REGLES.saison + '.';
   bt.append(bl);
   bouffe.append(bt);
-  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, bouffe]));
+  // Le site qui tient les pointages, et ce qu'il coute. A cote de la bouffe
+  // parce que les deux repondent a la meme question : ou passe l'argent qui
+  // ne finit pas en bourses.
+  const pe = el('div', 'rg-service');
+  const peImg = document.createElement('img');
+  peImg.className = 'rg-pe-logo';
+  peImg.src = 'assets/img/poolexpert.jpg';
+  peImg.alt = 'PoolExpert';
+  peImg.width = 126;
+  peImg.height = 41;
+  // Pas de lazy : 7 ko, et un logo qui apparait en retard sous un bloc de
+  // texte se remarque plus que le chargement qu'il economise.
+  pe.append(peImg);
+  const pt = el('div', 'rg-bouffe-txt');
+  const ph = el('div', 'rg-bouffe-h');
+  ph.innerHTML = euro(REGLES.cotisation.poolexpert) + ' par pooleur';
+  pt.append(ph);
+  const plx = el('div', 'rg-bouffe-l');
+  plx.innerHTML = 'Le site qui compile les pointages tout au long de la ' +
+    'saison. Compris dans la cotisation.';
+  pt.append(plx);
+  pe.append(pt);
+
+  const duo = el('div', 'rg-duo');
+  duo.append(bouffe, pe);
+  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, duo]));
 
   const reg = el('div', 'prose');
   reg.innerHTML =

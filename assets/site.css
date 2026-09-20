@@ -987,6 +987,25 @@ svg.rink text.df-lbl-s {
 .rg-bouffe-l { font-size: 13px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
 .rg-bouffe-l b { color: var(--ink); }
 
+/* Les deux depenses cote a cote : la bouffe et le site de pointage. Elles
+   repondent a la meme question — ou passe l'argent qui ne finit pas en
+   bourses — alors elles se lisent ensemble. */
+.rg-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+@media (max-width: 620px) { .rg-duo { grid-template-columns: 1fr; } }
+.rg-duo .rg-bouffe { margin-top: 0; height: 100%; }
+
+.rg-service {
+  display: flex; align-items: center; gap: 13px;
+  padding: 12px 14px; border-radius: 10px; height: 100%;
+  border: 1px solid var(--border); background: var(--panel-2);
+}
+/* Le logo est fourni sur fond blanc : un fond clair et un coin arrondi
+   l'integrent sans le decouper, y compris en theme sombre. */
+.rg-pe-logo {
+  width: 92px; height: auto; flex: none;
+  background: #fff; border-radius: 5px; padding: 4px 6px;
+}
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
