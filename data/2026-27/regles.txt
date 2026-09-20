@@ -1,0 +1,46 @@
+Saison 2026-2027
+	Pooleurs = 12
+
+Cotisations
+	Pool = 80$
+	PoolExpert = 3$
+	Trade = 10$ chaque
+	Trades inclus = 2
+
+Bourses
+	1re position = 600$
+	2e position = 240$
+	3e position = 120$
+	4e position = 0$
+	La bourse du ballottage est divisee en quatre parts egales entre les
+	quatre premieres positions.
+
+Penalites de position
+	5e = 0$
+	6e = 0$
+	7e = 10$
+	8e = 15$
+	9e = 20$
+	10e = 25$
+	11e = 30$
+	12e = 35$
+
+Ballottage
+	Maximum = 2 joueurs
+	Date limite = 1 mars 2027 23h59
+	Cout = 10$ par joueur repeche
+	Penalite = 10$ si le joueur acquis ne finit pas dans les 10 qui comptent
+
+Repas
+	# A remplir quand le repas aura eu lieu. Laisser vide tant qu'on ne
+	# connait pas le montant : la page affiche alors un point d'interrogation
+	# plutot qu'un faux zero.
+	Total =
+	Divise entre =
+	Budget penalites =
+
+Paiements
+	# Qui a regle, une ligne par pooleur, quand les comptes sont faits.
+	# Exemple :
+	#   Steve T. = recu
+	#   Eric C. = paye

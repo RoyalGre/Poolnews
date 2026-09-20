@@ -1,0 +1,19 @@
+Trade 2026-2027
+
+# Un bloc par pooleur, une ligne par echange :
+#
+#     Pooleur X.
+#         Out <joueur sortant> In <joueur entrant> (12 jan 2027)
+#
+# Le nom du pooleur doit correspondre a celui du pool, les accents pres :
+# le script compare sans accents, donc « Francois C. » trouve « Francois C. ».
+#
+# Les mois s'ecrivent en francais ou en anglais, abreges ou non, la casse
+# n'a pas d'importance : nov, Nov, novembre passent tous.
+#
+# Ensuite :
+#     powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-trades.ps1
+#
+# Le script retrouve chaque joueur acquis dans l'alignement final et marque
+# ceux qui ne finissent pas dans les dix qui comptent : c'est la penalite de
+# 10 $. Rien a calculer a la main.

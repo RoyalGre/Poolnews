@@ -74,6 +74,7 @@ foreach ($raw in $lines) {
     if ([string]::IsNullOrWhiteSpace($raw)) { continue }
     $line = $raw.Trim()
     if ($line -match '^Trade\b') { continue }          # the file's own title
+    if ($line.StartsWith('#')) { continue }            # commentaire du modele
 
     # A trade line always carries "Out ... In ...". Anything else at this
     # indentation is a pooler name.
@@ -110,7 +111,9 @@ foreach ($raw in $lines) {
     }
 }
 
-if ($trades.Count -eq 0) { throw 'No trades parsed -- refusing to write an empty file.' }
+# Un fichier sans trade est normal en debut de saison : on ecrit quand meme,
+# pour que la page affiche l'absence de transaction plutot que rien du tout.
+if ($trades.Count -eq 0) { Say '  aucun trade pour l''instant' 'Yellow' }
 
 # ---- did the incoming player count in that pooler's top ten? ---------------
 $poolPath    = Get-SeasonPath -Root $root -Season $Season -Name 'pool'

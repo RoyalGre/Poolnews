@@ -103,6 +103,34 @@ The reader's choice lives in `localStorage` under `hockeyPool.season`, beside
 the theme, so it follows them from tab to tab. `poolSeason.set()` reloads, since
 data is loaded at parse time.
 
+## Ce qu'une nouvelle saison demande
+
+Trois fichiers écrits à la main dans `data/<saison>/`, toujours les mêmes noms :
+
+| Fichier | Contenu | Devient |
+|---|---|---|
+| `regles.txt` | tarifs, bourses, pénalités, ballottage, repas | lu à la main pour l'instant |
+| `trades.txt` | les échanges, un bloc par pooleur | `trades.js` via `build-trades.ps1` |
+| l'export JSON de la page Repêchage | les participants + leurs choix | `pool.js` via `publish-pool.ps1` |
+
+Tout le reste se construit : `players`, `history`, `advanced`, `goals`,
+`schedule` viennent de l'API et sont rebâtis par `update.ps1`.
+
+**Ordre pour ouvrir une saison :**
+
+```powershell
+# 1. la liste des joueurs de la nouvelle saison
+powershell -File refresh-players.ps1 -StatsSeason 20272028
+# 2. le calendrier du défi des vainqueurs
+powershell -File build-schedule.ps1 -Season 20272028
+# 3. le repêchage se fait dans pool.html, puis :
+powershell -File publish-pool.ps1 -PoolFile <export>.json -Season 20272028
+```
+
+`regles.txt` et `trades.txt` se copient du dossier de l'année précédente et se
+vident. `build-trades.ps1` tolère un fichier sans aucun échange — c'est l'état
+normal en septembre — et saute les lignes commençant par `#`.
+
 `season-path.ps1` holds the shared helpers — `Get-SeasonPath` builds the path,
 `Update-SeasonIndex` rewrites `data/seasons.js` from what is really on disk.
 **Resolve `$OutPath` only AFTER the season is known**: four scripts used to
