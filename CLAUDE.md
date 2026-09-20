@@ -26,7 +26,15 @@ published to GitHub Pages.
 | `funfacts.html` | Faits saillants | `assets/funfacts.js` |
 | `defi.html` | Défi de la semaine | `assets/defi.js` |
 | `defis.html` | Qui va gagner ? | `assets/defis.js` |
+| `reglements.html` | Règlements | `assets/rules.js` |
+| `finances.html` | Finances | `assets/finances.js` |
 | `pool-records.html` | Livre des records | generated — see below |
+
+**Règlements et Finances sont deux pages**, pas une. Règlements décrit la
+saison qui commence — 12 pooleurs, cotisation 103 $, bourses 600/240/120 ;
+Finances fait le bilan de celle qui finit — 11 pooleurs, 102 $, 540/220/120.
+Les mélanger rendait chaque montant ambigu. `assets/pool-common.js` porte les
+quelques helpers partagés (`euro`, `bloc`, `ligne`, `pizzaSVG`).
 
 `index.html` redirects to the standings. `assets/core.js` is shared by all the
 app pages: player index, search, saved state, **scoring**, weekly history.

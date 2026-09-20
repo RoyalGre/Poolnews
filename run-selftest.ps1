@@ -61,7 +61,7 @@ $failed = 0
 Write-Host ''
 Write-Host '=== Navigation ===' -ForegroundColor Cyan
 
-$pages = 'pool.html', 'standings.html', 'poolers.html', 'funfacts.html', 'defi.html', 'defis.html', 'reglements.html', 'pool-records.html'
+$pages = 'pool.html', 'standings.html', 'poolers.html', 'funfacts.html', 'defi.html', 'defis.html', 'reglements.html', 'finances.html', 'pool-records.html'
 # index.html is the published site's landing page: it only has to point at
 # pages that exist, not link to all of them.
 $linkOnly = @('index.html')
