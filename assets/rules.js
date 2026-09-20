@@ -151,25 +151,6 @@ function render() {
     'pas aux gagnants — il paie la bouffe du repêchage suivant.'));
   gauche.append(bloc('À payer au classement final', pen));
 
-  // Ou va l'argent des penalites : c'est la question que le tableau laissait
-  // sans reponse, et la reponse est sympathique.
-  const penaTrade = sp0.reduce((t, p) => t + p.pena, 0);
-  const penaPos   = sp0.reduce((t, p) => t + p.pos, 0);
-  const bouffe = el('div', 'rg-bouffe');
-  bouffe.append(pizzaSVG());
-  const bt = el('div', 'rg-bouffe-txt');
-  const bh = el('div', 'rg-bouffe-h');
-  bh.innerHTML = 'Les pénalités paient la <b>bouffe du repêchage</b>';
-  bt.append(bh);
-  const bl = el('div', 'rg-bouffe-l');
-  bl.innerHTML =
-    'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités de trade ' +
-    '<b>' + euro(penaTrade) + '</b> = <b>' + euro(penaPos + penaTrade) + '</b> ' +
-    'au menu du repêchage ' + REGLES.saison + '.';
-  bt.append(bl);
-  bouffe.append(bt);
-  gauche.append(bouffe);
-
   split.append(gauche);
 
   /* ---- Colonne de droite : la saison précédente, puis les règles ---- */
@@ -242,8 +223,8 @@ function render() {
    '+' + euro(tot.pre - tot.uti), euro(tot.pena), euro(tot.pos),
    euro(tot.bou), tot.bal.toFixed(2) + ' $'].forEach(v => fr.append(el('td', 'num', v)));
   // Pas de total pour le solde : additionner des gains et des pertes donne un
-  // nombre que personne ne verse ni ne recoit. Les deux flux reels sont
-  // affiches sous le tableau, ou ils veulent dire quelque chose.
+  // nombre que personne ne verse ni ne recoit. La colonne « A regler » dit,
+  // elle, ce que chaque pooleur doit vraiment au debut de la saison.
   fr.append(el('td', 'num solde', '—'));
   const cotisTot = (REGLES.cotisation.base + REGLES.cotisation.poolexpert + 20) *
                    sp.poolers.length;
@@ -263,42 +244,25 @@ function render() {
     "qu'un récupère 10 $, celui qui n'en fait aucun récupère ses 20 $.";
 
   // Les deux mouvements que la direction doit reellement faire.
-  const flux = sp.poolers.map(p => {
-    const u = 82 + p.trades * 10;
-    return sp.prepaye - u - p.pena - p.pos + p.bourse + p.ballot;
-  });
-  // Ce qui change vraiment de mains : le solde APRES deduction de la
-  // cotisation de la saison qui commence, puisque tout se regle d'un coup.
-  const cotisAn = REGLES.cotisation.base + REGLES.cotisation.poolexpert + 20;
-  const nets    = flux.map(v => v - cotisAn);
-  const aVerser  = nets.filter(v => v > 0).reduce((t, v) => t + v, 0);
-  const aPercev  = nets.filter(v => v < 0).reduce((t, v) => t - v, 0);
-  const nbVerser = nets.filter(v => v > 0).length;
-  const nbPercev = nets.filter(v => v < 0).length;
-
-  const bilan = el('div', 'rg-flux');
-  const fg = el('div', 'rg-flux-item gain');
-  fg.append(el('span', 'rg-flux-lbl', 'À verser aux pooleurs'));
-  fg.append(el('span', 'rg-flux-val', aVerser.toFixed(2) + ' $'));
-  fg.append(el('span', 'rg-flux-sub', nbVerser + ' pooleurs'));
-  const fp = el('div', 'rg-flux-item perte');
-  fp.append(el('span', 'rg-flux-lbl', 'À percevoir'));
-  fp.append(el('span', 'rg-flux-val', aPercev.toFixed(2) + ' $'));
-  fp.append(el('span', 'rg-flux-sub', nbPercev + ' pooleurs'));
-  bilan.append(fg, fp);
-
-  const nbRemis = sp.poolers.filter(p => p.trades < 2).length;
-  const totRemis = sp.poolers.reduce((t, p) => t + (2 - p.trades) * 10, 0);
-  const noteFlux = el('p', 'hint');
-  noteFlux.innerHTML = 'Montants nets, cotisation ' + REGLES.saison +
-    ' de ' + euro(cotisAn) + ' déjà déduite — c’est ce qui change de mains ' +
-    'au moment de lancer la saison.';
-
-  const noteFin = el('p', 'hint',
-    "Colonne « Remis » : " + nbRemis + " pooleurs sur " + sp.poolers.length +
-    " n'ont pas utilisé leurs deux trades et se font rembourser " +
-    euro(totRemis) + " au total. Barème de " + sp.saison + ", à 11 pooleurs.");
-  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, bilan, noteFlux, noteFin]));
+  // Ou va l'argent des penalites. Les deux encadres de flux qui etaient ici
+  // n'ajoutaient rien : le tableau dit deja, ligne par ligne, qui doit quoi.
+  // Cette information-la, en revanche, ne figure nulle part ailleurs.
+  const penaTrade = sp0.reduce((t, p) => t + p.pena, 0);
+  const penaPos   = sp0.reduce((t, p) => t + p.pos, 0);
+  const bouffe = el('div', 'rg-bouffe');
+  bouffe.append(pizzaSVG());
+  const bt = el('div', 'rg-bouffe-txt');
+  const bh = el('div', 'rg-bouffe-h');
+  bh.innerHTML = 'Les pénalités paient la <b>bouffe du repêchage</b>';
+  bt.append(bh);
+  const bl = el('div', 'rg-bouffe-l');
+  bl.innerHTML =
+    'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités de trade ' +
+    '<b>' + euro(penaTrade) + '</b> = <b>' + euro(penaPos + penaTrade) + '</b> ' +
+    'au menu du repêchage ' + REGLES.saison + '.';
+  bt.append(bl);
+  bouffe.append(bt);
+  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, bouffe]));
 
   const reg = el('div', 'prose');
   reg.innerHTML =
