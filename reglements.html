@@ -45,7 +45,11 @@
 
 <!-- Aucune donnée de saison ici : les règlements ne dépendent pas
      d'une année. Seul core.js est requis, pour el() et l'entête. -->
-<script>poolSeason.load(['players', 'pool', 'trades']);</script>
+<!-- own: true — les Règlements décrivent la saison EN COURS, donc ses
+     propres participants. Sans cela la règle « famille de statistiques »
+     fait basculer le pool vers la saison précédente, et le 12e pooleur
+     disparaît de la liste. -->
+<script>poolSeason.load(['pool'], { own: true });</script>
 <script src="assets/core.js?v=f34735a3"></script>
 <script src="assets/pool-common.js?v=a6e88e98"></script>
 <script src="assets/rules.js?v=c689fd74"></script>
