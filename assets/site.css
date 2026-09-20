@@ -1006,6 +1006,16 @@ svg.rink text.df-lbl-s {
   background: #fff; border-radius: 5px; padding: 4px 6px;
 }
 
+/* La colonne du repas. Le montant n'est pas connu : la colonne existe pour
+   rappeler qu'il viendra s'ajouter, d'ou le point d'interrogation plutot
+   qu'un zero, qui laisserait croire a la gratuite. */
+.rg-th-pizza { text-align: center !important; padding: 4px 8px !important; }
+.rg-th-pizza .rg-pizza { width: 22px; height: 22px; display: block; margin: 0 auto; }
+.rg-tbl td.rg-pizza-cell {
+  text-align: center; color: var(--faint); font-weight: 600;
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+}
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }

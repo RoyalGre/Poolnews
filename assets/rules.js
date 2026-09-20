@@ -171,8 +171,19 @@ function render() {
   [['', ''], ['Pooleur', ''], ['Prépayé', 'num'], ['Trades', 'num'],
    ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
    ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num'],
-   ['Cotis. ' + REGLES.saison, 'num'], ['À régler', 'num']]
-    .forEach(([h, c]) => hr.append(el('th', c, h)));
+   ['Cotis. ' + REGLES.saison, 'num'], ['PIZZA', 'num'], ['À régler', 'num']]
+    .forEach(([h, c]) => {
+      // La colonne du repas n'a pas de titre ecrit : une pizza dit la meme
+      // chose en moins large, et la largeur compte sur douze colonnes.
+      if (h === 'PIZZA') {
+        const th = el('th', c + ' rg-th-pizza');
+        th.append(pizzaSVG());
+        th.title = 'Part du repas du repêchage — montant à venir';
+        hr.append(th);
+      } else {
+        hr.append(el('th', c, h));
+      }
+    });
   thead.append(hr);
   t.append(thead);
 
@@ -211,6 +222,9 @@ function render() {
     const cotis = REGLES.cotisation.base + REGLES.cotisation.poolexpert + 20;
     const net = solde - cotis;
     tr.append(el('td', 'num', '−' + euro(cotis)));
+    // Le repas n'est pas encore chiffre : la colonne existe pour rappeler
+    // qu'il s'ajoutera, sans pretendre a un montant qu'on ignore.
+    tr.append(el('td', 'num rg-pizza-cell', '?'));
     tr.append(el('td', 'num net ' + (net >= 0 ? 'gain' : 'perte'),
                  (net >= 0 ? '+' : '') + net.toFixed(2) + ' $'));
     tb.append(tr);
@@ -231,6 +245,7 @@ function render() {
   const cotisTot = (REGLES.cotisation.base + REGLES.cotisation.poolexpert + 20) *
                    sp.poolers.length;
   fr.append(el('td', 'num', '−' + euro(cotisTot)));
+  fr.append(el('td', 'num rg-pizza-cell', '?'));
   fr.append(el('td', 'num net', '—'));
   tf.append(fr);
   t.append(tf);
