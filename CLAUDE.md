@@ -65,6 +65,14 @@ is lost now: each build writes into its own season's folder.
 | `data/defi.js` | zone-game offline fallback | **hand-written** |
 | `data/defis.js` | winner-game offline fallback | **hand-written** |
 
+`build-rules.ps1` lit `regles.txt` et accepte **deux dialectes**, parce que
+les fichiers ont été écrits à des moments différents et que réécrire
+l'histoire serait pire que l'analyser : `1re position  $500 + 1/4 Ballotage`
+comme `1re position = 600$`, et le barème des pénalités en prose
+(« La 6e position devra payer 10$ ») comme en `6e = 10$`. Ce que le fichier
+ne dit pas est absent du résultat, et la page masque le bloc plutôt que
+d'inventer un montant.
+
 `build-trades.ps1` reads a hand-written `data/<season>/trades.txt` — one
 indented block per pooler, `Out X In Y (12 jan 2026)` — and resolves each
 incoming player against the final rosters to flag the 10 $ penalties. It
@@ -109,7 +117,7 @@ Trois fichiers écrits à la main dans `data/<saison>/`, toujours les mêmes nom
 
 | Fichier | Contenu | Devient |
 |---|---|---|
-| `regles.txt` | tarifs, bourses, pénalités, ballottage, repas | lu à la main pour l'instant |
+| `regles.txt` | tarifs, bourses, pénalités, ballottage, repas | `regles.js` via `build-rules.ps1` |
 | `trades.txt` | les échanges, un bloc par pooleur | `trades.js` via `build-trades.ps1` |
 | `poolers.json` | les participants + leurs choix | `pool.js` via `publish-pool.ps1` |
 

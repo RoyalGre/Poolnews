@@ -45,7 +45,7 @@ function Update-SeasonIndex {
         [string] $Current = ''
     )
     $dataDir = Join-Path $Root 'data'
-    $known   = 'players', 'history', 'advanced', 'goals', 'pool', 'schedule', 'trades'
+    $known   = 'players', 'history', 'advanced', 'goals', 'pool', 'schedule', 'trades', 'regles'
 
     $rows = @()
     foreach ($dir in (Get-ChildItem -Path $dataDir -Directory | Sort-Object Name -Descending)) {

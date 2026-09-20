@@ -1,52 +1,66 @@
 /* =========================================================================
-   rules.js — les règles et les tarifs de la saison qui commence.
+   rules.js — les règles et les tarifs de la saison AFFICHÉE.
 
-   Cette page regarde en AVANT : 12 pooleurs, cotisation 2026-27, bourses
-   recalculées sur le nouveau nombre de participants. Le bilan de l'année
-   écoulée vit dans finances.js, parce que ses montants sont différents et
-   que les mélanger rendait chaque chiffre ambigu.
+   Rien n'est codé en dur : tout vient de data/<saison>/regles.js, produit
+   par build-rules.ps1 à partir du regles.txt écrit à la main. Choisir
+   2024-25 sur la page d'accueil montre donc les règles de 2024-25 — 10
+   pooleurs, bourses 500/200/100 — et non celles de cette année.
 
-   Les montants sont regroupés ici en tête pour qu'une nouvelle saison se
-   mette à jour à un seul endroit.
+   Le bilan financier de l'année écoulée vit dans finances.js.
    ========================================================================= */
 
-const REGLES = {
-  saison: '2026-27',
-  poolers: 12,
-  cotisation: { base: 80, poolexpert: 3, trades: 2, parTrade: 10 },
-  // Le pot suit le nombre de participants : 12 x 80 = 960 $. À 11 pooleurs
-  // il était de 880 $ et les bourses se lisaient 540/220/120.
-  bourses: [
-    { rang: '1re position', montant: 600 },
-    { rang: '2e position',  montant: 240 },
-    { rang: '3e position',  montant: 120 },
-    { rang: '4e position',  montant: 0 }
-  ],
-  // Le bas du classement paie : c'est ce qui garde la fin de saison vivante.
-  // À 12 pooleurs, cinq positions sont à l'abri au lieu de quatre.
-  penalites: [
-    { rang: '5e',  montant: 0 },
-    { rang: '6e',  montant: 0 },
-    { rang: '7e',  montant: 10 },
-    { rang: '8e',  montant: 15 },
-    { rang: '9e',  montant: 20 },
-    { rang: '10e', montant: 25 },
-    { rang: '11e', montant: 30 },
-    { rang: '12e', montant: 35 }
-  ],
+/* Les tarifs viennent de data/<saison>/regles.js, produit par build-rules.ps1
+   a partir du regles.txt que Yanick entretient. La page suit donc la saison
+   choisie au lieu d'en coder une en dur : choisir 2024-25 montre les regles
+   de 2024-25, pas celles de cette annee. */
+const R = window.NHL_REGLES || null;
+
+const REGLES = R ? {
+  saison: R.label,
+  poolers: R.poolers,
+  cotisation: {
+    base: R.cotisation.pool || 0,
+    poolexpert: R.cotisation.poolexpert || 0,
+    trades: R.cotisation.trades || 2,
+    parTrade: R.cotisation.parTrade || 0,
+    pizza: R.cotisation.pizza || 0
+  },
+  verse: R.verse,
+  bourses: R.bourses.map(b => ({
+    rang: b.rang + (b.rang === 1 ? 're' : 'e') + ' position',
+    montant: b.montant,
+    ballottage: b.ballottage
+  })),
+  penalites: R.penalites.map(p => ({
+    rang: p.rang + (p.rang === 1 ? 're' : 'e'),
+    montant: p.montant
+  })),
   ballottage: {
-    maxJoueurs: 2,
-    limite: '1er mars 2027 à 23 h 59',
-    cout: 10,
+    maxJoueurs: R.ballottage.max,
+    limite: R.ballottage.limite,
+    cout: R.ballottage.cout,
     penaliteNonComptant: 10
   }
-};
+} : null;
+
 
 function render() {
   const box = $('content');
   box.innerHTML = '';
+
+  // Une saison sans regles.txt : on le dit plutôt que de planter.
+  if (!REGLES) {
+    const p = el('div', 'panel');
+    p.append(el('div', 'empty-state',
+      'Aucun règlement pour cette saison. Ajoutez data/<saison>/regles.txt ' +
+      'puis lancez build-rules.ps1.'));
+    box.append(p);
+    return;
+  }
+
   const C = REGLES.cotisation;
-  const verse = C.base + C.poolexpert + C.trades * C.parTrade;
+  // verse vient du fichier : il inclut la pizza quand la saison en avait une.
+  const verse = REGLES.verse || (C.base + C.poolexpert + C.trades * C.parTrade);
 
   const split = el('div', 'rg-split');
 
@@ -58,9 +72,10 @@ function render() {
   cot.push(ligne('PoolExpert', euro(C.poolexpert)));
   cot.push(ligne(C.trades + ' trades (' + euro(C.parTrade) + ' chacun)',
                  euro(C.trades * C.parTrade)));
+  if (C.pizza) cot.push(ligne('Pizza', euro(C.pizza)));
   cot.push(ligne('Versé au départ', euro(verse), 'rg-total'));
-  // Dit ici parce que c'est la première section qu'on lit, et que la question
-  // « pourquoi 103 $ alors que le pool coûte 80 $ » se pose tout de suite.
+  // Dit ici parce que c'est la première section qu'on lit, et que l'écart
+  // entre le prix du pool et le total versé se remarque tout de suite.
   const remb = el('p', 'hint rg-remb');
   remb.innerHTML = '↩ Les trades non utilisés sont <b>remboursés</b> en fin de ' +
     "saison : " + euro(C.parTrade) + " par trade que vous n'avez pas fait.";

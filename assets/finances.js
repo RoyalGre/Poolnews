@@ -1,41 +1,100 @@
 /* =========================================================================
-   finances.js — le bilan de la saison qui vient de finir.
+   finances.js — le bilan financier de la saison AFFICHÉE.
 
-   Séparé des Règlements pour une raison de fond : cette page regarde en
-   ARRIÈRE. Elle décrit 11 pooleurs, une cotisation de 102 $ et des bourses
-   de 540/220/120 — les chiffres de 2025-26. La page Règlements, elle,
-   décrit la saison qui commence : 12 pooleurs, 103 $, 600/240/120.
+   Séparé des Règlements pour une raison de fond : cette page fait les
+   comptes d'une saison jouée, l'autre annonce les tarifs de celle qui
+   commence. Les mélanger rendait chaque montant ambigu — 540 $ était-il ce
+   que Steve T. a touché, ou ce que le prochain gagnant touchera ?
 
-   Mélanger les deux sur une seule page rendait chaque montant ambigu : on ne
-   savait plus si 540 $ était ce que Steve T. a touché ou ce que le prochain
-   gagnant touchera.
-
-   Les montants viennent de ReglementsPool2025_2026.txt ; les points et les
-   rangs sont recalculés depuis data/2025-26/.
+   Tout se calcule : les pooleurs et leurs choix viennent de pool.js, les
+   points de players.js, les échanges de trades.js, les montants de
+   regles.js. Choisir 2024-25 donne donc le bilan de 2024-25.
    ========================================================================= */
 
-const SAISON_PRECEDENTE = {
-  saison: '2025-26',
-  // Ce qui a RÉELLEMENT été versé en 2025-26 : 80 + 2 + 20. PoolExpert est
-  // passé à 3 $ pour 2026-27, mais un historique ne se réécrit pas.
-  prepaye: 102,
-  // La cotisation de la saison SUIVANTE, celle qu'on déduit du solde au
-  // moment de régler les comptes. Elle suit les tarifs 2026-27.
-  cotisSuivante: 103,
-  poolers: [
-    { rang: 1,  nom: 'Steve T.',     pts: 778, trades: 1, pena: 0,  pos: 0,  bourse: 540, ballot: 42.5 },
-    { rang: 2,  nom: 'Frédérick D.', pts: 756, trades: 2, pena: 0,  pos: 0,  bourse: 220, ballot: 42.5 },
-    { rang: 3,  nom: 'Martin M.',    pts: 752, trades: 1, pena: 0,  pos: 0,  bourse: 120, ballot: 42.5 },
-    { rang: 4,  nom: 'Martin Pr.',   pts: 734, trades: 2, pena: 10, pos: 0,  bourse: 0,   ballot: 42.5 },
-    { rang: 5,  nom: 'Yanick M.',    pts: 712, trades: 0, pena: 0,  pos: 0,  bourse: 0,   ballot: 0 },
-    { rang: 6,  nom: 'Eric C.',      pts: 709, trades: 2, pena: 10, pos: 10, bourse: 0,   ballot: 0 },
-    { rang: 7,  nom: 'Pascal R.',    pts: 699, trades: 2, pena: 0,  pos: 15, bourse: 0,   ballot: 0 },
-    { rang: 8,  nom: 'François C.',  pts: 696, trades: 2, pena: 0,  pos: 20, bourse: 0,   ballot: 0 },
-    { rang: 9,  nom: 'Dany P.',      pts: 692, trades: 1, pena: 0,  pos: 25, bourse: 0,   ballot: 0 },
-    { rang: 10, nom: 'Manuel T.',    pts: 681, trades: 2, pena: 10, pos: 30, bourse: 0,   ballot: 0 },
-    { rang: 11, nom: 'Patrick C.',   pts: 634, trades: 2, pena: 0,  pos: 35, bourse: 0,   ballot: 0 }
-  ]
-};
+/* Le bilan se calcule depuis les donnees de la saison AFFICHEE plutot que
+   d'etre recopie a la main : les pooleurs et leurs choix viennent de pool.js,
+   les points de players.js, les echanges de trades.js et les montants de
+   regles.js. Choisir 2024-25 donne donc le bilan de 2024-25.
+
+   Ce qui reste hors de portee du calcul -- le cout du repas, qui a paye --
+   attend dans regles.txt et s'affiche quand il y sera. */
+function bilanSaison() {
+  const R = window.NHL_REGLES;
+  const pool = window.POOL_DATA;
+  if (!R || !pool || !pool.poolers || !pool.poolers.length) return null;
+
+  const bourse = {};
+  (R.bourses || []).forEach(b => { bourse[b.rang] = b.montant; });
+  const pena = {};
+  (R.penalites || []).forEach(p => { pena[p.rang] = p.montant; });
+
+  const parTrade = (R.cotisation && R.cotisation.parTrade) || 0;
+  const nbTrades = (R.cotisation && R.cotisation.trades) || 2;
+  const verse    = R.verse || 0;
+  // Ce qui etait du sans les trades : le reste depend du nombre employe.
+  const base = verse - nbTrades * parTrade;
+
+  // Les echanges de la saison, par pooleur.
+  const T = window.NHL_TRADES;
+  const parPooleur = {}, penaTrade = {};
+  if (T && T.trades) {
+    T.trades.forEach(x => {
+      parPooleur[x.pooler] = (parPooleur[x.pooler] || 0) + 1;
+      if (x.counted === false) penaTrade[x.pooler] = (penaTrade[x.pooler] || 0) + parTrade;
+    });
+  }
+
+  // Le classement, avec la regle du pool.
+  const rows = pool.poolers.map(pl => {
+    const sc = scoreRoster(pl.picks, statsSeason());
+    return { nom: pl.name, pts: sc.pts, p11: sc.p11, p12: sc.p12 };
+  }).sort((a, b) => b.pts - a.pts || b.p11 - a.p11 || b.p12 - a.p12);
+  rows.forEach((r, i) => { r.rang = i + 1; });
+
+  // La bourse du ballottage : un quart pour chacune des quatre premieres.
+  const totTrades = Object.keys(parPooleur).reduce((t, k) => t + parPooleur[k], 0);
+  const potBallot = totTrades * ((R.ballottage && R.ballottage.cout) || 0);
+  const part = potBallot / 4;
+
+  rows.forEach(r => {
+    r.trades = parPooleur[r.nom] || 0;
+    r.pena   = penaTrade[r.nom] || 0;
+    r.pos    = pena[r.rang] || 0;
+    r.bourse = bourse[r.rang] || 0;
+    r.ballot = r.rang <= 4 ? part : 0;
+    r.utilise = base + r.trades * parTrade;
+    r.remis   = verse - r.utilise;
+    r.solde   = verse - r.utilise - r.pena - r.pos + r.bourse + r.ballot;
+  });
+
+  return {
+    saison: R.label,
+    prepaye: verse,
+    nbTrades: nbTrades,
+    parTrade: parTrade,
+    poolExpert: (R.cotisation && R.cotisation.poolexpert) || 0,
+    repas: R.repas || {},
+    poolers: rows
+  };
+}
+
+const SAISON_PRECEDENTE = bilanSaison();
+
+/* Les comptes se règlent au début de la saison suivante : le solde vient en
+   déduction de sa cotisation. On la cherche dans l'index des saisons ; si la
+   suivante n'existe pas encore, on retombe sur celle de l'année affichée. */
+const COTIS_SUIV = (function () {
+  const idx = window.NHL_SEASONS;
+  const R = window.NHL_REGLES;
+  if (!R) return 0;
+  if (idx && idx.seasons && idx.seasons.length) {
+    const i = idx.seasons.findIndex(x => x.label === R.label);
+    // seasons est trié du plus récent au plus ancien : la suivante est avant.
+    if (i > 0) return R.verse;   // la valeur exacte demanderait son regles.js
+  }
+  return R.verse || 0;
+})();
+
 
 /* ---- Les transactions de la saison -------------------------------------
    data/<saison>/trades.js, produit par build-trades.ps1 à partir du
@@ -102,6 +161,16 @@ function render() {
   box.innerHTML = '';
   const sp = SAISON_PRECEDENTE;
 
+  // Une saison sans règles ou sans pool : on le dit plutôt que de planter.
+  if (!sp) {
+    const p = el('div', 'panel');
+    p.append(el('div', 'empty-state',
+      'Pas assez de données pour faire les comptes de cette saison. Il faut ' +
+      'data/<saison>/regles.txt et un pool publié.'));
+    box.append(p);
+    return;
+  }
+
   const intro = el('div', 'panel');
   intro.append(el('h2', null, 'Bilan de la saison ' + sp.saison));
   const id = el('div', 'prose');
@@ -116,10 +185,11 @@ function render() {
   // ---- Le tableau -------------------------------------------------------
   const rappel = el('div', 'rg-callout');
   rappel.innerHTML =
-    '<b>Les trades inutilisés sont remboursés.</b> Chacun a versé ' +
-    euro(sp.prepaye) + ' au départ — 80 $ de pool, 2 $ de PoolExpert et ' +
-    "20 $ pour <b>deux</b> trades. Un trade coûte 10 $ : celui qui n'en fait " +
-    "qu'un récupère 10 $, celui qui n'en fait aucun récupère ses 20 $.";
+    '<b>Les trades inutilisés sont remboursés.</b> Chacun a versé <b>' +
+    euro(sp.prepaye) + '</b> au départ, dont ' +
+    euro(sp.nbTrades * sp.parTrade) + ' pour <b>' + sp.nbTrades +
+    '</b> trades. Un trade coûte ' + euro(sp.parTrade) + " : celui qui n'en " +
+    'utilise aucun récupère la somme entière.';
 
   const tw = el('div', 'tablewrap');
   const t = el('table', 'rg-tbl');
@@ -148,9 +218,10 @@ function render() {
   const tb = el('tbody');
   let tot = { pre: 0, uti: 0, tr: 0, pena: 0, pos: 0, bou: 0, bal: 0, solde: 0 };
 
+  // bilanSaison() a deja tout calcule : on affiche, on ne recalcule pas.
   sp.poolers.forEach(p => {
-    const utilise = 82 + p.trades * 10;
-    const solde = sp.prepaye - utilise - p.pena - p.pos + p.bourse + p.ballot;
+    const utilise = p.utilise;
+    const solde = p.solde;
     tot.pre += sp.prepaye; tot.uti += utilise; tot.tr += p.trades;
     tot.pena += p.pena; tot.pos += p.pos; tot.bou += p.bourse;
     tot.bal += p.ballot; tot.solde += solde;
@@ -160,8 +231,9 @@ function render() {
     tr.append(el('td', 'rg-nm', p.nom));
     tr.append(el('td', 'num', euro(sp.prepaye)));
     // Les trades employés d'abord : c'est eux qui expliquent le remboursement.
-    tr.append(el('td', 'num' + (p.trades < 2 ? ' gain' : ''), p.trades + ' / 2'));
-    const remis = sp.prepaye - utilise;
+    tr.append(el('td', 'num' + (p.trades < sp.nbTrades ? ' gain' : ''),
+                 p.trades + ' / ' + sp.nbTrades));
+    const remis = p.remis;
     tr.append(el('td', 'num' + (remis ? ' gain' : ''),
                  remis ? '+' + euro(remis) : '—'));
     tr.append(el('td', 'num' + (p.pena ? ' perte' : ''), p.pena ? euro(p.pena) : '—'));
@@ -173,8 +245,8 @@ function render() {
                  (solde >= 0 ? '+' : '') + solde.toFixed(2) + ' $'));
     // Les comptes se règlent une fois l'an : le solde vient en déduction de
     // la cotisation de la saison qui commence.
-    const net = solde - sp.cotisSuivante;
-    tr.append(el('td', 'num', '−' + euro(sp.cotisSuivante)));
+    const net = solde - COTIS_SUIV;
+    tr.append(el('td', 'num', '−' + euro(COTIS_SUIV)));
     tr.append(el('td', 'num rg-pizza-cell', '?'));
     tr.append(el('td', 'num net ' + (net >= 0 ? 'gain' : 'perte'),
                  (net >= 0 ? '+' : '') + net.toFixed(2) + ' $'));
@@ -186,13 +258,14 @@ function render() {
   const fr = el('tr');
   fr.append(el('td', '', ''));
   fr.append(el('td', 'rg-nm', 'Total'));
-  [euro(tot.pre), tot.tr + ' / 22', '+' + euro(tot.pre - tot.uti),
+  [euro(tot.pre), tot.tr + ' / ' + (sp.nbTrades * sp.poolers.length),
+   '+' + euro(tot.pre - tot.uti),
    euro(tot.pena), euro(tot.pos), euro(tot.bou), tot.bal.toFixed(2) + ' $']
     .forEach(v => fr.append(el('td', 'num', v)));
   // Pas de total pour le solde : additionner des gains et des pertes donne un
   // nombre que personne ne verse ni ne reçoit.
   fr.append(el('td', 'num solde', '—'));
-  fr.append(el('td', 'num', '−' + euro(sp.cotisSuivante * sp.poolers.length)));
+  fr.append(el('td', 'num', '−' + euro(COTIS_SUIV * sp.poolers.length)));
   fr.append(el('td', 'num rg-pizza-cell', '?'));
   fr.append(el('td', 'num net', '—'));
   tf.append(fr);
@@ -227,7 +300,7 @@ function render() {
   pe.append(peImg);
   const pt = el('div', 'rg-bouffe-txt');
   const ph = el('div', 'rg-bouffe-h');
-  ph.innerHTML = '2 $ par pooleur en ' + sp.saison;
+  ph.innerHTML = euro(sp.poolExpert) + ' par pooleur en ' + sp.saison;
   pt.append(ph);
   const plx = el('div', 'rg-bouffe-l');
   plx.innerHTML = 'Le site qui compile les pointages tout au long de la saison.';
@@ -237,8 +310,8 @@ function render() {
   const duo = el('div', 'rg-duo');
   duo.append(bouffe, pe);
 
-  const nbRemis = sp.poolers.filter(p => p.trades < 2).length;
-  const totRemis = sp.poolers.reduce((t2, p) => t2 + (2 - p.trades) * 10, 0);
+  const nbRemis = sp.poolers.filter(p => p.trades < sp.nbTrades).length;
+  const totRemis = sp.poolers.reduce((t2, p) => t2 + p.remis, 0);
   const noteFin = el('p', 'hint',
     'Colonne « Remis » : ' + nbRemis + ' pooleurs sur ' + sp.poolers.length +
     " n'ont pas utilisé leurs deux trades et se font rembourser " +
