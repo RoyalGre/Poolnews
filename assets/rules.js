@@ -144,7 +144,8 @@ function render() {
   const hr = el('tr');
   [['', ''], ['Pooleur', ''], ['Prépayé', 'num'], ['Trades', 'num'],
    ['Coût réel', 'num'], ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
-   ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num']]
+   ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num'],
+   ['Cotis. ' + REGLES.saison, 'num'], ['À régler', 'num']]
     .forEach(([h, c]) => hr.append(el('th', c, h)));
   thead.append(hr);
   t.append(thead);
@@ -180,6 +181,13 @@ function render() {
     tr.append(el('td', 'num' + (p.ballot ? ' gain' : ''), p.ballot ? p.ballot.toFixed(2) + ' $' : '—'));
     tr.append(el('td', 'num solde ' + (solde >= 0 ? 'gain' : 'perte'),
                  (solde >= 0 ? '+' : '') + solde.toFixed(2) + ' $'));
+    // Les comptes se reglent une fois l'an, au debut de la saison
+    // suivante : le solde vient donc en deduction de la cotisation.
+    const cotis = REGLES.cotisation.base + REGLES.cotisation.poolexpert + 20;
+    const net = solde - cotis;
+    tr.append(el('td', 'num', '−' + euro(cotis)));
+    tr.append(el('td', 'num net ' + (net >= 0 ? 'gain' : 'perte'),
+                 (net >= 0 ? '+' : '') + net.toFixed(2) + ' $'));
     tb.append(tr);
   });
   t.append(tb);
@@ -195,6 +203,10 @@ function render() {
   // nombre que personne ne verse ni ne recoit. Les deux flux reels sont
   // affiches sous le tableau, ou ils veulent dire quelque chose.
   fr.append(el('td', 'num solde', '—'));
+  const cotisTot = (REGLES.cotisation.base + REGLES.cotisation.poolexpert + 20) *
+                   sp.poolers.length;
+  fr.append(el('td', 'num', '−' + euro(cotisTot)));
+  fr.append(el('td', 'num net', '—'));
   tf.append(fr);
   t.append(tf);
 
@@ -213,10 +225,14 @@ function render() {
     const u = 82 + p.trades * 10;
     return sp.prepaye - u - p.pena - p.pos + p.bourse + p.ballot;
   });
-  const aVerser  = flux.filter(v => v > 0).reduce((t, v) => t + v, 0);
-  const aPercev  = flux.filter(v => v < 0).reduce((t, v) => t - v, 0);
-  const nbVerser = flux.filter(v => v > 0).length;
-  const nbPercev = flux.filter(v => v < 0).length;
+  // Ce qui change vraiment de mains : le solde APRES deduction de la
+  // cotisation de la saison qui commence, puisque tout se regle d'un coup.
+  const cotisAn = REGLES.cotisation.base + REGLES.cotisation.poolexpert + 20;
+  const nets    = flux.map(v => v - cotisAn);
+  const aVerser  = nets.filter(v => v > 0).reduce((t, v) => t + v, 0);
+  const aPercev  = nets.filter(v => v < 0).reduce((t, v) => t - v, 0);
+  const nbVerser = nets.filter(v => v > 0).length;
+  const nbPercev = nets.filter(v => v < 0).length;
 
   const bilan = el('div', 'rg-flux');
   const fg = el('div', 'rg-flux-item gain');
@@ -231,11 +247,16 @@ function render() {
 
   const nbRemis = sp.poolers.filter(p => p.trades < 2).length;
   const totRemis = sp.poolers.reduce((t, p) => t + (2 - p.trades) * 10, 0);
+  const noteFlux = el('p', 'hint');
+  noteFlux.innerHTML = 'Montants nets, cotisation ' + REGLES.saison +
+    ' de ' + euro(cotisAn) + ' déjà déduite — c’est ce qui change de mains ' +
+    'au moment de lancer la saison.';
+
   const noteFin = el('p', 'hint',
     "L'an dernier, " + nbRemis + " pooleurs sur " + sp.poolers.length +
     " ont récupéré de l'argent, pour " + euro(totRemis) + " au total. " +
     'Barème de ' + sp.saison + ', à 11 pooleurs.');
-  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, bilan, noteFin]));
+  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, bilan, noteFlux, noteFin]));
 
   const reg = el('div', 'prose');
   reg.innerHTML =
