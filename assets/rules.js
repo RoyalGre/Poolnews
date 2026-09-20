@@ -402,11 +402,6 @@ function render() {
 
   split.append(droite);
   box.append(split);
-
-  const note = el('p', 'hint');
-  note.textContent = 'Finances et règlements de la saison ' + REGLES.saison +
-    ' — source : Pool_25-26.xlsx, feuille Résultats.';
-  box.append(note);
 }
 
 /* ---- Go ---------------------------------------------------------------- */
