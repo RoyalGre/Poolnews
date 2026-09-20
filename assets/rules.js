@@ -34,7 +34,7 @@ const REGLES = {
   ],
   ballottage: {
     maxJoueurs: 2,
-    limite: '6 mars 2026 à 23 h 59',
+    limite: '1er mars 2027 à 23 h 59',
     cout: 10,
     penaliteNonComptant: 10
   }
@@ -190,8 +190,10 @@ function render() {
   [euro(tot.pre), tot.tr + ' / 22', euro(tot.uti),
    '+' + euro(tot.pre - tot.uti), euro(tot.pena), euro(tot.pos),
    euro(tot.bou), tot.bal.toFixed(2) + ' $'].forEach(v => fr.append(el('td', 'num', v)));
-  fr.append(el('td', 'num solde ' + (tot.solde >= 0 ? 'gain' : 'perte'),
-               (tot.solde >= 0 ? '+' : '') + tot.solde.toFixed(2) + ' $'));
+  // Pas de total pour le solde : additionner des gains et des pertes donne un
+  // nombre que personne ne verse ni ne recoit. Les deux flux reels sont
+  // affiches sous le tableau, ou ils veulent dire quelque chose.
+  fr.append(el('td', 'num solde', '—'));
   tf.append(fr);
   t.append(tf);
 
@@ -205,13 +207,34 @@ function render() {
     "20 $ pour <b>deux</b> trades. Un trade coûte 10 $ : celui qui n'en fait " +
     "qu'un récupère 10 $, celui qui n'en fait aucun récupère ses 20 $.";
 
+  // Les deux mouvements que la direction doit reellement faire.
+  const flux = sp.poolers.map(p => {
+    const u = 82 + p.trades * 10;
+    return sp.prepaye - u - p.pena - p.pos + p.bourse + p.ballot;
+  });
+  const aVerser  = flux.filter(v => v > 0).reduce((t, v) => t + v, 0);
+  const aPercev  = flux.filter(v => v < 0).reduce((t, v) => t - v, 0);
+  const nbVerser = flux.filter(v => v > 0).length;
+  const nbPercev = flux.filter(v => v < 0).length;
+
+  const bilan = el('div', 'rg-flux');
+  const fg = el('div', 'rg-flux-item gain');
+  fg.append(el('span', 'rg-flux-lbl', 'À verser aux pooleurs'));
+  fg.append(el('span', 'rg-flux-val', aVerser.toFixed(2) + ' $'));
+  fg.append(el('span', 'rg-flux-sub', nbVerser + ' pooleurs'));
+  const fp = el('div', 'rg-flux-item perte');
+  fp.append(el('span', 'rg-flux-lbl', 'À percevoir'));
+  fp.append(el('span', 'rg-flux-val', aPercev.toFixed(2) + ' $'));
+  fp.append(el('span', 'rg-flux-sub', nbPercev + ' pooleurs'));
+  bilan.append(fg, fp);
+
   const nbRemis = sp.poolers.filter(p => p.trades < 2).length;
   const totRemis = sp.poolers.reduce((t, p) => t + (2 - p.trades) * 10, 0);
   const noteFin = el('p', 'hint',
     "L'an dernier, " + nbRemis + " pooleurs sur " + sp.poolers.length +
     " ont récupéré de l'argent, pour " + euro(totRemis) + " au total. " +
     'Barème de ' + sp.saison + ', à 11 pooleurs.');
-  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, noteFin]));
+  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, bilan, noteFin]));
 
   const reg = el('div', 'prose');
   reg.innerHTML =

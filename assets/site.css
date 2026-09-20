@@ -929,6 +929,32 @@ svg.rink text.df-lbl-s {
 .rg-remb { color: var(--ok); margin-top: 9px; }
 .rg-remb b { color: var(--ok); }
 
+/* Les deux mouvements reels de la caisse, sous le tableau. Additionner la
+   colonne Solde donnait un nombre que personne ne verse ni ne recoit ; ces
+   deux-la, si. */
+.rg-flux { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+@media (max-width: 520px) { .rg-flux { grid-template-columns: 1fr; } }
+.rg-flux-item {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--panel-2);
+}
+.rg-flux-item.gain  { border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 8%, transparent); }
+.rg-flux-item.perte { border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent); }
+.rg-flux-lbl {
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+}
+.rg-flux-val {
+  font-family: var(--f-disp); font-weight: 700; font-size: 25px; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.rg-flux-item.gain  .rg-flux-val { color: var(--ok); }
+.rg-flux-item.perte .rg-flux-val { color: var(--danger); }
+.rg-flux-sub { font-size: 11.5px; color: var(--muted); }
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
