@@ -158,14 +158,40 @@ if ((Test-Path $poolPath) -and (Test-Path $playersPath)) {
 
         foreach ($t in $trades) {
             # Le fichier est tape a la main : « Francois C. » y cotoie
-            # « Francois C. » du pool. On compare sans accents, comme le
-            # site le fait deja pour les noms de joueurs.
-            if ((Fold $t.pooler) -ne (Fold $pooler.name)) { continue }
+            # « Francois C. » du pool, et « Martin P. » y designe
+            # « Martin Pr. ». On compare sans accents, et on accepte qu'une
+            # abreviation soit le prefixe de l'autre.
+            $ft = (Fold $t.pooler) -replace '[^a-z]', ''
+            $fp = (Fold $pooler.name) -replace '[^a-z]', ''
+            if ($ft -ne $fp -and -not $fp.StartsWith($ft) -and -not $ft.StartsWith($fp)) { continue }
             $want = Fold $t.joueur
             $hit = @($rows | Where-Object {
                 $f = Fold $_.n
                 $f -eq $want -or $f.EndsWith($want) -or $want.EndsWith($f)
             })
+            # Le fichier est tape a la main : « Barbachev » pour Barbashev,
+            # « Marchement » pour Marchment. Plutot que d'echouer en silence,
+            # on retombe sur le nom le plus proche de l'alignement -- qui ne
+            # compte que douze joueurs, donc le risque de confusion est nul.
+            if ($hit.Count -eq 0) {
+                $best = $null; $bestScore = 0
+                foreach ($r in $rows) {
+                    $f = Fold $r.n
+                    # Distance de Levenshtein simplifiee : proportion de
+                    # caracteres communs dans le meme ordre.
+                    $common = 0; $j = 0
+                    foreach ($ch in $want.ToCharArray()) {
+                        $k = $f.IndexOf($ch, $j)
+                        if ($k -ge 0) { $common++; $j = $k + 1 }
+                    }
+                    $score = $common / [Math]::Max($want.Length, $f.Length)
+                    if ($score -gt $bestScore) { $bestScore = $score; $best = $r }
+                }
+                if ($bestScore -ge 0.8) {
+                    $hit = @($best)
+                    Say ("  ~ {0} -> {1}" -f $t.joueur, $best.n) 'DarkGray'
+                }
+            }
             if ($hit.Count -gt 0) {
                 $t.player  = [string]$hit[0].n
                 $t.pts     = [int]$hit[0].pts

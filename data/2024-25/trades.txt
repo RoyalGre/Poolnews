@@ -10,3 +10,29 @@ Trade 2024-2025
 #
 # puis :
 #     powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-trades.ps1 -Season 20242025
+
+Frédérick D.
+	Out Dylan Cozen In Ivan Barbachev (5 oct 2024)
+	Out Matias Macelli In Tomas Hertl (6 mars 2025)
+Pascal R.
+	Out Noah Dobson In Connor McMichael (16 Nov 2024)
+	Out Juraj Slafkovsky In Shea Theodore (20 jan 2025)
+Francois C.
+	Out Michael Bunting In Sam Bennett (17 Nov 2024)
+	Out Zach Hyman In Aliaksei Protas (22 fev 2025)
+Dany P.
+	Out Jeff Skinner In Mason Marchement (16 nov 2024)
+	Out Trevor Zegras In Dylan Guenther in (20 dec 2024)
+Steve T.
+	Out Brian Rust In Kirill Marchenko (17 nov 2024)
+	Out Andrei Kuzmenko In Pierre-Luc Dubois (9 fev 2025)
+Patrick C.
+	Out Morgan Reielly In Mark Stone (23 oct 2024)
+	Out Mathew Barzal In Gabriel Vilardi (14 jan 2025)
+Eric C.
+	Out Vince Dunn In Zach Werenski (5 dec 2024)
+Martin P.
+	Out Quinton Byfield In Sean Monahan (28 dec 2024)
+	Out Mason Mctavish In Marco Rossi (26 jan 2025)
+Manuel T.
+	Out Miro Heiskanen In Lane Hutson (15 jan 2025)

@@ -1,36 +1,43 @@
-Saison 2024-2025
-	Pooleurs = 10
-
-# Reconstitue a partir du livre des records (pool-history.json) et des
-# alignements retrouves dans players.js. Les montants ci-dessous viennent des
-# regles en vigueur cette annee-la ; completer si certains different.
-
 Cotisations
 	Pool = 80$
 	PoolExpert = 2$
 	Trade = 10$ chaque
-	Trades inclus = 2
+	Pizza = 2.85$ chaque
 
 Bourses
-	1re position = 500$
-	2e position = 200$
-	3e position = 100$
-	4e position = 0$
-	La bourse du ballottage est divisee en quatre parts egales entre les
-	quatre premieres positions.
+	1ère position	$500 + 1/4 Ballotage						
+	2e position 	$200 + 1/4 Ballotage						
+	3e position		$100 + 1/4 Ballotage						
+	4e position		$0 + 1/4 Ballotage						
+	La bourse du ballottage est divisée 1/4, 1/4, 1/4, 1/4 entre les 4 premières positions										
 
-Penalites de position
-	# A confirmer : le bareme de cette saison n'a pas ete retrouve.
-	5e = 0$
+Règlements		
+	12 choix par participant, nous cumulons le total des points (LNH) des 10 meilleurs choix à la fin de la saison dont obligatoirement 						
+	au moins 1 défenseur même s'il ne fait pas partie des 10 meilleurs pointeurs						
+	Si un participant n'a pas de défenseur dans son alignement, il devra se contenter du total de ses 9 meilleurs pointeurs.						
+	En cas d'égalité, c'est le 11e choix qui détermine l'avance et si l'égalité persiste c'est le 12e choix						
+								
+	Au classement final,						
+	La 5e position n'a rien à payer						
+	La 6e position devra payer 10$ supplémentaires						
+	La 7e position devra payer 15$ supplémentaires						
+	La 8e position devra payer 20$ supplémentaires						
+	La 9e position devra payer 25$ supplémentaires						
+	La 10e position devra payer 30$ supplémentaires							
 
-Ballottage
-	Maximum = 2 joueurs
-	Cout = 10$ par joueur repeche
-	Penalite = 10$ si le joueur acquis ne finit pas dans les 10 qui comptent
+Ballottage		
+	Chaque participant a le droit de soumettre au ballottage un maximum de 2 joueurs jusqu'au 6 mars 2025 à 23h59.																	
+	Chaque joueur rejeté est éligible pour être repêché par un autre participant																	
+	Tout changement dans l'alignement d'un participant doit être annoncé sur Facebook aux autres participants																	
+	La date et l'heure de la réception du message sur Facebook détermineront la priorité lorsque 2 participants veulent obtenir le même joueur																	
+	Chaque joueur repêché par le processus de ballottage coûte 10$ au participant qui fera le changement dans son alignement																	
+	L'argent accumulé par le processus de ballottage servira à augmenter la bourse des gagnants.
+	http://www.poolexpert.com/grank.aspx																	
+	# code du pool PoolExpert : garde hors du depot public
+																			
+Pénalité																				
+	Si un joueur réclamé pendant la saison obtient moins de points que le joueur soumis au ballotage, 													
+	le participant doit remettre 10$ dans la bourse de la bouffe de la prochaine saison													
+	Si un joueur réclamé ne compte pas dans le total d'un participant, 													
+	le participant doit remettre 10$ dans la bourse de la bouffe de la prochaine saison													
 
-Repas
-	Total =
-	Divise entre =
-	Budget penalites =
-
-Paiements
