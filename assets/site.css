@@ -966,6 +966,27 @@ svg.rink text.df-lbl-s {
 .rg-tbl td.solde.gain  { background: color-mix(in srgb, var(--ok) 8%, transparent); }
 .rg-tbl td.solde.perte { background: color-mix(in srgb, var(--danger) 8%, transparent); }
 
+/* Ou vont les penalites. Le ton est volontairement plus chaleureux que le
+   reste de la page : c'est la seule ligne du budget qui finit en pizza. */
+.rg-bouffe {
+  display: flex; align-items: center; gap: 13px;
+  margin-top: 18px; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--gold);
+  background: var(--gold-soft);
+}
+.rg-pizza { width: 46px; height: 46px; flex: none; }
+.rg-pizza .pz-croute { fill: #D9A441; }
+.rg-pizza .pz-sauce  { fill: #C8202E; }
+.rg-pizza .pz-pointe { fill: #E8C170; stroke: #D9A441; stroke-width: 1.5; }
+.rg-pizza .pz-pep    { fill: #8C1B25; }
+.rg-bouffe-txt { min-width: 0; }
+.rg-bouffe-h {
+  font-family: var(--f-disp); font-weight: 700; font-size: 17px;
+  line-height: 1.15; color: var(--ink);
+}
+.rg-bouffe-l { font-size: 13px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
+.rg-bouffe-l b { color: var(--ink); }
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }

@@ -72,6 +72,27 @@ const SAISON_PRECEDENTE = {
   ]
 };
 
+/* La pizza du repêchage, dessinée plutôt que chargée : nette à toute taille,
+   elle suit le thème et ne coûte aucune requête. Vue de dessus, une pointe
+   légèrement détachée — c'est ce qui la rend lisible en petit. */
+function pizzaSVG() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const sv = (t, a) => { const e = document.createElementNS(NS, t);
+                         for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const svg = sv('svg', { class: 'rg-pizza', viewBox: '0 0 64 64',
+                          role: 'img', 'aria-label': 'Pizza du repêchage' });
+  // La croûte, puis la sauce.
+  svg.append(sv('circle', { cx: 32, cy: 32, r: 30, class: 'pz-croute' }));
+  svg.append(sv('circle', { cx: 32, cy: 32, r: 24, class: 'pz-sauce' }));
+  // Une pointe découpée, légèrement écartée.
+  svg.append(sv('path', { d: 'M 34 4 A 28 28 0 0 1 60 26 L 36 32 Z',
+                          class: 'pz-pointe' }));
+  // Les pepperonis.
+  [[22,22],[42,24],[26,42],[44,42],[32,32],[18,33]].forEach(([x, y]) => {
+    svg.append(sv('circle', { cx: x, cy: y, r: 4, class: 'pz-pep' }));
+  });
+  return svg;
+}
 function euro(n) { return n + ' $'; }
 
 function bloc(titre, noeuds) {
@@ -96,6 +117,8 @@ function render() {
 
   /* ---- Colonne de gauche : l'argent ---- */
   const gauche = el('div');
+
+  const sp0 = SAISON_PRECEDENTE.poolers;
 
   const cot = [];
   cot.push(ligne('Pool', euro(REGLES.cotisation.base)));
@@ -124,8 +147,28 @@ function render() {
           p.montant ? 'rg-pay' : ''));
   pen.push(el('p', 'hint',
     'Au classement final : la moitié inférieure remet de l’argent, ce qui ' +
-    'garde la fin de saison intéressante même loin du sommet.'));
+    'garde la fin de saison intéressante même loin du sommet. Cet argent ne va ' +
+    'pas aux gagnants — il paie la bouffe du repêchage suivant.'));
   gauche.append(bloc('À payer au classement final', pen));
+
+  // Ou va l'argent des penalites : c'est la question que le tableau laissait
+  // sans reponse, et la reponse est sympathique.
+  const penaTrade = sp0.reduce((t, p) => t + p.pena, 0);
+  const penaPos   = sp0.reduce((t, p) => t + p.pos, 0);
+  const bouffe = el('div', 'rg-bouffe');
+  bouffe.append(pizzaSVG());
+  const bt = el('div', 'rg-bouffe-txt');
+  const bh = el('div', 'rg-bouffe-h');
+  bh.innerHTML = 'Les pénalités paient la <b>bouffe du repêchage</b>';
+  bt.append(bh);
+  const bl = el('div', 'rg-bouffe-l');
+  bl.innerHTML =
+    'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités de trade ' +
+    '<b>' + euro(penaTrade) + '</b> = <b>' + euro(penaPos + penaTrade) + '</b> ' +
+    'au menu du repêchage ' + REGLES.saison + '.';
+  bt.append(bl);
+  bouffe.append(bt);
+  gauche.append(bouffe);
 
   split.append(gauche);
 
