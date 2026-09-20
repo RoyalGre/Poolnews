@@ -295,9 +295,9 @@ function render() {
     'au moment de lancer la saison.';
 
   const noteFin = el('p', 'hint',
-    "L'an dernier, " + nbRemis + " pooleurs sur " + sp.poolers.length +
-    " ont récupéré de l'argent, pour " + euro(totRemis) + " au total. " +
-    'Barème de ' + sp.saison + ', à 11 pooleurs.');
+    "Colonne « Remis » : " + nbRemis + " pooleurs sur " + sp.poolers.length +
+    " n'ont pas utilisé leurs deux trades et se font rembourser " +
+    euro(totRemis) + " au total. Barème de " + sp.saison + ", à 11 pooleurs.");
   droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, bilan, noteFlux, noteFin]));
 
   const reg = el('div', 'prose');
