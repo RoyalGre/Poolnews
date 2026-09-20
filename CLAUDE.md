@@ -52,9 +52,17 @@ is lost now: each build writes into its own season's folder.
 | `data/<season>/goals.js` | every goal + ice coordinates (~1.7 MB) | `build-goals.ps1` |
 | `data/<season>/pool.js` | the published pool everyone sees | `publish-pool.ps1` |
 | `data/<season>/schedule.js` | Thu–Sun games + winners | `build-schedule.ps1` |
+| `data/<season>/trades.js` | the season's trades + penalty flags | `build-trades.ps1` |
 | `data/seasons.js` | which seasons exist, which is current | rebuilt by every run |
 | `data/defi.js` | zone-game offline fallback | **hand-written** |
 | `data/defis.js` | winner-game offline fallback | **hand-written** |
+
+`build-trades.ps1` reads a hand-written `data/<season>/trades.txt` — one
+indented block per pooler, `Out X In Y (12 jan 2026)` — and resolves each
+incoming player against the final rosters to flag the 10 $ penalties. It
+matches pooler names **accent-insensitively**: the file says `Francois C.`
+while the pool says `François C.`, and an exact match silently loses two
+trades.
 
 The two mini-game fallbacks stay at the root on purpose: their picks are keyed
 by weekend date, so they span seasons.

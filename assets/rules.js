@@ -111,6 +111,65 @@ function ligne(gauche, droite, cls) {
   return r;
 }
 
+/* ---- Les transactions de la saison -------------------------------------
+   data/<saison>/trades.js, produit par build-trades.ps1 a partir du
+   trades.txt ecrit a la main pendant l'annee. Le script a deja determine si
+   le joueur acquis a fini dans les dix qui comptent ; la page ne fait que
+   l'afficher. */
+function blocTrades() {
+  const T = window.NHL_TRADES;
+  if (!T || !T.trades || !T.trades.length) return null;
+
+  const MOIS = ['janv.','fevr.','mars','avr.','mai','juin',
+                'juil.','aout','sept.','oct.','nov.','dec.'];
+  const jour = iso => {
+    if (!iso) return '';
+    const p = iso.split('-');
+    return (+p[2]) + ' ' + MOIS[(+p[1]) - 1];
+  };
+
+  const wrap = el('div', 'tablewrap');
+  const t = el('table', 'rg-tbl tr-tbl');
+  const thead = el('thead');
+  const hr = el('tr');
+  [['Date',''], ['Pooleur',''], ['Sort',''], ['Entre',''],
+   ['Pts','num'], ['',''] ].forEach(([h, c]) => hr.append(el('th', c, h)));
+  thead.append(hr);
+  t.append(thead);
+
+  const tb = el('tbody');
+  T.trades.forEach(x => {
+    const tr = el('tr', x.counted === false ? 'pena' : '');
+    tr.append(el('td', 'tr-date', jour(x.date)));
+    tr.append(el('td', 'tr-who', x.pooler));
+    tr.append(el('td', 'tr-out', x.out));
+    tr.append(el('td', 'tr-in', x.player || x.joueur));
+    tr.append(el('td', 'num', x.pts === undefined ? '—' : String(x.pts)));
+    // La colonne muette porte le verdict : compte, ou penalite de 10 $.
+    if (x.counted === false) {
+      const b = el('td', 'tr-flag');
+      b.append(el('span', 'tr-pena', '10 $'));
+      b.title = 'Ce joueur n’a pas fini dans les dix qui comptent';
+      tr.append(b);
+    } else if (x.counted === true) {
+      tr.append(el('td', 'tr-flag ok', '✓'));
+    } else {
+      tr.append(el('td', 'tr-flag', ''));
+    }
+    tb.append(tr);
+  });
+  t.append(tb);
+  wrap.append(t);
+
+  const nPena = T.trades.filter(x => x.counted === false).length;
+  const note = el('p', 'hint');
+  note.innerHTML = T.trades.length + ' transactions. Un joueur acquis qui ne ' +
+    'finit pas dans les dix qui comptent vaut <b>10 $</b> de penalite : ' +
+    'c’est arrive <b>' + nPena + ' fois</b>, et cet argent paie la bouffe ' +
+    'du repechage.';
+
+  return bloc('Transactions ' + T.label, [wrap, note]);
+}
 function render() {
   const box = $('content');
   box.innerHTML = '';
@@ -335,6 +394,11 @@ function render() {
     'celui-ci remet <b>' + euro(REGLES.ballottage.penaliteNonComptant) +
     '</b> dans la bourse de la bouffe de la saison suivante.</p>';
   droite.append(bloc('Ballottage', [bal]));
+
+  // Les transactions ferment la colonne : c'est l'historique de l'annee,
+  // pas une regle, et la liste est longue.
+  const tradesBloc = blocTrades();
+  if (tradesBloc) droite.append(tradesBloc);
 
   split.append(droite);
   box.append(split);

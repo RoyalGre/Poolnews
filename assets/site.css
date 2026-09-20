@@ -1016,6 +1016,25 @@ svg.rink text.df-lbl-s {
   background: color-mix(in srgb, var(--gold) 8%, transparent);
 }
 
+/* Les transactions de la saison. Une ligne par echange, dans l'ordre ou ils
+   se sont produits : c'est un journal, pas un classement. */
+.tr-tbl td { font-size: 12.5px; }
+.tr-date { font-family: var(--f-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.tr-who  { font-weight: 600; white-space: nowrap; }
+/* Le sortant en retrait, l'entrant en pleine encre : c'est lui qui compte
+   pour la penalite, et c'est lui qu'on cherche en relisant la liste. */
+.tr-out  { color: var(--muted); text-decoration: line-through; }
+.tr-in   { color: var(--ink); font-weight: 500; }
+.tr-flag { text-align: center; white-space: nowrap; }
+.tr-flag.ok { color: var(--ok); }
+.tr-pena {
+  display: inline-block; padding: 1px 6px; border-radius: 4px;
+  font-family: var(--f-mono); font-size: 10.5px; font-weight: 600;
+  color: var(--danger); border: 1px solid var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+.tr-tbl tr.pena td { background: color-mix(in srgb, var(--danger) 5%, transparent); }
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
