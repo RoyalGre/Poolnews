@@ -1,0 +1,36 @@
+Saison 2024-2025
+	Pooleurs = 10
+
+# Reconstitue a partir du livre des records (pool-history.json) et des
+# alignements retrouves dans players.js. Les montants ci-dessous viennent des
+# regles en vigueur cette annee-la ; completer si certains different.
+
+Cotisations
+	Pool = 80$
+	PoolExpert = 2$
+	Trade = 10$ chaque
+	Trades inclus = 2
+
+Bourses
+	1re position = 500$
+	2e position = 200$
+	3e position = 100$
+	4e position = 0$
+	La bourse du ballottage est divisee en quatre parts egales entre les
+	quatre premieres positions.
+
+Penalites de position
+	# A confirmer : le bareme de cette saison n'a pas ete retrouve.
+	5e = 0$
+
+Ballottage
+	Maximum = 2 joueurs
+	Cout = 10$ par joueur repeche
+	Penalite = 10$ si le joueur acquis ne finit pas dans les 10 qui comptent
+
+Repas
+	Total =
+	Divise entre =
+	Budget penalites =
+
+Paiements

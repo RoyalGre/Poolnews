@@ -1,0 +1,12 @@
+Trade 2024-2025
+
+# Les echanges de cette saison n'ont pas ete conserves : le livre des records
+# ne garde que les alignements finaux, pas les mouvements qui y ont mene.
+#
+# Si vous retrouvez la liste, elle s'ecrit comme celle des autres saisons :
+#
+#     Pooleur X.
+#         Out <joueur sortant> In <joueur entrant> (12 jan 2025)
+#
+# puis :
+#     powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-trades.ps1 -Season 20242025
