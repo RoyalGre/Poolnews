@@ -143,7 +143,7 @@ function render() {
   const thead = el('thead');
   const hr = el('tr');
   [['', ''], ['Pooleur', ''], ['Prépayé', 'num'], ['Trades', 'num'],
-   ['Coût réel', 'num'], ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
+   ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
    ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num'],
    ['Cotis. ' + REGLES.saison, 'num'], ['À régler', 'num']]
     .forEach(([h, c]) => hr.append(el('th', c, h)));
@@ -168,7 +168,6 @@ function render() {
     // et le remboursement qui suit.
     tr.append(el('td', 'num' + (p.trades < 2 ? ' gain' : ''),
                  p.trades + ' / 2'));
-    tr.append(el('td', 'num', euro(utilise)));
     // La colonne qui manquait : ce que le pooleur récupère pour les trades
     // qu'il n'a pas utilisés. Auparavant il fallait soustraire deux colonnes
     // de tête pour s'en apercevoir.
@@ -196,7 +195,7 @@ function render() {
   const fr = el('tr');
   fr.append(el('td', '', ''));
   fr.append(el('td', 'rg-nm', 'Total'));
-  [euro(tot.pre), tot.tr + ' / 22', euro(tot.uti),
+  [euro(tot.pre), tot.tr + ' / 22',
    '+' + euro(tot.pre - tot.uti), euro(tot.pena), euro(tot.pos),
    euro(tot.bou), tot.bal.toFixed(2) + ' $'].forEach(v => fr.append(el('td', 'num', v)));
   // Pas de total pour le solde : additionner des gains et des pertes donne un
