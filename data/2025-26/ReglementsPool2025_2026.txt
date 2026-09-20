@@ -1,0 +1,70 @@
+Cotisations
+	Pool = 80$
+	PoolExpert = 2$
+	Trade = 10$ chaque
+
+Bourses
+	1ère position	$540 + 1/4 Ballotage						
+	2e position 	$220 + 1/4 Ballotage						
+	3e position		$120 + 1/4 Ballotage						
+	4e position		$0 + 1/4 Ballotage						
+	La bourse du ballottage est divisée 1/4, 1/4, 1/4, 1/4 entre les 4 premières positions										
+
+Règlements		
+	12 choix par participant, nous cumulons le total des points (LNH) des 10 meilleurs choix à la fin de la saison dont obligatoirement 						
+	au moins 1 défenseur même s'il ne fait pas partie des 10 meilleurs pointeurs						
+	Si un participant n'a pas de défenseur dans son alignement, il devra se contenter du total de ses 9 meilleurs pointeurs.						
+	En cas d'égalité, c'est le 11e choix qui détermine l'avance et si l'égalité persiste c'est le 12e choix						
+								
+	Au classement final,						
+	La 5e position n'a rien à payer						
+	La 6e position devra payer 10$ supplémentaires						
+	La 7e position devra payer 15$ supplémentaires						
+	La 8e position devra payer 20$ supplémentaires						
+	La 9e position devra payer 25$ supplémentaires						
+	La 10e position devra payer 30$ supplémentaires						
+	La 11e position devra payer 35$ supplémentaires						
+
+Ballottage		
+	Chaque participant a le droit de soumettre au ballottage un maximum de 2 joueurs jusqu'au 6 mars 2026 à 23h59.																	
+	Chaque joueur rejeté est éligible pour être repêché par un autre participant																	
+	Tout changement dans l'alignement d'un participant doit être annoncé sur Facebook aux autres participants																	
+	La date et l'heure de la réception du message sur Facebook détermineront la priorité lorsque 2 participants veulent obtenir le même joueur																	
+	Chaque joueur repêché par le processus de ballottage coûte 10$ au participant qui fera le changement dans son alignement																	
+	L'argent accumulé par le processus de ballottage servira à augmenter la bourse des gagnants (voir section Bourses)																	
+	http://www.poolexpert.com/grank.aspx																	
+	pn2526																	
+																			
+Pénalité																			
+	Si un joueur réclamé ne compte pas dans le total d'un participant, 																	
+	le participant doit remettre 10$ dans la bourse de la bouffe de la prochaine saison																	
+
+
+Trade 2025-2026
+	Frédérick D. 
+		Out Connor McMichael In Bryan Rust (6 nov 2025)
+		Out Jonathan Marchessault In Beckett Sennecke (7 dec 2025)
+	Pascal R.
+		Out Pierre-Luc Dubois In Ivan Barbashev(7 nov 2025)
+		Out Ryan Donato In Moritz Seider (1 jan 2026)
+	Martin Pr.
+		Out Cole Perfetti In Dawson Mercer (9 Nov 2025)	
+		Out Jared McCann In Ryan O'Reilly (21 dec 2025)
+	Eric C.
+		Out Kent Johnson In Artturi Lehkonen (14 Nov 2025)
+		Out Dougie Hamilton In Tyler Bertuzzi (12 jan 2026)
+	Patrick C.
+		Out Matt Duchene In John Carlson (28 Nov 2025)
+		Out Victor Hedman In Marcus Johansson in (29 dec 2025)
+	Martin M.
+		Out Thomas Harley In Jakob Chychrun (28 nov 2025)
+	Francois C.
+		Out Steven Stamkos In Morgan Geekie (29 Nov 2025)
+		Out Anze Kopitar In Luke Evangelista (2 mars 2026)
+	Dany P.
+		Out Shea Theodore In Darren Raddysh (4 jan 2026)
+	Steve T.
+		Out Adam fox In Sam Bennett (8 jan 2026)
+	Manuel T.
+		Out Anders Lee Out Zach Hyman in (15 jan 2026)
+		Out Logan Cooley In Steven Stamkos (5 fev 2026)

@@ -872,6 +872,48 @@ svg.rink text.df-lbl-s {
 .rg-frow.top .rg-fcash { color: var(--ok); }
 .rg-frow.pay .rg-fcash { color: var(--danger); }
 
+/* Le bilan financier de la saison précédente.
+
+   Le code de couleur porte le sens : vert = le pooleur encaisse ou récupère,
+   rouge = il débourse. La teinte de fond reste très pâle pour que la colonne
+   se lise d'un coup d'œil sans transformer le tableau en damier ; c'est le
+   texte coloré qui tranche, le fond ne fait que regrouper.
+
+   Rouge et vert seuls ne suffisent pas pour un daltonien, alors le solde
+   porte aussi son signe (+ ou −) et les colonnes sont nommées. */
+.rg-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.rg-tbl th {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--muted); font-weight: 600;
+  text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+.rg-tbl th.num, .rg-tbl td.num { text-align: right; }
+.rg-tbl td {
+  padding: 6px 8px; border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.rg-tbl td.num { font-family: var(--f-mono); font-size: 12.5px; }
+.rg-tbl tbody tr:hover td { background: var(--hover-wash); }
+.rg-tbl .rank { font-size: 13px; }
+.rg-nm { font-size: 13.5px; }
+.rg-tbl tr.top .rg-nm { font-weight: 600; }
+
+/* Gain et perte. Le fond est volontairement discret ; la couleur du texte
+   fait le travail. */
+.rg-tbl td.gain  { color: var(--ok);     background: color-mix(in srgb, var(--ok) 9%, transparent); }
+.rg-tbl td.perte { color: var(--danger); background: color-mix(in srgb, var(--danger) 9%, transparent); }
+
+/* Le solde est la colonne qu'on vient lire : plus marquée que les autres. */
+.rg-tbl td.solde { font-weight: 700; font-size: 13px; border-left: 1px solid var(--border); }
+.rg-tbl td.solde.gain  { background: color-mix(in srgb, var(--ok) 16%, transparent); }
+.rg-tbl td.solde.perte { background: color-mix(in srgb, var(--danger) 16%, transparent); }
+
+.rg-tbl tfoot td {
+  border-top: 2px solid var(--line-strong); border-bottom: 0;
+  padding-top: 8px; font-weight: 600;
+}
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }

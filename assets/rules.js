@@ -44,20 +44,30 @@ const REGLES = {
    ou remis. Les points viennent de data/2025-26/, recalculés avec la règle
    du pool ; les montants suivent le barème de CETTE saison-là, à 11
    pooleurs, pas celui de 2026-27. */
+/* Le bilan financier complet de la saison précédente.
+
+   prepaye : tout le monde a versé 102 $ au départ (80 pool + 2 PoolExpert
+             + 20 pour deux trades), peu importe le nombre de trades utilisés.
+   utilise : ce qui était réellement dû, soit 82 $ + 10 $ par trade employé.
+   Un pooleur qui trade moins récupère donc la différence.
+
+   Les montants viennent de ReglementsPool2025_2026.txt ; les points et les
+   rangs sont recalculés depuis data/2025-26/. */
 const SAISON_PRECEDENTE = {
   saison: '2025-26',
+  prepaye: 102,
   poolers: [
-    { rang: 1,  nom: 'Steve T.',     pts: 778, bourse: 540 },
-    { rang: 2,  nom: 'Frédérick D.', pts: 756, bourse: 220 },
-    { rang: 3,  nom: 'Martin M.',    pts: 752, bourse: 120 },
-    { rang: 4,  nom: 'Martin Pr.',   pts: 734, bourse: 0   },
-    { rang: 5,  nom: 'Yanick M.',    pts: 712, bourse: 0   },
-    { rang: 6,  nom: 'Eric C.',      pts: 709, bourse: -10 },
-    { rang: 7,  nom: 'Pascal R.',    pts: 699, bourse: -15 },
-    { rang: 8,  nom: 'François C.',  pts: 696, bourse: -20 },
-    { rang: 9,  nom: 'Dany P.',      pts: 692, bourse: -25 },
-    { rang: 10, nom: 'Manuel T.',    pts: 681, bourse: -30 },
-    { rang: 11, nom: 'Patrick C.',   pts: 634, bourse: -35 }
+    { rang: 1,  nom: 'Steve T.',     pts: 778, trades: 1, pena: 0,  pos: 0,  bourse: 540, ballot: 42.5 },
+    { rang: 2,  nom: 'Frédérick D.', pts: 756, trades: 2, pena: 0,  pos: 0,  bourse: 220, ballot: 42.5 },
+    { rang: 3,  nom: 'Martin M.',    pts: 752, trades: 1, pena: 0,  pos: 0,  bourse: 120, ballot: 42.5 },
+    { rang: 4,  nom: 'Martin Pr.',   pts: 734, trades: 2, pena: 10, pos: 0,  bourse: 0,   ballot: 42.5 },
+    { rang: 5,  nom: 'Yanick M.',    pts: 712, trades: 0, pena: 0,  pos: 0,  bourse: 0,   ballot: 0 },
+    { rang: 6,  nom: 'Eric C.',      pts: 709, trades: 2, pena: 10, pos: 10, bourse: 0,   ballot: 0 },
+    { rang: 7,  nom: 'Pascal R.',    pts: 699, trades: 2, pena: 0,  pos: 15, bourse: 0,   ballot: 0 },
+    { rang: 8,  nom: 'François C.',  pts: 696, trades: 2, pena: 0,  pos: 20, bourse: 0,   ballot: 0 },
+    { rang: 9,  nom: 'Dany P.',      pts: 692, trades: 1, pena: 0,  pos: 25, bourse: 0,   ballot: 0 },
+    { rang: 10, nom: 'Manuel T.',    pts: 681, trades: 2, pena: 10, pos: 30, bourse: 0,   ballot: 0 },
+    { rang: 11, nom: 'Patrick C.',   pts: 634, trades: 2, pena: 0,  pos: 35, bourse: 0,   ballot: 0 }
   ]
 };
 
@@ -113,24 +123,68 @@ function render() {
   /* ---- Colonne de droite : la saison précédente, puis les règles ---- */
   const droite = el('div');
 
-  // Ce que le barème a réellement donné l'an dernier : plus parlant qu'un
-  // tableau de montants théoriques, et ça rappelle que le bas paie.
+  // Ce que le barème a réellement donné l'an dernier. Le vert et le rouge
+  // portent l'information — qui a encaissé, qui a remis — pour qu'on lise le
+  // bilan sans additionner soi-même. Les colonnes suivent le calcul :
+  // prépayé − utilisé − pénalités − position + bourse + ballottage.
   const sp = SAISON_PRECEDENTE;
-  const tbl = el('div', 'rg-final');
+  const tw = el('div', 'tablewrap');
+  const t = el('table', 'rg-tbl');
+
+  const thead = el('thead');
+  const hr = el('tr');
+  [['', ''], ['Pooleur', ''], ['Prépayé', 'num'], ['Utilisé', 'num'],
+   ['Trades', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
+   ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num']]
+    .forEach(([h, c]) => hr.append(el('th', c, h)));
+  thead.append(hr);
+  t.append(thead);
+
+  const tb = el('tbody');
+  let tot = { pre: 0, uti: 0, tr: 0, pena: 0, pos: 0, bou: 0, bal: 0, solde: 0 };
+
   sp.poolers.forEach(p => {
-    const r = el('div', 'rg-frow' + (p.rang <= 3 ? ' top' : '') +
-                        (p.bourse < 0 ? ' pay' : ''));
-    r.append(el('span', 'rank' + (p.rang <= 3 ? ' r' + p.rang : ''), String(p.rang)));
-    r.append(el('span', 'rg-fnm', p.nom));
-    r.append(el('span', 'rg-fpts', p.pts + ' pts'));
-    r.append(el('span', 'rg-fcash',
-      p.bourse > 0 ? '+' + euro(p.bourse) : (p.bourse < 0 ? euro(p.bourse) : '—')));
-    tbl.append(r);
+    const utilise = 82 + p.trades * 10;
+    const solde = sp.prepaye - utilise - p.pena - p.pos + p.bourse + p.ballot;
+    tot.pre += sp.prepaye; tot.uti += utilise; tot.tr += p.trades;
+    tot.pena += p.pena; tot.pos += p.pos; tot.bou += p.bourse;
+    tot.bal += p.ballot; tot.solde += solde;
+
+    const tr = el('tr', p.rang <= 3 ? 'top' : '');
+    tr.append(el('td', 'rank' + (p.rang <= 3 ? ' r' + p.rang : ''), String(p.rang)));
+    tr.append(el('td', 'rg-nm', p.nom));
+    tr.append(el('td', 'num', euro(sp.prepaye)));
+    // Utilisé sous le prépayé = un remboursement : c'est un gain.
+    tr.append(el('td', 'num' + (utilise < sp.prepaye ? ' gain' : ''), euro(utilise)));
+    tr.append(el('td', 'num', String(p.trades)));
+    tr.append(el('td', 'num' + (p.pena ? ' perte' : ''), p.pena ? euro(p.pena) : '—'));
+    tr.append(el('td', 'num' + (p.pos ? ' perte' : ''), p.pos ? euro(p.pos) : '—'));
+    tr.append(el('td', 'num' + (p.bourse ? ' gain' : ''), p.bourse ? euro(p.bourse) : '—'));
+    tr.append(el('td', 'num' + (p.ballot ? ' gain' : ''), p.ballot ? p.ballot.toFixed(2) + ' $' : '—'));
+    tr.append(el('td', 'num solde ' + (solde >= 0 ? 'gain' : 'perte'),
+                 (solde >= 0 ? '+' : '') + solde.toFixed(2) + ' $'));
+    tb.append(tr);
   });
+  t.append(tb);
+
+  const tf = el('tfoot');
+  const fr = el('tr');
+  fr.append(el('td', '', ''));
+  fr.append(el('td', 'rg-nm', 'Total'));
+  [euro(tot.pre), euro(tot.uti), String(tot.tr), euro(tot.pena), euro(tot.pos),
+   euro(tot.bou), tot.bal.toFixed(2) + ' $'].forEach(v => fr.append(el('td', 'num', v)));
+  fr.append(el('td', 'num solde ' + (tot.solde >= 0 ? 'gain' : 'perte'),
+               (tot.solde >= 0 ? '+' : '') + tot.solde.toFixed(2) + ' $'));
+  tf.append(fr);
+  t.append(tf);
+
+  tw.append(t);
   const noteFin = el('p', 'hint',
-    'Les gagnants se partagent en plus la bourse du ballottage, en quatre ' +
-    'parts égales. Barème de ' + sp.saison + ', à 11 pooleurs.');
-  droite.append(bloc('Bourses finales ' + sp.saison, [tbl, noteFin]));
+    'Chacun a versé ' + euro(sp.prepaye) + ' au départ (80 $ + 2 $ + 20 $ pour ' +
+    'deux trades). « Utilisé » est ce qui était réellement dû : 82 $ plus 10 $ ' +
+    'par trade employé — le reste revient au pooleur. Barème de ' + sp.saison +
+    ', à 11 pooleurs.');
+  droite.append(bloc('Bilan financier ' + sp.saison, [tw, noteFin]));
 
   const reg = el('div', 'prose');
   reg.innerHTML =
