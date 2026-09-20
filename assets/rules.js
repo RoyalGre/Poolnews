@@ -97,9 +97,17 @@ function render() {
   const gauche = el('div');
 
   const cot = [];
-  cot.push(ligne('Par participant', euro(REGLES.cotisation.base)));
+  cot.push(ligne('Pool', euro(REGLES.cotisation.base)));
   cot.push(ligne('PoolExpert', euro(REGLES.cotisation.poolexpert)));
-  cot.push(ligne('Total', euro(REGLES.cotisation.base + REGLES.cotisation.poolexpert), 'rg-total'));
+  cot.push(ligne('2 trades (10 $ chacun)', euro(20)));
+  cot.push(ligne('Versé au départ', euro(REGLES.cotisation.base +
+                 REGLES.cotisation.poolexpert + 20), 'rg-total'));
+  // Dit ici aussi : c'est la première section qu'on lit, et la question
+  // « pourquoi 102 $ alors que le pool coûte 80 $ » se pose tout de suite.
+  const remb = el('p', 'hint rg-remb');
+  remb.innerHTML = '↩ Les trades non utilisés sont <b>remboursés</b> en fin de ' +
+    "saison : 10 $ par trade que vous n'avez pas fait.";
+  cot.push(remb);
   gauche.append(bloc('Cotisation', cot));
 
   const bou = REGLES.bourses.map(b =>
@@ -133,8 +141,8 @@ function render() {
 
   const thead = el('thead');
   const hr = el('tr');
-  [['', ''], ['Pooleur', ''], ['Prépayé', 'num'], ['Utilisé', 'num'],
-   ['Trades', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
+  [['', ''], ['Pooleur', ''], ['Prépayé', 'num'], ['Trades', 'num'],
+   ['Coût réel', 'num'], ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
    ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num']]
     .forEach(([h, c]) => hr.append(el('th', c, h)));
   thead.append(hr);
@@ -154,9 +162,17 @@ function render() {
     tr.append(el('td', 'rank' + (p.rang <= 3 ? ' r' + p.rang : ''), String(p.rang)));
     tr.append(el('td', 'rg-nm', p.nom));
     tr.append(el('td', 'num', euro(sp.prepaye)));
-    // Utilisé sous le prépayé = un remboursement : c'est un gain.
-    tr.append(el('td', 'num' + (utilise < sp.prepaye ? ' gain' : ''), euro(utilise)));
-    tr.append(el('td', 'num', String(p.trades)));
+    // Les trades employés d'abord : c'est eux qui expliquent le coût réel,
+    // et le remboursement qui suit.
+    tr.append(el('td', 'num' + (p.trades < 2 ? ' gain' : ''),
+                 p.trades + ' / 2'));
+    tr.append(el('td', 'num', euro(utilise)));
+    // La colonne qui manquait : ce que le pooleur récupère pour les trades
+    // qu'il n'a pas utilisés. Auparavant il fallait soustraire deux colonnes
+    // de tête pour s'en apercevoir.
+    const remis = sp.prepaye - utilise;
+    tr.append(el('td', 'num' + (remis ? ' gain' : ''),
+                 remis ? '+' + euro(remis) : '—'));
     tr.append(el('td', 'num' + (p.pena ? ' perte' : ''), p.pena ? euro(p.pena) : '—'));
     tr.append(el('td', 'num' + (p.pos ? ' perte' : ''), p.pos ? euro(p.pos) : '—'));
     tr.append(el('td', 'num' + (p.bourse ? ' gain' : ''), p.bourse ? euro(p.bourse) : '—'));
@@ -171,7 +187,8 @@ function render() {
   const fr = el('tr');
   fr.append(el('td', '', ''));
   fr.append(el('td', 'rg-nm', 'Total'));
-  [euro(tot.pre), euro(tot.uti), String(tot.tr), euro(tot.pena), euro(tot.pos),
+  [euro(tot.pre), tot.tr + ' / 22', euro(tot.uti),
+   '+' + euro(tot.pre - tot.uti), euro(tot.pena), euro(tot.pos),
    euro(tot.bou), tot.bal.toFixed(2) + ' $'].forEach(v => fr.append(el('td', 'num', v)));
   fr.append(el('td', 'num solde ' + (tot.solde >= 0 ? 'gain' : 'perte'),
                (tot.solde >= 0 ? '+' : '') + tot.solde.toFixed(2) + ' $'));
@@ -179,12 +196,22 @@ function render() {
   t.append(tf);
 
   tw.append(t);
+  // L'encadré passe AVANT le tableau : la règle du remboursement explique la
+  // moitié des colonnes, et personne ne la devinait en lisant les chiffres.
+  const rappel = el('div', 'rg-callout');
+  rappel.innerHTML =
+    '<b>Les trades inutilisés sont remboursés.</b> Chacun verse ' +
+    euro(sp.prepaye) + ' au départ — 80 $ de pool, 2 $ de PoolExpert et ' +
+    "20 $ pour <b>deux</b> trades. Un trade coûte 10 $ : celui qui n'en fait " +
+    "qu'un récupère 10 $, celui qui n'en fait aucun récupère ses 20 $.";
+
+  const nbRemis = sp.poolers.filter(p => p.trades < 2).length;
+  const totRemis = sp.poolers.reduce((t, p) => t + (2 - p.trades) * 10, 0);
   const noteFin = el('p', 'hint',
-    'Chacun a versé ' + euro(sp.prepaye) + ' au départ (80 $ + 2 $ + 20 $ pour ' +
-    'deux trades). « Utilisé » est ce qui était réellement dû : 82 $ plus 10 $ ' +
-    'par trade employé — le reste revient au pooleur. Barème de ' + sp.saison +
-    ', à 11 pooleurs.');
-  droite.append(bloc('Bilan financier ' + sp.saison, [tw, noteFin]));
+    "L'an dernier, " + nbRemis + " pooleurs sur " + sp.poolers.length +
+    " ont récupéré de l'argent, pour " + euro(totRemis) + " au total. " +
+    'Barème de ' + sp.saison + ', à 11 pooleurs.');
+  droite.append(bloc('Bilan financier ' + sp.saison, [rappel, tw, noteFin]));
 
   const reg = el('div', 'prose');
   reg.innerHTML =

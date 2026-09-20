@@ -914,6 +914,21 @@ svg.rink text.df-lbl-s {
   padding-top: 8px; font-weight: 600;
 }
 
+/* L'encadré du remboursement. Il explique la moitié des colonnes du tableau,
+   alors il se place avant lui et se distingue du corps du texte — mais en
+   vert discret plutôt qu'en avertissement : c'est une bonne nouvelle. */
+.rg-callout {
+  padding: 10px 13px; margin-bottom: 14px;
+  border-radius: 8px; font-size: 13.5px; line-height: 1.5;
+  border: 1px solid var(--ok);
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
+  color: var(--ink-2);
+}
+.rg-callout b { color: var(--ink); }
+
+.rg-remb { color: var(--ok); margin-top: 9px; }
+.rg-remb b { color: var(--ok); }
+
 /* L'infobulle de la patinoire porte plus de lignes que celle des graphiques. */
 .tooltip.pl-tip { white-space: normal; max-width: 280px; }
 .tooltip.pl-tip .t-sub { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
