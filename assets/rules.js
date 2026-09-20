@@ -1,5 +1,6 @@
 /* =========================================================================
-   rules.js — Règlements, bourses et ballottage.
+   rules.js — Finances et règlements : cotisation, bourses, bilan de la
+   saison précédente et ballottage.
 
    Le texte vient de Pool_25-26.xlsx (feuille « Résultats », lignes 59-93),
    la source de vérité du pool. Il est recopié ici plutôt que lu du fichier :
@@ -270,7 +271,7 @@ function render() {
   box.append(split);
 
   const note = el('p', 'hint');
-  note.textContent = 'Règlements de la saison ' + REGLES.saison +
+  note.textContent = 'Finances et règlements de la saison ' + REGLES.saison +
     ' — source : Pool_25-26.xlsx, feuille Résultats.';
   box.append(note);
 }
