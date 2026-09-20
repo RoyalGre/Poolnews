@@ -33,7 +33,7 @@ Ballottage
 	Chaque joueur repêché par le processus de ballottage coûte 10$ au participant qui fera le changement dans son alignement																	
 	L'argent accumulé par le processus de ballottage servira à augmenter la bourse des gagnants (voir section Bourses)																	
 	http://www.poolexpert.com/grank.aspx																	
-	pn2526																	
+	# code du pool PoolExpert : garde hors du depot public
 																			
 Pénalité																			
 	Si un joueur réclamé ne compte pas dans le total d'un participant, 																	
