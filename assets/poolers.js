@@ -208,6 +208,16 @@ function render() {
   const box = $('content');
   box.innerHTML = '';
 
+  // Pas un but marque : la patinoire serait vide et les alignements aussi.
+  // Le dire vaut mieux que d'afficher les buts de l'an dernier.
+  if (seasonNotStarted()) {
+    box.append(seasonPendingPanel(
+      'Les alignements et les buts de chaque pooleur apparaîtront au fil ' +
+      'de la saison. Pour revoir une saison terminée, choisissez-la sur la ' +
+      '<a href="index.html">page d’accueil</a>.'));
+    return;
+  }
+
   if (!GOALS_DATA) {
     const p = el('div', 'panel');
     p.append(el('div', 'empty-state',

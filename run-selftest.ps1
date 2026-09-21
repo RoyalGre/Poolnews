@@ -25,6 +25,16 @@ $ErrorActionPreference = 'Stop'
 $root = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
 
+# La saison sur laquelle tester : la plus recente qui a un history.js, donc
+# une saison reellement jouee. Se deduit du disque plutot que d'etre ecrite
+# en dur, pour qu'ouvrir 2027-28 ne demande pas de toucher a ce fichier.
+$TestSeason = (Get-ChildItem (Join-Path $root 'data') -Directory |
+    Where-Object { $_.Name -match '^\d{4}-\d{2}$' -and
+                   (Test-Path (Join-Path $_.FullName 'history.js')) } |
+    Sort-Object Name -Descending | Select-Object -First 1).Name
+if (-not $TestSeason) { throw 'Aucune saison avec history.js : rien a tester.' }
+Write-Host ("Saison de test : {0}" -f $TestSeason) -ForegroundColor DarkGray
+
 $suites = @(
     @{ Name = 'Draft page';     Page = 'pool.html';      Test = '_selftest.js' },
     @{ Name = 'Standings page'; Page = 'standings.html'; Test = '_selftest-standings.js' },
@@ -181,6 +191,16 @@ foreach ($s in $suites) {
 
     $html = [System.IO.File]::ReadAllText($htmlPath, [System.Text.Encoding]::UTF8)
     $test = [System.IO.File]::ReadAllText($testPath, [System.Text.Encoding]::UTF8)
+
+    # Les suites verifient le CALCUL : le pointage, les semaines, les buts.
+    # Il leur faut donc une saison qui a des chiffres. La saison courante n'en
+    # a pas avant son premier match -- 2026-27 n'a ni history ni goals -- et
+    # les pages y affichent a juste titre « la saison n'a pas commence ». On
+    # epingle la saison jouee la plus recente, avant season.js qui lit
+    # localStorage des le <head>.
+    $pin = "<scr" + "ipt>try{localStorage.setItem('hockeyPool.season','$TestSeason')}catch(e){}</scr" + "ipt>"
+    $html = [regex]::Replace($html, '<head>',
+              [System.Text.RegularExpressions.MatchEvaluator]{ param($m) '<head>' + $pin }, 1)
 
     # Split the closing tag so this script's own source can't be mistaken for it.
     $inject = "<script>`r`n$test`r`n</" + "script>`r`n</body>"

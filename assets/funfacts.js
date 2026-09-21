@@ -113,6 +113,16 @@ function render() {
   const box = $('content');
   box.innerHTML = '';
 
+  // Les faits saillants se tirent des ecarts entre pooleurs : sans un seul
+  // point marque, il n'y a rien a saillir.
+  if (seasonNotStarted()) {
+    box.append(seasonPendingPanel(
+      'Les faits saillants se construisent à partir des points marqués : ' +
+      'ils apparaîtront une fois la saison lancée. Pour revoir une saison ' +
+      'terminée, choisissez-la sur la <a href="index.html">page d’accueil</a>.'));
+    return;
+  }
+
   if (!state.poolers.length) {
     box.innerHTML = '<div class="panel"><div class="empty-state">Aucun pooler.<br><br>' +
       'Ajoutez-les dans l’onglet <a href="pool.html">Repêchage</a>, ou utilisez <b>Données ▸ Importer JSON</b> ci-dessus.</div></div>';

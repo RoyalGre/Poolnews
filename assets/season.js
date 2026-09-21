@@ -82,9 +82,21 @@
      family follows whichever season does, and the pool with it. Only the
      schedule stays on the chosen season -- that one is about games to come,
      not results. */
-  var STATS = ['players', 'history', 'advanced', 'goals', 'pool'];
+  /* La famille des stats. « pool » n'en fait plus partie : la liste des
+     pooleurs appartient a la saison choisie, pas a celle qui a les chiffres.
+     Tant qu'elle en faisait partie, ouvrir 2026-27 affichait les onze
+     pooleurs de 2025-26 sous le titre de 2026-27 -- Antoine D., le douzieme,
+     n'apparaissait nulle part. Les pages qui n'ont rien a montrer disent
+     maintenant que la saison n'a pas commence (voir seasonNotStarted dans
+     core.js) plutot que d'emprunter un classement. */
+  var STATS = ['players', 'history', 'advanced', 'goals'];
 
+  /* Ou vivent les chiffres. Une saison qui a ses propres joueurs les garde :
+     emprunter les points de l'an dernier pour les afficher sous le nom de
+     cette annee est precisement ce qu'on veut eviter. Les pages constatent
+     alors zero point partout et annoncent que la saison n'a pas commence. */
   function statsHome() {
+    if (holds(label, 'players')) return label;
     if (holds(label, 'history')) return label;
     for (var i = 0; i < all.length; i++) {
       if (all[i].files.indexOf('history') >= 0) return all[i].label;

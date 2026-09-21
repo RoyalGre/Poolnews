@@ -441,6 +441,73 @@ function wireThemeToggle() {
   }
 }
 
+/* ---- Une saison qui n'a pas encore commence -----------------------------
+
+   Avant le premier match, les pages de resultats n'ont rien a montrer. Le
+   chargeur leur donnait alors les fichiers de la saison precedente -- une
+   famille de stats coherente valait mieux qu'un melange -- et le classement
+   affichait les onze pooleurs de l'an dernier sous le titre de cette annee.
+   Le badge le disait en petit sous la barre, mais un tableau complet ment
+   plus fort qu'une ligne de 10px.
+
+   seasonNotStarted() repond a la question une fois pour toutes : la saison
+   affichee a-t-elle des points a elle ? Zero point sur toute la ligue n'est
+   pas une saison mediocre, c'est une saison qui n'a pas commence -- aucune
+   annee jouee ne ressemble a ca. */
+function seasonNotStarted() {
+  if (!window.poolSeason || !poolSeason.label) return false;
+  // Une saison passee a forcement joue : ne jamais l'annoncer comme a venir.
+  if (poolSeason.isPast()) return false;
+  var d = window.NHL_DATA;
+  if (!d || !d.players || !d.players.length) return false;
+  for (var i = 0; i < d.players.length; i++) {
+    var p = d.players[i];
+    if ((+p.g || 0) + (+p.a || 0) > 0) return false;
+  }
+  return true;
+}
+
+/* Le panneau d'attente. Toutes les pages de resultats montrent le meme, avec
+   une phrase propre a ce qu'elles auraient affiche -- dire « aucune donnee »
+   partout ne ferait pas comprendre ce qui manque. Les pooleurs de la saison
+   sont listes quand on les connait : c'est la seule chose vraie et utile
+   avant le premier match. */
+function seasonPendingPanel(quoi) {
+  var wrap = el('div', 'panel season-pending');
+  var t = el('div', 'sp-title');
+  t.append(el('span', 'sp-dot'));
+  t.append(document.createTextNode('La saison ' + poolSeason.label +
+                                   " n'a pas encore commencé"));
+  wrap.append(t);
+
+  // innerHTML et non textContent : la phrase porte le lien de retour vers
+  // l'accueil. Elle vient du code de la page, jamais d'une saisie.
+  var txt = el('p', 'sp-txt');
+  txt.innerHTML = quoi;
+  wrap.append(txt);
+
+  var pool = window.POOL_DATA;
+  var noms = (pool && pool.poolers) ? pool.poolers : [];
+  if (noms.length) {
+    // Le repechage n'est pas fait : le dire evite qu'on lise cette liste
+    // comme un classement a zero.
+    var fait = noms.some(function (p) {
+      return (p.picks || []).some(function (x) { return x; });
+    });
+    wrap.append(el('div', 'sp-sub', noms.length + ' pooleurs inscrits' +
+                   (fait ? '' : ' — le repêchage n’a pas encore eu lieu')));
+    var lst = el('div', 'sp-poolers');
+    noms.forEach(function (p, i) {
+      var row = el('span', 'sp-pooler');
+      row.append(el('span', 'sp-pooler-n', String(i + 1)));
+      row.append(el('span', 'sp-pooler-nm', p.name));
+      lst.append(row);
+    });
+    wrap.append(lst);
+  }
+  return wrap;
+}
+
 /* The season being viewed, shown in the header of every page.
 
    It sits in the <h1>, right after the wordmark, and it is always there --

@@ -139,6 +139,20 @@ function tableRows() {
 function render() {
   renderStamp(WEEK_COUNT ? WEEK_COUNT + ' semaines d’historique' : null);
 
+  // Avant le premier match il n'y a pas de classement -- douze pooleurs a
+  // zero point ne se classent pas. On le dit au lieu d'afficher le tableau
+  // de l'an dernier sous le titre de cette saison.
+  if (seasonNotStarted()) {
+    const box = $('content');
+    box.innerHTML = '';
+    box.append(seasonPendingPanel(
+      'Le classement apparaîtra dès les premiers points de la saison. ' +
+      'Pour revoir une saison terminée, choisissez-la sur la ' +
+      '<a href="index.html">page d’accueil</a>.'));
+    $('toolbar').style.display = 'none';
+    return;
+  }
+
   if (!state.poolers.length) {
     $('content').innerHTML =
       '<div class="panel"><div class="empty-state">Aucun pooler.<br><br>' +

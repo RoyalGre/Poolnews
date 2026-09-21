@@ -235,6 +235,17 @@ function render() {
   const box = $('content');
   box.innerHTML = '';
 
+  // Ce defi se joue sur les buts reellement marques : sans un seul match
+  // joue, il n'y a ni zone a deviner ni resultat a comparer. Le message
+  // technique sur build-goals.ps1 s'adresse a Yanick, pas aux pooleurs.
+  if (seasonNotStarted()) {
+    box.append(seasonPendingPanel(
+      'Le défi des zones se joue sur les buts marqués pendant la fin de ' +
+      'semaine : il ouvrira dès les premiers matchs. Pour revoir une saison ' +
+      'terminée, choisissez-la sur la <a href="index.html">page d’accueil</a>.'));
+    return;
+  }
+
   if (!G_DATA) {
     const p = el('div', 'panel');
     p.append(el('div', 'empty-state',
