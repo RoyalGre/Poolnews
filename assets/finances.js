@@ -67,9 +67,16 @@ function bilanSaison() {
     r.solde   = verse - r.utilise - r.pena - r.pos + r.bourse + r.ballot;
   });
 
+  // Le detail du versement de depart. « Prepaye » en une case cachait de
+  // quoi il etait fait : le pool, PoolExpert, la bouffe et les trades sont
+  // quatre destinations differentes, et seule la derniere est remboursable.
+  const cot = R.cotisation || {};
   return {
     saison: R.label,
     prepaye: verse,
+    cotPool: cot.pool || 0,
+    cotExpert: cot.poolexpert || 0,
+    cotBouffe: cot.pizza || 0,
     nbTrades: nbTrades,
     parTrade: parTrade,
     poolExpert: (R.cotisation && R.cotisation.poolexpert) || 0,
@@ -184,29 +191,45 @@ function render() {
 
   // ---- Le tableau -------------------------------------------------------
   const rappel = el('div', 'rg-callout');
+  // Le detail dit ou va chaque dollar du depart. Les trois premieres parts
+  // sont depensees pour de bon ; la quatrieme revient si elle ne sert pas,
+  // et c'est justement ce que le tableau montre colonne par colonne.
+  const parts = [euro(sp.cotPool) + ' au pot du pool',
+                 euro(sp.cotExpert) + ' à PoolExpert'];
+  if (sp.cotBouffe) parts.push(euro(sp.cotBouffe) + ' à la bouffe');
+  parts.push(euro(sp.nbTrades * sp.parTrade) + ' pour ' + sp.nbTrades + ' trades');
   rappel.innerHTML =
     '<b>Les trades inutilisés sont remboursés.</b> Chacun a versé <b>' +
-    euro(sp.prepaye) + '</b> au départ, dont ' +
-    euro(sp.nbTrades * sp.parTrade) + ' pour <b>' + sp.nbTrades +
-    '</b> trades. Un trade coûte ' + euro(sp.parTrade) + " : celui qui n'en " +
-    'utilise aucun récupère la somme entière.';
+    euro(sp.prepaye) + '</b> au départ : ' +
+    parts.slice(0, -1).join(', ') + ' et ' + parts[parts.length - 1] +
+    '. Un trade coûte ' + euro(sp.parTrade) + " : celui qui n'en utilise " +
+    'aucun récupère la somme entière.';
 
   const tw = el('div', 'tablewrap');
   const t = el('table', 'rg-tbl');
 
   const thead = el('thead');
   const hr = el('tr');
-  [['', ''], ['Pooleur', ''], ['Prépayé', 'num'], ['Trades', 'num'],
+  // « Prepaye » se lisait comme un bloc opaque. Les premieres colonnes disent
+  // maintenant ou va l'argent : le pot du pool, l'abonnement PoolExpert, la
+  // part du repas. Il y avait deux colonnes de repas -- celle-ci et un
+  // point d'interrogation pres du bout du tableau -- pour la meme depense ;
+  // une seule suffit, et c'est celle qui porte un montant.
+  const entetes = [['', ''], ['Pooleur', ''],
+                   ['Pool', 'num'], ['PoolExpert', 'num']];
+  if (sp.cotBouffe) entetes.push(['PIZZA', 'num']);
+  entetes.push(['Trades', 'num'],
    ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
    ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num'],
-   ['Cotis. suiv.', 'num'], ['PIZZA', 'num'], ['À régler', 'num']]
-    .forEach(([h, c]) => {
+   ['Cotis. suiv.', 'num'], ['À régler', 'num']);
+  entetes.forEach(([h, c]) => {
       // La colonne du repas n'a pas de titre écrit : une pizza dit la même
       // chose en moins large, et la largeur compte sur treize colonnes.
       if (h === 'PIZZA') {
         const th = el('th', c + ' rg-th-pizza');
         th.append(pizzaSVG());
-        th.title = 'Part du repas du repêchage — montant à venir';
+        th.title = 'Part du repas du repêchage — ' + euro(sp.cotBouffe) +
+                   ' par pooleur, ajusté à la commande';
         hr.append(th);
       } else {
         hr.append(el('th', c, h));
@@ -229,7 +252,11 @@ function render() {
     const tr = el('tr', p.rang <= 3 ? 'top' : '');
     tr.append(el('td', 'rank' + (p.rang <= 3 ? ' r' + p.rang : ''), String(p.rang)));
     tr.append(el('td', 'rg-nm', p.nom));
-    tr.append(el('td', 'num', euro(sp.prepaye)));
+    // Le versement de depart, detaille. Les trades suivent dans leur propre
+    // colonne : c'est la seule part que le pooleur peut recuperer.
+    tr.append(el('td', 'num', euro(sp.cotPool)));
+    tr.append(el('td', 'num', euro(sp.cotExpert)));
+    if (sp.cotBouffe) tr.append(el('td', 'num rg-pizza-cell', euro(sp.cotBouffe)));
     // Les trades employés d'abord : c'est eux qui expliquent le remboursement.
     tr.append(el('td', 'num' + (p.trades < sp.nbTrades ? ' gain' : ''),
                  p.trades + ' / ' + sp.nbTrades));
@@ -247,7 +274,6 @@ function render() {
     // la cotisation de la saison qui commence.
     const net = solde - COTIS_SUIV;
     tr.append(el('td', 'num', '−' + euro(COTIS_SUIV)));
-    tr.append(el('td', 'num rg-pizza-cell', '?'));
     tr.append(el('td', 'num net ' + (net >= 0 ? 'gain' : 'perte'),
                  (net >= 0 ? '+' : '') + net.toFixed(2) + ' $'));
     tb.append(tr);
@@ -258,15 +284,23 @@ function render() {
   const fr = el('tr');
   fr.append(el('td', '', ''));
   fr.append(el('td', 'rg-nm', 'Total'));
-  [euro(tot.pre), tot.tr + ' / ' + (sp.nbTrades * sp.poolers.length),
-   '+' + euro(tot.pre - tot.uti),
-   euro(tot.pena), euro(tot.pos), euro(tot.bou), tot.bal.toFixed(2) + ' $']
-    .forEach(v => fr.append(el('td', 'num', v)));
+  const n = sp.poolers.length;
+  // Arrondi au cent : 2,85 $ x 12 en virgule flottante peut sortir
+  // 34,199999999999996, et personne ne veut lire ca dans un total.
+  const cents = v => euro(Math.round(v * 100) / 100);
+  // Chaque total porte sa classe : la colonne du repas garde sa teinte
+  // jusqu'en bas, sinon le pied rompt la colonne qu'on suivait des yeux.
+  const pieds = [[cents(sp.cotPool * n), ''], [cents(sp.cotExpert * n), '']];
+  if (sp.cotBouffe) pieds.push([cents(sp.cotBouffe * n), ' rg-pizza-cell']);
+  pieds.push([tot.tr + ' / ' + (sp.nbTrades * n), ''],
+   ['+' + cents(tot.pre - tot.uti), ''],
+   [euro(tot.pena), ''], [euro(tot.pos), ''], [euro(tot.bou), ''],
+   [tot.bal.toFixed(2) + ' $', '']);
+  pieds.forEach(([v, c]) => fr.append(el('td', 'num' + c, v)));
   // Pas de total pour le solde : additionner des gains et des pertes donne un
   // nombre que personne ne verse ni ne reçoit.
   fr.append(el('td', 'num solde', '—'));
   fr.append(el('td', 'num', '−' + euro(COTIS_SUIV * sp.poolers.length)));
-  fr.append(el('td', 'num rg-pizza-cell', '?'));
   fr.append(el('td', 'num net', '—'));
   tf.append(fr);
   t.append(tf);
@@ -283,10 +317,19 @@ function render() {
   bh.innerHTML = 'Les pénalités paient la <b>bouffe du repêchage</b>';
   bt.append(bh);
   const bl = el('div', 'rg-bouffe-l');
-  bl.innerHTML =
-    'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités de trade ' +
-    '<b>' + euro(penaTrade) + '</b> = <b>' + euro(penaPos + penaTrade) + '</b> ' +
-    'au menu du prochain repêchage.';
+  // Le repas a deux sources : les penalites et, les saisons ou elle est
+  // percue, la part versee par chaque pooleur. N'en nommer qu'une donnait un
+  // budget plus petit que la realite.
+  const partBouffe = Math.round(sp.cotBouffe * sp.poolers.length * 100) / 100;
+  let txt = 'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités de ' +
+            'trade <b>' + euro(penaTrade) + '</b>';
+  if (partBouffe) {
+    txt += ' + la part de chacun <b>' + euro(partBouffe) + '</b> (' +
+           euro(sp.cotBouffe) + ' × ' + sp.poolers.length + ')';
+  }
+  txt += ' = <b>' + euro(Math.round((penaPos + penaTrade + partBouffe) * 100) / 100) +
+         '</b> au menu du prochain repêchage.';
+  bl.innerHTML = txt;
   bt.append(bl);
   bouffe.append(bt);
 

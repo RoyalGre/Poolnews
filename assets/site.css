@@ -1011,8 +1011,11 @@ svg.rink text.df-lbl-s {
    qu'un zero, qui laisserait croire a la gratuite. */
 .rg-th-pizza { text-align: center !important; padding: 4px 8px !important; }
 .rg-th-pizza .rg-pizza { width: 22px; height: 22px; display: block; margin: 0 auto; }
+/* La colonne du repas porte un vrai montant depuis que le prix est connu :
+   elle s'aligne donc a droite comme les autres sommes. Le fond dore reste,
+   parce que c'est la seule part de la cotisation qui bougera encore d'ici
+   la commande. */
 .rg-tbl td.rg-pizza-cell {
-  text-align: center; color: var(--faint); font-weight: 600;
   background: color-mix(in srgb, var(--gold) 8%, transparent);
 }
 
