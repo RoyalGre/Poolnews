@@ -158,6 +158,52 @@ header .brand a {
 header .brand a:hover { border-bottom-color: var(--gold); }
 header .brand a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 
+/* La saison affichee, collee au titre. Elle vivait sous la barre en 10px, ou
+   personne ne la lisait : on pouvait consulter 2024-25 en croyant voir
+   l'annee en cours. A cote du mot « Poolnews » elle fait partie de
+   l'identite de la page, pas d'une note de bas de page. */
+header .brand .season-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  vertical-align: 2px;
+  margin-left: 9px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.07);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: none;
+  color: #CFE0F2;
+}
+/* Une saison archivee doit crier un peu : c'est la seule defense contre un
+   pooleur qui lit de vieux chiffres sans s'en rendre compte. */
+header .brand .season-chip.past {
+  border-color: rgba(214,163,58,.55);
+  background: rgba(214,163,58,.14);
+  color: var(--gold);
+}
+/* Seule la puce qui ramene vraiment quelque part se comporte en bouton. */
+header .brand .season-chip.back { cursor: pointer; }
+header .brand .season-chip.back:hover { background: rgba(214,163,58,.24); }
+header .brand .season-chip.back:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+header .brand .season-chip-tag {
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: .85;
+}
+@media (max-width: 560px) {
+  header .brand .season-chip { margin-left: 6px; padding: 2px 6px; font-size: 10px; }
+  header .brand .season-chip-tag { display: none; }
+}
+
 nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 nav.tabs a, nav.tabs span {
   display: block;

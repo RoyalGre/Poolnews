@@ -443,28 +443,57 @@ function wireThemeToggle() {
 
 /* The season being viewed, shown in the header of every page.
 
-   Silent on the current season -- saying "2026-27" all year is noise. It only
-   speaks up when the reader is looking at an archived season, where the risk
-   is real: standings that look wrong because they are last year's. */
+   It sits in the <h1>, right after the wordmark, and it is always there --
+   even on the current season. It used to appear only on archived seasons, in
+   10px under the bar, on the theory that "2026-27" all year is noise. In
+   practice the quiet line was the noise: it was small, it was easy to miss,
+   and a reader who landed on the standings had no way to tell 2024-25 from
+   this year without hunting for it. Naming the season next to the site name
+   costs one chip and removes the whole question. */
 function wireSeasonBadge() {
-  var box = $('seasonBadge');
-  if (!box || !window.poolSeason || !poolSeason.label) return;
-  box.textContent = '';
+  // La saison se lit a cote du titre, pas en petit sous la barre : c'est la
+  // premiere chose qu'on doit savoir en arrivant, surtout quand on consulte
+  // une annee passee. Le badge se glisse dans le <h1> pour rester colle au
+  // mot « Poolnews » meme quand la barre se replie sur un telephone.
+  var brand = document.querySelector('header .brand');
+  if (!brand || !window.poolSeason || !poolSeason.label) return;
+  if (brand.querySelector('.season-chip')) return;
 
-  // Looking at an archived season: say which, and offer the way back.
-  if (poolSeason.isPast()) {
-    box.textContent = 'saison ' + poolSeason.label + ' — ';
-    var back = el('button', 'linkbtn', 'revenir à ' + poolSeason.current);
-    back.title = 'Afficher la saison en cours';
-    back.onclick = function () { poolSeason.set(poolSeason.current); };
-    box.append(back);
-    return;
+  var past = poolSeason.isPast();
+  var chip = el('span', 'season-chip' + (past ? ' past' : ''));
+  chip.append(el('span', 'season-chip-yr', poolSeason.label));
+
+  if (past) {
+    // Une saison archivee doit se distinguer d'un coup d'oeil. Sur les onglets
+    // elle offre aussi la sortie, parce que le selecteur n'y est pas : sans ca
+    // on lit de vieux chiffres sans savoir comment en sortir. Sur l'accueil le
+    // selecteur est juste en dessous, alors la puce n'est qu'une etiquette --
+    // deux boutons pour la meme chose ne feraient qu'hesiter.
+    chip.append(el('span', 'season-chip-tag', 'archive'));
+    if ($('seasonPick')) {
+      chip.title = 'Saison archivée';
+    } else {
+      chip.classList.add('back');
+      chip.title = 'Saison archivée — revenir à ' + poolSeason.current;
+      chip.setAttribute('role', 'button');
+      chip.tabIndex = 0;
+      var back = function () { poolSeason.set(poolSeason.current); };
+      chip.onclick = back;
+      chip.onkeydown = function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); back(); }
+      };
+    }
+  } else {
+    chip.title = 'Saison en cours';
   }
+  brand.append(chip);
 
-  // On the current season, but some files came from an older one because
-  // this season has not produced them yet. Before opening night that is
-  // EVERY number on the page. Saying nothing would let a pooler read last
-  // season's standings as if they were this season's.
+  // L'avertissement des chiffres empruntes reste sous la barre : c'est une
+  // precision, pas une identite, et il disparait des que la saison demarre.
+  var box = $('seasonBadge');
+  if (!box) return;
+  box.textContent = '';
+  if (past) return;
   var from = poolSeason.borrowed || {};
   var seasons = [];
   for (var k in from) if (seasons.indexOf(from[k]) < 0) seasons.push(from[k]);
