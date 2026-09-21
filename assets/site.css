@@ -904,6 +904,12 @@ svg.rink text.df-lbl-s {
 .rg-tbl td.gain  { color: var(--ok);     background: color-mix(in srgb, var(--ok) 9%, transparent); }
 .rg-tbl td.perte { color: var(--danger); background: color-mix(in srgb, var(--danger) 9%, transparent); }
 
+/* Une saison pas encore jouee : les colonnes qui soldent les comptes n'ont
+   rien a montrer. Le tiret reste pour garder la grille lisible, mais efface
+   pour qu'on ne le prenne pas pour un montant -- et la teinte du solde ne
+   s'applique pas, sinon un vide aurait l'air d'un gain. */
+.rg-tbl td.rg-vide { color: var(--faint); background: none; font-weight: 400; }
+
 /* Le solde est la colonne qu'on vient lire : plus marquée que les autres. */
 .rg-tbl td.solde { font-weight: 700; font-size: 13px; border-left: 1px solid var(--border); }
 .rg-tbl td.solde.gain  { background: color-mix(in srgb, var(--ok) 16%, transparent); }
@@ -990,7 +996,13 @@ svg.rink text.df-lbl-s {
 /* Les deux depenses cote a cote : la bouffe et le site de pointage. Elles
    repondent a la meme question — ou passe l'argent qui ne finit pas en
    bourses — alors elles se lisent ensemble. */
-.rg-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+/* Deux cartes cote a cote, mais avant le repechage celle de la bouffe
+   n'existe pas : auto-fit evite de laisser PoolExpert a demi-largeur avec
+   un trou a cote. */
+.rg-duo {
+  display: grid; gap: 10px; margin-top: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
 @media (max-width: 620px) { .rg-duo { grid-template-columns: 1fr; } }
 .rg-duo .rg-bouffe { margin-top: 0; height: 100%; }
 

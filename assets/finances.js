@@ -45,6 +45,11 @@ function bilanSaison() {
   }
 
   // Le classement, avec la regle du pool.
+  // Une saison pas encore repechee n'a pas de classement : douze alignements
+  // vides se valent tous. Le detecter ici plutot qu'en dur evite d'avoir un
+  // drapeau a lever le jour du repechage -- le premier choix publie suffit.
+  const jouee = pool.poolers.some(pl => (pl.picks || []).some(x => x));
+
   const rows = pool.poolers.map(pl => {
     const sc = scoreRoster(pl.picks, statsSeason());
     return { nom: pl.name, pts: sc.pts, p11: sc.p11, p12: sc.p12 };
@@ -59,9 +64,12 @@ function bilanSaison() {
   rows.forEach(r => {
     r.trades = parPooleur[r.nom] || 0;
     r.pena   = penaTrade[r.nom] || 0;
-    r.pos    = pena[r.rang] || 0;
-    r.bourse = bourse[r.rang] || 0;
-    r.ballot = r.rang <= 4 ? part : 0;
+    // Tout ce qui depend du rang attend le classement. Sans repechage, le
+    // rang ne vaut rien -- il sort de l'ordre du fichier -- et verser 600 $
+    // au premier de douze alignements vides serait une invention.
+    r.pos    = jouee ? (pena[r.rang] || 0) : 0;
+    r.bourse = jouee ? (bourse[r.rang] || 0) : 0;
+    r.ballot = (jouee && r.rang <= 4) ? part : 0;
     r.utilise = base + r.trades * parTrade;
     r.remis   = verse - r.utilise;
     r.solde   = verse - r.utilise - r.pena - r.pos + r.bourse + r.ballot;
@@ -73,6 +81,7 @@ function bilanSaison() {
   const cot = R.cotisation || {};
   return {
     saison: R.label,
+    jouee: jouee,
     prepaye: verse,
     cotPool: cot.pool || 0,
     cotExpert: cot.poolexpert || 0,
@@ -179,13 +188,21 @@ function render() {
   }
 
   const intro = el('div', 'panel');
-  intro.append(el('h2', null, 'Bilan de la saison ' + sp.saison));
+  intro.append(el('h2', null, (sp.jouee ? 'Bilan de la saison ' : 'Saison ') +
+                              sp.saison));
   const id = el('div', 'prose');
-  id.innerHTML =
-    'Les comptes de l’année qui vient de finir, à <b>' + sp.poolers.length +
-    ' pooleurs</b>. Les montants de cette page sont ceux de ' + sp.saison +
-    ' — pour les tarifs de la saison en cours, voir <a href="reglements.html">' +
-    'Règlements</a>.';
+  // Une saison pas encore repechee n'a pas de comptes a rendre : le dire,
+  // plutot que d'annoncer le bilan d'une annee qui n'a pas commence.
+  id.innerHTML = sp.jouee
+    ? 'Les comptes de l’année qui vient de finir, à <b>' + sp.poolers.length +
+      ' pooleurs</b>. Les montants de cette page sont ceux de ' + sp.saison +
+      ' — pour les tarifs de la saison en cours, voir <a href="reglements.html">' +
+      'Règlements</a>.'
+    : '<b>La saison ' + sp.saison + ' n’a pas encore été repêchée.</b> Les ' +
+      'tarifs sont connus — ' + euro(sp.prepaye) + ' par pooleur, à <b>' +
+      sp.poolers.length + ' pooleurs</b> — mais rien n’est encore dû ni gagné : ' +
+      'le solde, la cotisation suivante et le montant à régler attendent le ' +
+      'classement final. Voir <a href="reglements.html">Règlements</a>.';
   intro.append(id);
   box.append(intro);
 
@@ -268,6 +285,16 @@ function render() {
     tr.append(el('td', 'num' + (p.bourse ? ' gain' : ''), p.bourse ? euro(p.bourse) : '—'));
     tr.append(el('td', 'num' + (p.ballot ? ' gain' : ''),
                  p.ballot ? p.ballot.toFixed(2) + ' $' : '—'));
+    // Solde, cotisation suivante et a-regler n'existent qu'une fois la
+    // saison jouee : ils soldent des comptes que personne n'a encore faits.
+    // Vides plutot qu'a zero -- un zero se lit comme un montant.
+    if (!sp.jouee) {
+      tr.append(el('td', 'num solde rg-vide', '—'));
+      tr.append(el('td', 'num rg-vide', '—'));
+      tr.append(el('td', 'num net rg-vide', '—'));
+      tb.append(tr);
+      return;
+    }
     tr.append(el('td', 'num solde ' + (solde >= 0 ? 'gain' : 'perte'),
                  (solde >= 0 ? '+' : '') + solde.toFixed(2) + ' $'));
     // Les comptes se règlent une fois l'an : le solde vient en déduction de
@@ -292,15 +319,23 @@ function render() {
   // jusqu'en bas, sinon le pied rompt la colonne qu'on suivait des yeux.
   const pieds = [[cents(sp.cotPool * n), ''], [cents(sp.cotExpert * n), '']];
   if (sp.cotBouffe) pieds.push([cents(sp.cotBouffe * n), ' rg-pizza-cell']);
+  // Penalites, bourses et ballottage se decident au classement final : avant
+  // le repechage un « 0 $ » se lirait comme un resultat alors qu'il n'y a
+  // rien a totaliser. Les trades non employes, eux, sont bel et bien dus --
+  // personne n'en a fait, donc tout le monde recupere sa mise.
+  const z = v => sp.jouee ? v : '—';
+  const zc = sp.jouee ? '' : ' rg-vide';
   pieds.push([tot.tr + ' / ' + (sp.nbTrades * n), ''],
    ['+' + cents(tot.pre - tot.uti), ''],
-   [euro(tot.pena), ''], [euro(tot.pos), ''], [euro(tot.bou), ''],
-   [tot.bal.toFixed(2) + ' $', '']);
+   [z(euro(tot.pena)), zc], [z(euro(tot.pos)), zc], [z(euro(tot.bou)), zc],
+   [z(tot.bal.toFixed(2) + ' $'), zc]);
   pieds.forEach(([v, c]) => fr.append(el('td', 'num' + c, v)));
   // Pas de total pour le solde : additionner des gains et des pertes donne un
-  // nombre que personne ne verse ni ne reçoit.
+  // nombre que personne ne verse ni ne reçoit. Pas de total non plus pour la
+  // cotisation suivante -- c'est le meme montant repete, pas une somme qui
+  // s'additionne, et l'empiler douze fois n'apprend rien.
   fr.append(el('td', 'num solde', '—'));
-  fr.append(el('td', 'num', '−' + euro(COTIS_SUIV * sp.poolers.length)));
+  fr.append(el('td', 'num', '—'));
   fr.append(el('td', 'num net', '—'));
   tf.append(fr);
   t.append(tf);
@@ -310,28 +345,35 @@ function render() {
   const penaTrade = sp.poolers.reduce((t2, p) => t2 + p.pena, 0);
   const penaPos   = sp.poolers.reduce((t2, p) => t2 + p.pos, 0);
 
-  const bouffe = el('div', 'rg-bouffe');
-  bouffe.append(pizzaSVG());
-  const bt = el('div', 'rg-bouffe-txt');
-  const bh = el('div', 'rg-bouffe-h');
-  bh.innerHTML = 'Les pénalités paient la <b>bouffe du repêchage</b>';
-  bt.append(bh);
-  const bl = el('div', 'rg-bouffe-l');
-  // Le repas a deux sources : les penalites et, les saisons ou elle est
-  // percue, la part versee par chaque pooleur. N'en nommer qu'une donnait un
-  // budget plus petit que la realite.
-  const partBouffe = Math.round(sp.cotBouffe * sp.poolers.length * 100) / 100;
-  let txt = 'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités de ' +
-            'trade <b>' + euro(penaTrade) + '</b>';
-  if (partBouffe) {
-    txt += ' + la part de chacun <b>' + euro(partBouffe) + '</b> (' +
-           euro(sp.cotBouffe) + ' × ' + sp.poolers.length + ')';
+  // Avant le repechage il n'y a ni penalite ni part percue : annoncer
+  // « 0 $ au menu » ferait croire a un budget vide alors qu'il n'est pas
+  // encore ouvert. Le bloc attend que la saison soit jouee.
+  let bouffe = null;
+  if (sp.jouee) {
+    bouffe = el('div', 'rg-bouffe');
+    bouffe.append(pizzaSVG());
+    const bt = el('div', 'rg-bouffe-txt');
+    const bh = el('div', 'rg-bouffe-h');
+    bh.innerHTML = 'Les pénalités paient la <b>bouffe du repêchage</b>';
+    bt.append(bh);
+    const bl = el('div', 'rg-bouffe-l');
+    // Le repas a deux sources : les penalites et, les saisons ou elle est
+    // percue, la part versee par chaque pooleur. N'en nommer qu'une donnait
+    // un budget plus petit que la realite.
+    const partBouffe = Math.round(sp.cotBouffe * sp.poolers.length * 100) / 100;
+    let txt = 'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités ' +
+              'de trade <b>' + euro(penaTrade) + '</b>';
+    if (partBouffe) {
+      txt += ' + la part de chacun <b>' + euro(partBouffe) + '</b> (' +
+             euro(sp.cotBouffe) + ' × ' + sp.poolers.length + ')';
+    }
+    txt += ' = <b>' +
+           euro(Math.round((penaPos + penaTrade + partBouffe) * 100) / 100) +
+           '</b> au menu du prochain repêchage.';
+    bl.innerHTML = txt;
+    bt.append(bl);
+    bouffe.append(bt);
   }
-  txt += ' = <b>' + euro(Math.round((penaPos + penaTrade + partBouffe) * 100) / 100) +
-         '</b> au menu du prochain repêchage.';
-  bl.innerHTML = txt;
-  bt.append(bl);
-  bouffe.append(bt);
 
   const pe = el('div', 'rg-service');
   const peImg = document.createElement('img');
@@ -351,16 +393,24 @@ function render() {
   pe.append(pt);
 
   const duo = el('div', 'rg-duo');
-  duo.append(bouffe, pe);
+  if (bouffe) duo.append(bouffe);
+  duo.append(pe);
 
   const nbRemis = sp.poolers.filter(p => p.trades < sp.nbTrades).length;
   const totRemis = sp.poolers.reduce((t2, p) => t2 + p.remis, 0);
-  const noteFin = el('p', 'hint',
-    'Colonne « Remis » : ' + nbRemis + ' pooleurs sur ' + sp.poolers.length +
-    " n'ont pas utilisé leurs deux trades et se font rembourser " +
-    euro(totRemis) + ' au total.');
+  // « 12 pooleurs sur 12 n'ont pas utilise leurs trades » serait vrai et
+  // trompeur avant le repechage : la saison n'a pas encore eu lieu.
+  const noteFin = el('p', 'hint', sp.jouee
+    ? 'Colonne « Remis » : ' + nbRemis + ' pooleurs sur ' + sp.poolers.length +
+      " n'ont pas utilisé leurs deux trades et se font rembourser " +
+      euro(totRemis) + ' au total.'
+    : 'Colonne « Remis » : aucun trade n’a encore été fait, donc les ' +
+      euro(sp.nbTrades * sp.parTrade) + ' de chacun sont pour l’instant ' +
+      'remboursables en entier. Chaque échange en retranchera ' +
+      euro(sp.parTrade) + '.');
 
-  box.append(bloc('Qui doit quoi', [rappel, tw, duo, noteFin]));
+  box.append(bloc(sp.jouee ? 'Qui doit quoi' : 'Ce qui est déjà versé',
+                  [rappel, tw, duo, noteFin]));
 
   const tradesBloc = blocTrades();
   if (tradesBloc) box.append(tradesBloc);
