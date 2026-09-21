@@ -86,6 +86,10 @@ function bilanSaison() {
     cotPool: cot.pool || 0,
     cotExpert: cot.poolexpert || 0,
     cotBouffe: cot.pizza || 0,
+    // « Pizza = » sans montant dans regles.txt : la part sera percue, le
+    // prix n'est pas encore fixe. La colonne parait avec un tiret, sinon on
+    // oublierait qu'elle doit etre remplie avant de reclamer l'argent.
+    bouffeAVenir: !!cot.pizzaAVenir,
     nbTrades: nbTrades,
     parTrade: parTrade,
     poolExpert: (R.cotisation && R.cotisation.poolexpert) || 0,
@@ -220,7 +224,12 @@ function render() {
     euro(sp.prepaye) + '</b> au départ : ' +
     parts.slice(0, -1).join(', ') + ' et ' + parts[parts.length - 1] +
     '. Un trade coûte ' + euro(sp.parTrade) + " : celui qui n'en utilise " +
-    'aucun récupère la somme entière.';
+    'aucun récupère la somme entière.' +
+    // La part du repas n'est pas dans ce total puisqu'elle n'est pas
+    // chiffree : l'annoncer evite qu'on prenne 102 $ pour la note finale.
+    (sp.bouffeAVenir
+      ? ' <b>S’ajoutera la part du repas</b>, une fois le prix connu.'
+      : '');
 
   const tw = el('div', 'tablewrap');
   const t = el('table', 'rg-tbl');
@@ -234,7 +243,8 @@ function render() {
   // une seule suffit, et c'est celle qui porte un montant.
   const entetes = [['', ''], ['Pooleur', ''],
                    ['Pool', 'num'], ['PoolExpert', 'num']];
-  if (sp.cotBouffe) entetes.push(['PIZZA', 'num']);
+  const colBouffe = !!(sp.cotBouffe || sp.bouffeAVenir);
+  if (colBouffe) entetes.push(['PIZZA', 'num']);
   entetes.push(['Trades', 'num'],
    ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
    ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num'],
@@ -245,8 +255,10 @@ function render() {
       if (h === 'PIZZA') {
         const th = el('th', c + ' rg-th-pizza');
         th.append(pizzaSVG());
-        th.title = 'Part du repas du repêchage — ' + euro(sp.cotBouffe) +
-                   ' par pooleur, ajusté à la commande';
+        th.title = sp.cotBouffe
+          ? 'Part du repas du repêchage — ' + euro(sp.cotBouffe) +
+            ' par pooleur, ajusté à la commande'
+          : 'Part du repas du repêchage — prix connu au moment de commander';
         hr.append(th);
       } else {
         hr.append(el('th', c, h));
@@ -273,7 +285,10 @@ function render() {
     // colonne : c'est la seule part que le pooleur peut recuperer.
     tr.append(el('td', 'num', euro(sp.cotPool)));
     tr.append(el('td', 'num', euro(sp.cotExpert)));
-    if (sp.cotBouffe) tr.append(el('td', 'num rg-pizza-cell', euro(sp.cotBouffe)));
+    if (colBouffe) {
+      tr.append(el('td', 'num rg-pizza-cell',
+                   sp.cotBouffe ? euro(sp.cotBouffe) : '—'));
+    }
     // Les trades employés d'abord : c'est eux qui expliquent le remboursement.
     tr.append(el('td', 'num' + (p.trades < sp.nbTrades ? ' gain' : ''),
                  p.trades + ' / ' + sp.nbTrades));
@@ -318,7 +333,9 @@ function render() {
   // Chaque total porte sa classe : la colonne du repas garde sa teinte
   // jusqu'en bas, sinon le pied rompt la colonne qu'on suivait des yeux.
   const pieds = [[cents(sp.cotPool * n), ''], [cents(sp.cotExpert * n), '']];
-  if (sp.cotBouffe) pieds.push([cents(sp.cotBouffe * n), ' rg-pizza-cell']);
+  if (colBouffe) {
+    pieds.push([sp.cotBouffe ? cents(sp.cotBouffe * n) : '—', ' rg-pizza-cell']);
+  }
   // Penalites, bourses et ballottage se decident au classement final : avant
   // le repechage un « 0 $ » se lirait comme un resultat alors qu'il n'y a
   // rien a totaliser. Les trades non employes, eux, sont bel et bien dus --
@@ -370,6 +387,12 @@ function render() {
     txt += ' = <b>' +
            euro(Math.round((penaPos + penaTrade + partBouffe) * 100) / 100) +
            '</b> au menu du prochain repêchage.';
+    // Une part est prevue mais pas encore chiffree : sans le dire, le total
+    // se lirait comme le budget definitif alors qu'il va monter.
+    if (sp.bouffeAVenir) {
+      txt += ' <b>La part de chacun s’ajoutera</b> dès que le prix du repas ' +
+             'sera connu.';
+    }
     bl.innerHTML = txt;
     bt.append(bl);
     bouffe.append(bt);

@@ -2,7 +2,7 @@ Cotisations
 	Pool = 80$
 	PoolExpert = 2$
 	Trade = 10$ chaque
-	Pizza = 3.31$ chaque
+	Pizza = 
 
 Bourses
 	1ère position	$540 + 1/4 Ballotage						

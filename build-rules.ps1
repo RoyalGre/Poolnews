@@ -99,7 +99,16 @@ foreach ($sid in $targets) {
                 elseif ($line -match '(?i)^PoolExpert\s*=') { $cot['poolexpert'] = Get-Amount $line }
                 elseif ($line -match '(?i)^Trade\s*=') { $cot['parTrade'] = Get-Amount $line }
                 elseif ($line -match '(?i)^Trades inclus\s*=\s*(\d+)') { $cot['trades'] = [int]$Matches[1] }
-                elseif ($line -match '(?i)^Pizza\s*=') { $cot['pizza'] = Get-Amount $line }
+                elseif ($line -match '(?i)^Pizza\s*=') {
+                    # Trois etats, pas deux. « Pizza = 3.31$ » donne un
+                    # montant ; « Pizza = » sans chiffre dit que la part
+                    # existe mais que le prix n'est pas encore connu -- la
+                    # page doit montrer la colonne avec un tiret plutot que
+                    # de la masquer ; pas de ligne du tout, pas de colonne.
+                    $m = Get-Amount $line
+                    if ($null -ne $m) { $cot['pizza'] = $m }
+                    else { $cot['pizzaAVenir'] = $true }
+                }
             }
             '(?i)^Bourse' {
                 if ($line -match '(?i)^(\d+)(?:re|e|ère|ere)?\s*position') {
