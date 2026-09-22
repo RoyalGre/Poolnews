@@ -159,5 +159,6 @@ function render() {
 
 /* ---- Go ---------------------------------------------------------------- */
 wireSeasonBadge();
+wireRecordsLink();
 wireThemeToggle();
 render();

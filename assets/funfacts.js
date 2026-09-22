@@ -591,6 +591,7 @@ function oddsAndEnds() {
 wireImportExport();   /* the hidden file input behind Data > Import */
 wireDataMenu();
 wireSeasonBadge();
+wireRecordsLink();
 wireThemeToggle();
 wireAutoRefresh();
 wirePublishedBadge();

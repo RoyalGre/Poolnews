@@ -586,6 +586,17 @@ svg.rink .puck:focus-visible { outline: 2px solid var(--accent); outline-offset:
   font-family: var(--f-disp); font-weight: 700; text-transform: uppercase;
   font-size: 20px; letter-spacing: .02em; line-height: 1.1;
 }
+/* Le livre des records est la seule carte qui ignore le selecteur de saison.
+   Sans le dire, on croirait que choisir 2024-25 en change le contenu. */
+.lp-tag {
+  display: inline-block; vertical-align: 3px; margin-left: 7px;
+  padding: 2px 7px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface-2);
+  font-family: var(--f-mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted);
+}
+.lp-card-all:hover .lp-tag { border-color: var(--gold); color: var(--gold); }
 .lp-d { font-size: 13.5px; color: var(--muted); line-height: 1.45; }
 
 /* ---- Le choix de la saison ---------------------------------------------

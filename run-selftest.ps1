@@ -89,6 +89,11 @@ foreach ($page in ($pages + $linkOnly)) {
     # Links to the other three, plus a marker for the page you are on.
     foreach ($target in $pages) {
         if ($target -eq $page -or $linkOnly -contains $page) { continue }
+        # Le livre des records n'est plus un onglet : il ne depend d'aucune
+        # saison, alors il vit dans le coin droit de la barre et core.js y
+        # pose l'icone au chargement. Un scan du HTML statique ne peut donc
+        # pas le voir -- la verification se fait sur le DOM rendu plus bas.
+        if ($target -eq 'pool-records.html') { continue }
         if ($text -notmatch [regex]::Escape("href=""$target""")) {
             Write-Host "FAIL $page does not link to $target" -ForegroundColor Red
             $navFails++

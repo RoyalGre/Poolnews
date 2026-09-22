@@ -119,6 +119,7 @@ renderLede();
 renderSeasons();
 renderPodium();
 wireSeasonBadge();
+wireRecordsLink();
 wireThemeToggle();
 wirePublishedBadge();
 renderStamp();

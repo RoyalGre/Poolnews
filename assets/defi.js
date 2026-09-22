@@ -639,6 +639,7 @@ function refreshPicks(key) {
 
 /* ---- Go ---------------------------------------------------------------- */
 wireSeasonBadge();
+wireRecordsLink();
 wireThemeToggle();
 wirePublishedBadge();
 renderStamp(G_DATA ? (G_LIST.length.toLocaleString('fr-CA') + ' buts localisés') : null);

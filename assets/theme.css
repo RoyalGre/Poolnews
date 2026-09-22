@@ -115,6 +115,16 @@ header .bar {
 header .spacer { flex: 1; }
 header .controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
+/* Le livre des records se tient en haut a droite, colle au bord. La barre
+   passe a la ligne quand les onglets sont larges ; l'icone doit rester sur
+   la premiere rangee, avec le titre, et non descendre avec « Donnees » et
+   « Theme ». Elle se pousse donc a droite d'elle-meme. */
+header .bar .iconbtn { margin-left: auto; flex: none; }
+/* Sur un telephone, le titre et sa puce remplissent la rangee et poussaient
+   l'icone hors de l'ecran. Le titre accepte de retrecir ; l'icone, jamais --
+   c'est le seul chemin vers le livre des records depuis un onglet. */
+header .bar .brand { min-width: 0; }
+
 /* Second line: provenance, deliberately quiet. */
 header .subbar {
   border-top: 1px solid rgba(255,255,255,.09);
@@ -199,6 +209,34 @@ header .brand .season-chip-tag {
   text-transform: uppercase;
   opacity: .85;
 }
+/* Le livre des records, a droite de la barre. Il ne depend d'aucune saison,
+   alors il ne vit pas parmi les onglets : il se tient avec les controles.
+   Un carre de la meme hauteur que les <select> voisins, pour que la rangee
+   reste alignee. */
+header .iconbtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; box-sizing: border-box;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.05);
+  color: #B9CFE6;
+  text-decoration: none;
+  transition: color .14s, border-color .14s, background .14s;
+}
+header .iconbtn:hover {
+  color: #fff; border-color: var(--gold);
+  background: rgba(214,163,58,.16);
+}
+header .iconbtn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* Sur la page du livre lui-meme : presente, allumee, mais pas cliquable. */
+header .iconbtn.on {
+  color: var(--gold);
+  border-color: rgba(214,163,58,.5);
+  background: rgba(214,163,58,.14);
+  cursor: default;
+}
+header .iconbtn svg { display: block; }
+
 @media (max-width: 560px) {
   header .brand .season-chip { margin-left: 6px; padding: 2px 6px; font-size: 10px; }
   header .brand .season-chip-tag { display: none; }

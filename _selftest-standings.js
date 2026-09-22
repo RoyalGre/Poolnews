@@ -239,6 +239,18 @@
        'an empty pool shows guidance instead of an empty table');
     ok(document.querySelectorAll('svg.chart').length === 0, 'no charts drawn for an empty pool');
 
+    /* ---- 16. le livre des records reste joignable ----
+       Il a quitte la barre d'onglets parce qu'il ne depend d'aucune saison ;
+       core.js pose l'icone a droite. Si ce lien disparait, la page devient
+       inaccessible depuis les onglets et personne ne s'en apercoit : le scan
+       du HTML statique ne peut pas le voir. */
+    const recs = document.getElementById('recordsLink');
+    ok(!!recs, 'le livre des records a son icone dans la barre');
+    ok(recs && recs.tagName === 'A' && /pool-records\.html$/.test(recs.getAttribute('href') || ''),
+       'et elle pointe vers pool-records.html');
+    ok(recs && !document.querySelector('nav.tabs a[href="pool-records.html"]'),
+       "et il ne reste pas d'onglet en double");
+
   } catch (e) {
     fails++;
     out.push('FAIL threw: ' + (e && e.stack ? e.stack : e));

@@ -590,6 +590,53 @@ function barSlot() {
   return $('barControls') || document.querySelector('header');
 }
 
+/* Le livre des records n'appartient a aucune saison : il couvre toutes les
+   annees a la fois. Le laisser parmi les onglets le faisait paraitre soumis
+   au selecteur de saison, ce qu'il n'est pas -- choisir 2024-25 ne changeait
+   rien a son contenu. Il vit donc a droite de la barre, avec les controles
+   qui ne dependent pas non plus de la saison.
+
+   Un lien, pas un bouton : on doit pouvoir l'ouvrir dans un nouvel onglet. */
+function wireRecordsLink() {
+  if ($('recordsLink')) return;
+  // Le coin haut droit, pas la rangee des controles : la barre d'onglets
+  // est large et passe a la ligne, ce qui reléguait l'icone en deuxieme
+  // rangee avec « Donnees » et « Theme ». Un emplacement dedie, pose juste
+  // apres le ressort, la garde collee au bord superieur droit.
+  const bar = document.querySelector('header .bar');
+  const slot = bar || barSlot();
+  if (!slot) return;
+
+  // Sur la page elle-meme, l'icone reste mais cesse d'etre un lien : cliquer
+  // pour rester ou l'on est est un clic mort.
+  const here = /pool-records\.html$/i.test(location.pathname);
+  const a = document.createElement(here ? 'span' : 'a');
+  a.id = 'recordsLink';
+  a.className = 'iconbtn' + (here ? ' on' : '');
+  if (!here) a.href = 'pool-records.html';
+  a.title = 'Livre des records — toutes les saisons';
+  a.setAttribute('aria-label', 'Livre des records');
+  a.innerHTML = RECORDS_ICON;
+
+  // Juste apres le titre : la barre se replie par-dessous, l'icone reste
+  // sur la premiere rangee et margin-left:auto la colle au bord droit.
+  const brand = bar ? bar.querySelector('.brand') : null;
+  if (brand && brand.parentNode === bar) brand.after(a);
+  else slot.append(a);
+}
+
+/* Un trophee, dessine plutot qu'en emoji : l'emoji change d'allure selon le
+   systeme et jure avec le reste de la barre. */
+const RECORDS_ICON =
+  '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" ' +
+  'fill="none" stroke="currentColor" stroke-width="1.7" ' +
+  'stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M7 4h10v6a5 5 0 0 1-10 0z"/>' +
+  '<path d="M7 6H4.5a2.5 2.5 0 0 0 2.5 4"/>' +
+  '<path d="M17 6h2.5a2.5 2.5 0 0 1-2.5 4"/>' +
+  '<path d="M12 15v3"/><path d="M8.5 20h7"/><path d="M10 18h4l1 2H9z"/>' +
+  '</svg>';
+
 /* A menu, not two buttons: export, import and "retour au pool publié" are
    all the same kind of rare, deliberate action, and three dropdowns in a row
    read better than dropdowns plus loose buttons. */

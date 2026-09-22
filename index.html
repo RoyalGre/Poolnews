@@ -7,8 +7,8 @@
 <meta name="description" content="Le pool de hockey de Yanick : classement, repêchage, pooleurs, faits saillants et livre des records.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/theme.css?v=dc00185a">
-<link rel="stylesheet" href="assets/site.css?v=1bdd814e">
+<link rel="stylesheet" href="assets/theme.css?v=5d364fb2">
+<link rel="stylesheet" href="assets/site.css?v=b17c9026">
 <script src="data/seasons.js?v=63a4c446"></script>
 <script src="assets/season.js?v=e2147ab1"></script>
 <script src="assets/theme.js?v=30989c40"></script>
@@ -127,10 +127,13 @@
           <span class="lp-d">Le bilan de la saison précédente.</span>
         </span>
       </a>
-      <a class="lp-card" href="pool-records.html">
+      <!-- Le livre des records ne suit pas le sélecteur de saison : il les
+           couvre toutes. D'où la mention, et sa place à part dans la barre
+           des autres pages. -->
+      <a class="lp-card lp-card-all" href="pool-records.html">
         <span class="lp-ico">🏆</span>
         <span class="lp-txt">
-          <span class="lp-k">Livre des records</span>
+          <span class="lp-k">Livre des records <span class="lp-tag">toutes saisons</span></span>
           <span class="lp-d">Les saisons passées et leurs sommets.</span>
         </span>
       </a>
@@ -149,7 +152,7 @@
 
 <!-- Données d'abord, puis le code partagé, puis celui de la page. -->
 <script>poolSeason.load(['players', 'history', 'pool']);</script>
-<script src="assets/core.js?v=db094240"></script>
-<script src="assets/landing.js?v=57f74138"></script>
+<script src="assets/core.js?v=4f9dc98c"></script>
+<script src="assets/landing.js?v=a407fd2d"></script>
 </body>
 </html>

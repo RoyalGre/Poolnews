@@ -449,6 +449,7 @@ function schRefresh(key) {
 
 /* ---- Go ---------------------------------------------------------------- */
 wireSeasonBadge();
+wireRecordsLink();
 wireThemeToggle();
 wirePublishedBadge();
 renderStamp(SCHED ? (SCH_GAMES.length + ' matchs jeu/ven/dim') : null);
