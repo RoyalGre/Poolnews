@@ -77,6 +77,11 @@ $pages = 'pool.html', 'standings.html', 'poolers.html', 'funfacts.html', 'defi.h
 $linkOnly = @('index.html')
 $navFails = 0
 
+# Le livre des records ne porte plus la barre d'onglets : il couvre toutes
+# les saisons a la fois, et ses onglets renvoyaient dans un contexte de
+# saison sans le dire. Depuis cette page on revient par le titre.
+$noTabs = @('pool-records.html')
+
 foreach ($page in ($pages + $linkOnly)) {
     $path = Join-Path $root $page
     if (-not (Test-Path $path)) {
@@ -89,6 +94,7 @@ foreach ($page in ($pages + $linkOnly)) {
     # Links to the other three, plus a marker for the page you are on.
     foreach ($target in $pages) {
         if ($target -eq $page -or $linkOnly -contains $page) { continue }
+        if ($noTabs -contains $page) { continue }
         # Le livre des records n'est plus un onglet : il ne depend d'aucune
         # saison, alors il vit dans le coin droit de la barre et core.js y
         # pose l'icone au chargement. Un scan du HTML statique ne peut donc
@@ -117,14 +123,20 @@ if ($navFails -eq 0) {
 }
 
 # The record book is generated; hand-edits to it get wiped by the next build.
+# Il ne porte plus les onglets -- il vit hors des saisons -- donc ce qui doit
+# survivre a une regeneration, c'est le chemin du retour : sans lui la page
+# serait un cul-de-sac, et personne ne s'en apercevrait avant d'y etre.
 $tpl = Join-Path $root 'pool-records.template.html'
 if (Test-Path $tpl) {
     $tplText = [System.IO.File]::ReadAllText($tpl, [System.Text.Encoding]::UTF8)
-    if ($tplText -notmatch 'href="standings\.html"') {
-        Write-Host 'FAIL pool-records.template.html has no nav — a rebuild would drop it from the site' -ForegroundColor Red
+    if ($tplText -notmatch 'class="brand"><a href="index\.html"') {
+        Write-Host 'FAIL pool-records.template.html has no way back — a rebuild would strand the page' -ForegroundColor Red
+        $failed++
+    } elseif ($tplText -match '<nav class="tabs">') {
+        Write-Host 'FAIL pool-records.template.html carries the season tabs again' -ForegroundColor Red
         $failed++
     } else {
-        Write-Host 'PASS the record book template carries the nav, so rebuilds keep it' -ForegroundColor Green
+        Write-Host 'PASS the record book template keeps its way back to the home page' -ForegroundColor Green
     }
 }
 
