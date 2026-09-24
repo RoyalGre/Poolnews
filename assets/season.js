@@ -77,6 +77,33 @@
   var label = chosen || idx.current || (all[0] && all[0].label) || null;
   var rec   = known(label);
 
+  /* Ecrire la saison dans la barre d'adresse.
+
+     Le parametre ne servait a rien si personne ne le voyait : en choisissant
+     2023-24 sur le site, l'adresse restait « finances.html » tout court, et
+     la copier renvoyait le lecteur a SA saison. Maintenant l'adresse dit ce
+     qu'on regarde, donc la copier suffit a partager exactement cette page.
+
+     replaceState et non pushState : changer de saison recharge deja la page,
+     et empiler des entrees ferait du bouton Precedent un piege qui repasse
+     par chaque saison visitee.
+
+     Seulement pour une saison archivee. Sur la saison courante l'adresse
+     reste nue, sinon un lien partage aujourd'hui pointerait pour toujours
+     sur 2026-27 -- alors qu'on veut d'ordinaire « la saison en cours ». */
+  (function stampUrl() {
+    if (!label || !idx.current || label === idx.current) return;
+    if (!window.history || !history.replaceState) return;
+    try {
+      var sp = new URLSearchParams(location.search);
+      if (sp.get('saison') === label) return;      // deja bon
+      sp.delete('season');
+      sp.set('saison', label);
+      history.replaceState(null, '',
+        location.pathname + '?' + sp.toString() + location.hash);
+    } catch (e) { /* vieux navigateur : l'adresse reste nue, rien de casse */ }
+  })();
+
   window.poolSeason = {
     KEY: KEY,
     /* The season on screen. */
