@@ -984,6 +984,28 @@ svg.rink text.df-lbl-s {
 }
 .rg-callout b { color: var(--ink); }
 
+/* Le lien partageable, sous le tableau : discret, mais la quand on en a
+   besoin. Le champ de repli n'apparait que si le presse-papier refuse. */
+.season-link { margin-top: 14px; }
+.season-link .linkbtn {
+  font: inherit; cursor: pointer;
+  padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--ink-2);
+  transition: border-color .14s, color .14s, background .14s;
+}
+.season-link .linkbtn:hover {
+  border-color: var(--gold); color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+.season-link .linkbtn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.season-link-field {
+  display: block; width: 100%; margin-top: 7px;
+  padding: 6px 9px; border-radius: 6px;
+  border: 1px solid var(--gold); background: var(--surface-2);
+  font-family: var(--f-mono); font-size: 12px; color: var(--ink);
+}
+
 .rg-remb { color: var(--ok); margin-top: 9px; }
 .rg-remb b { color: var(--ok); }
 

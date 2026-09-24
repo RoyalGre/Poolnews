@@ -432,8 +432,12 @@ function render() {
       'remboursables en entier. Chaque échange en retranchera ' +
       euro(sp.parTrade) + '.');
 
-  box.append(bloc(sp.jouee ? 'Qui doit quoi' : 'Ce qui est déjà versé',
-                  [rappel, tw, duo, noteFin]));
+  // Un lien qui porte la saison : « regarde les finances de 2023-24 » doit
+  // ouvrir 2023-24 chez le destinataire, pas la saison qu'il consultait.
+  const lien = seasonLinkButton('ce bilan');
+  const bas = [rappel, tw, duo, noteFin];
+  if (lien) bas.push(lien);
+  box.append(bloc(sp.jouee ? 'Qui doit quoi' : 'Ce qui est déjà versé', bas));
 
   const tradesBloc = blocTrades();
   if (tradesBloc) box.append(tradesBloc);

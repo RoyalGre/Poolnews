@@ -441,6 +441,55 @@ function wireThemeToggle() {
   }
 }
 
+/* ---- Le lien direct vers cette page, cette saison ----------------------
+
+   Sans parametre, une adresse copiee depuis la barre du navigateur affiche
+   au destinataire SA saison, pas celle qu'on voulait lui montrer -- le choix
+   vit dans son localStorage a lui. Le bouton compose donc l'adresse avec
+   ?saison=, et la copie.
+
+   Pas de navigator.clipboard partout : il exige un contexte securise, et le
+   site s'ouvre aussi en file://. On retombe sur une selection de texte, que
+   le lecteur n'a plus qu'a copier. */
+function seasonLinkButton(quoi) {
+  if (!window.poolSeason || !poolSeason.label) return null;
+
+  var page = location.pathname.split('/').pop() || 'index.html';
+  var url = location.origin && location.origin !== 'null'
+    ? location.origin + location.pathname.replace(/[^/]*$/, '') + page
+    : page;
+  url += '?saison=' + encodeURIComponent(poolSeason.label);
+
+  var wrap = el('p', 'hint season-link');
+  var b = el('button', 'linkbtn', 'Copier le lien vers ' + quoi + ' ' + poolSeason.label);
+  b.title = url;
+  b.onclick = function () {
+    var done = function (ok) {
+      b.textContent = ok ? 'Lien copié ✓' : 'Copie impossible — voir ci-dessous';
+      if (!ok) {
+        var f = el('input', 'season-link-field');
+        f.value = url;
+        f.readOnly = true;
+        wrap.append(f);
+        f.focus(); f.select();
+      }
+      setTimeout(function () {
+        b.textContent = 'Copier le lien vers ' + quoi + ' ' + poolSeason.label;
+      }, 2500);
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { done(true); },
+                                               function () { done(false); });
+        return;
+      }
+    } catch (e) { }
+    done(false);
+  };
+  wrap.append(b);
+  return wrap;
+}
+
 /* ---- Une saison qui n'a pas encore commence -----------------------------
 
    Avant le premier match, les pages de resultats n'ont rien a montrer. Le

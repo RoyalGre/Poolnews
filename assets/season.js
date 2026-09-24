@@ -25,11 +25,54 @@
     return null;
   }
 
+  /* L'adresse d'abord : finances.html?saison=2023-24 doit montrer 2023-24,
+     peu importe ce que le lecteur avait choisi la derniere fois. C'est ce qui
+     rend un lien partageable -- sans ca, envoyer « regarde les finances de
+     2023-24 » affichait la saison du destinataire, pas celle qu'on voulait
+     lui montrer.
+
+     « season » est accepte a cote de « saison » : le premier est plus naturel
+     a taper pour qui bricole l'URL, le second colle au reste du site. Les deux
+     formes 2023-24 et 20232024 passent, parce qu'on retient rarement laquelle
+     le site emploie. */
+  function fromUrl() {
+    var q = null;
+    try {
+      var sp = new URLSearchParams(location.search);
+      q = sp.get('saison') || sp.get('season');
+    } catch (e) {
+      // URLSearchParams manque sur les navigateurs anciens : on lit a la main.
+      var m = /[?&](?:saison|season)=([^&#]+)/.exec(location.search || '');
+      if (m) { try { q = decodeURIComponent(m[1]); } catch (e2) { q = m[1]; } }
+    }
+    if (!q) return null;
+    q = String(q).trim();
+    if (known(q)) return q;
+    // 20232024 -> 2023-24, et 2023 tout court -> la saison qui commence en 2023.
+    var digits = q.replace(/[^0-9]/g, '');
+    if (digits.length === 8) {
+      var lab = digits.slice(0, 4) + '-' + digits.slice(6, 8);
+      if (known(lab)) return lab;
+    }
+    if (digits.length === 4) {
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].label.slice(0, 4) === digits) return all[i].label;
+      }
+    }
+    return null;
+  }
+
+  var urlPick = fromUrl();
+
   var chosen = null;
   try { chosen = localStorage.getItem(KEY); } catch (e) { }
   // A season the reader picked once but that no longer exists must not strand
   // them on a blank page.
   if (!known(chosen)) chosen = null;
+
+  /* Un lien gagne sur le choix memorise, mais ne l'ecrase pas : le lecteur
+     retrouve sa propre saison en revenant par un autre onglet. */
+  if (urlPick) chosen = urlPick;
 
   var label = chosen || idx.current || (all[0] && all[0].label) || null;
   var rec   = known(label);
@@ -50,6 +93,24 @@
         if (l && l !== idx.current) localStorage.setItem(KEY, l);
         else localStorage.removeItem(KEY);   // back to following "current"
       } catch (e) { }
+      // Un ?saison= dans l'adresse gagne au chargement : le garder ici
+      // annulerait le changement qu'on vient de demander -- « revenir a
+      // 2026-27 » rechargerait 2023-24. On retire donc le parametre.
+      var u = location.pathname + location.hash;
+      try {
+        var sp = new URLSearchParams(location.search);
+        if (sp.has('saison') || sp.has('season')) {
+          sp.delete('saison'); sp.delete('season');
+          var rest = sp.toString();
+          location.replace(location.pathname + (rest ? '?' + rest : '') + location.hash);
+          return;
+        }
+      } catch (e) {
+        if (/[?&](?:saison|season)=/.test(location.search || '')) {
+          location.replace(u);
+          return;
+        }
+      }
       location.reload();
     },
     /* True when the reader is on something other than the live season. */

@@ -111,6 +111,18 @@ The reader's choice lives in `localStorage` under `hockeyPool.season`, beside
 the theme, so it follows them from tab to tab. `poolSeason.set()` reloads, since
 data is loaded at parse time.
 
+**A link can carry the season**: `finances.html?saison=2023-24` opens that
+season for whoever follows it, whatever they had chosen before — which is what
+makes a link shareable at all, since the choice otherwise lives in each
+reader's own browser. `season` works as well as `saison`, and `20232024` or
+plain `2023` as well as `2023-24`; an unknown season falls back to the current
+one rather than stranding the reader. The parameter wins over the stored choice
+but does not overwrite it, so the reader finds their own season again on the
+next tab. `poolSeason.set()` strips the parameter before reloading — otherwise
+"revenir à 2026-27" would reload straight back into the linked season.
+The Finances page offers a *Copier le lien* button (`seasonLinkButton()` in
+`core.js`) so nobody has to remember the syntax.
+
 ## Ce qu'une nouvelle saison demande
 
 Trois fichiers écrits à la main dans `data/<saison>/`, toujours les mêmes noms :
