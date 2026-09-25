@@ -3,36 +3,85 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Le Défi de la semaine. Un document par fin de semaine, nommé par la
-    // date du jeudi qui l'ouvre : defi/2026-04-16
-    //
-    // Ouvert sans garde, comme demandé : n'importe qui ayant l'adresse du
-    // projet peut lire et écrire. Le dépôt GitHub est public, alors l'identité
-    // du projet est trouvable. La date ci-dessous ferme la porte toute seule
-    // le 31 décembre 2026 — sans elle, cette ouverture resterait en place
-    // indéfiniment parce que personne ne s'en souviendrait.
-    //
-    // Pour refermer plus tôt : remplacer la ligne allow par
-    //   allow read: if true;
-    //   allow write: if request.resource.data.motDePasse == 'le-mot-choisi';
-    // Le {document=**} est essentiel : les règles Firestore ne descendent PAS
-    // toutes seules dans les sous-collections. Sans lui, defi/2026-04-16 est
-    // accessible mais defi/2026-04-16/picks/Yanick ne l'est pas, et la page
-    // reçoit un 403 sans explication.
-    match /defi/{weekend}/{document=**} {
-      allow read, write: if request.time < timestamp.date(2026, 12, 31);
+    /* ===================================================================
+       QUI A LE DROIT D'ECRIRE, ET SOUS QUEL NOM
+
+       Chaque pooleur a un jeton personnel. La page n'envoie jamais le
+       jeton : elle envoie sha256(jeton + nom) dans le champ `preuve`, et
+       la regle compare cette empreinte a celle rangee dans
+       /secrets/<nom du pooleur>.
+
+       CE QUI LIE LE NOM AU JETON. Le document ecrit s'appelle picks/<nom>,
+       et la regle va lire secrets/<ce meme nom>. L'empreinte de Pascal ne
+       peut donc pas autoriser une ecriture sous le nom de Steve : la regle
+       verifie le secret du document qu'on ecrit, pas celui qu'on pretend
+       etre. La verification vit dans la base -- aucune page ne la contourne.
+
+       POURQUOI UNE EMPREINTE PLUTOT QUE LE JETON. Firestore ne permet pas
+       d'envoyer une donnee visible des regles sans qu'elle soit ecrite : un
+       champ hors updateMask est ignore avant meme l'evaluation (verifie sur
+       cette base). Le jeton serait donc stocke, et /picks est public -- il
+       suffirait de le lire pour usurper son proprietaire. Une empreinte ne
+       se remonte pas jusqu'au jeton.
+
+       CE QUE CA N'ARRETE PAS. L'empreinte etant stockee, un pooleur peut
+       lire celle d'un autre et la rejouer pour ecraser ses choix. Ecrire
+       sous un nom dont on n'a pas l'empreinte reste impossible, mais le
+       rejeu l'est. Fermer cette porte demanderait Firebase Auth.
+       Accepte en connaissance de cause -- voir assets/jeton.js.
+
+       LA DATE. Comme la version precedente, ces regles expirent le
+       31 decembre 2026. Sans echeance, une ouverture temporaire devient
+       permanente parce que personne ne s'en souvient.
+       =================================================================== */
+
+    function avantExpiration() {
+      return request.time < timestamp.date(2026, 12, 31);
     }
 
-    // « Qui va gagner ? » — les pronostics de vainqueurs.
-    // Collection SÉPARÉE de « defi » : defis/{fin de semaine}/picks/{pooleur}.
-    // Une règle sur /defi ne couvre pas /defis, ce sont deux collections de
-    // premier niveau sans lien entre elles. Sans ce bloc, l'onglet reçoit un
-    // 403 et reste éternellement « hors ligne ».
-    match /defis/{weekend}/{document=**} {
-      allow read, write: if request.time < timestamp.date(2026, 12, 31);
+    /* L'empreinte attendue pour ce pooleur. exists() d'abord : sans ce
+       garde-fou, un nom absent de /secrets ferait echouer get() au lieu de
+       refuser proprement. */
+    function preuveValide(pooleur) {
+      return exists(/databases/$(database)/documents/secrets/$(pooleur))
+          && request.resource.data.preuve ==
+             get(/databases/$(database)/documents/secrets/$(pooleur)).data.preuve;
     }
 
-    // Tout le reste de la base demeure fermé.
+    /* Le Defi de la semaine -- les zones de but.
+       defi/<fin de semaine>/picks/<pooleur>, un document par pooleur, pour
+       que deux envois simultanes ne s'ecrasent pas. */
+    match /defi/{weekend}/picks/{pooleur} {
+      allow read: if true;
+      allow create, update: if avantExpiration() && preuveValide(pooleur);
+      allow delete: if false;
+    }
+
+    /* « Qui va gagner ? » -- les pronostics de vainqueurs.
+       Collection SEPAREE de « defi » : une regle sur l'une ne couvre pas
+       l'autre, ce sont deux collections de premier niveau sans lien entre
+       elles. Sans ce bloc, l'onglet resterait « hors ligne ». */
+    match /defis/{weekend}/picks/{pooleur} {
+      allow read: if true;
+      allow create, update: if avantExpiration() && preuveValide(pooleur);
+      allow delete: if false;
+    }
+
+    /* Le document de la fin de semaine lui-meme ne porte aucune donnee :
+       seules ses sous-collections comptent. Lisible pour que la page puisse
+       lister, jamais inscriptible. */
+    match /defi/{weekend}  { allow read: if true; allow write: if false; }
+    match /defis/{weekend} { allow read: if true; allow write: if false; }
+
+    /* Les empreintes. Ni lues ni ecrites depuis le site : elles se gerent
+       dans la console Firebase. Les regles, elles, y accedent par get() --
+       qui n'est pas soumis a cette interdiction. C'est ce qui rend la
+       comparaison possible sans jamais exposer le contenu de /secrets. */
+    match /secrets/{pooleur} {
+      allow read, write: if false;
+    }
+
+    /* Tout le reste de la base demeure ferme. */
     match /{document=**} {
       allow read, write: if false;
     }

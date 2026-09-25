@@ -735,6 +735,29 @@ svg.rink text.df-lbl-s {
 .df-field input[type=number]:focus { outline: none; border-color: var(--accent); }
 .df-field select { padding: 7px 9px; }
 
+/* ---- Le jeton ------------------------------------------------------------
+   Ne paraît que la première fois, sur un appareil qui ne connaît pas encore
+   le code du pooleur choisi. Le liseré doré le distingue des champs de jeu :
+   ce n'est pas une prédiction, c'est une preuve d'identité. */
+.jeton-field .jeton-input {
+  width: 168px; font-size: 14px; font-family: var(--f-mono);
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--gold); border-radius: 6px; padding: 7px 9px;
+  letter-spacing: .06em;
+}
+.jeton-field .jeton-input:focus { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 35%, transparent); }
+.jeton-field .jeton-input::placeholder { color: var(--faint); letter-spacing: 0; }
+.jeton-aide {
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted); margin-top: 2px;
+}
+.jeton-reset {
+  font: inherit; font-size: 11px; cursor: pointer; padding: 0;
+  background: none; border: 0; color: var(--muted);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.jeton-reset:hover { color: var(--gold); }
+
 /* Le total : vert quand il fait 100, rouge sinon. C'est la seule validation
    qui compte et elle doit se lire sans lire. */
 .df-total {

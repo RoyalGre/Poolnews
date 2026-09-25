@@ -155,7 +155,13 @@ function schFromFields(f) {
 function schToFields(p) {
   const fields = {};
   for (const gid in p.picks) fields[gid] = { stringValue: p.picks[gid] };
-  return { fields: { name: { stringValue: p.name }, picks: { mapValue: { fields: fields } } } };
+  const f = {
+    name: { stringValue: p.name },
+    picks: { mapValue: { fields: fields } }
+  };
+  // L'empreinte du jeton : les regles la comparent a /secrets/<nom>.
+  if (p.preuve) f.preuve = { stringValue: p.preuve };
+  return { fields: f };
 }
 
 function schLoadPicks(key) {
@@ -177,7 +183,14 @@ function schSavePick(key, p) {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(schToFields(p))
-  }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+  }).then(r => {
+    // 403 : les regles ont refuse, donc l'empreinte ne correspond pas au
+    // nom choisi. On le distingue d'une panne reseau pour pouvoir dire
+    // « jeton refuse » plutot que « verifiez votre connexion ».
+    if (r.status === 403 || r.status === 401) { const e = new Error('jeton'); e.jeton = true; throw e; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  });
 }
 
 /* =========================================================================
@@ -278,7 +291,12 @@ function schForm(w) {
   const f = el('div', 'df-field');
   f.append(el('label', null, 'Pooleur'));
   const sel = el('select');
-  sel.append(el('option', null, '— choisir —'));
+  // value vide explicite : sans elle, sel.value rend le TEXTE de l'option
+  // (« — choisir — »), qui est verite -- et le champ du jeton paraissait
+  // avant meme qu'un nom soit choisi.
+  const vide = el('option', null, '— choisir —');
+  vide.value = '';
+  sel.append(vide);
   state.poolers.forEach(pl => {
     const o = el('option', null, pl.name);
     o.value = pl.name;
@@ -286,16 +304,25 @@ function schForm(w) {
   });
   f.append(sel);
   who.append(f);
-  p.append(who);
 
   const chosen = {};
   const msg = el('div', 'df-msg');
 
-  // Charger les choix déjà envoyés quand on se reconnaît dans la liste.
+  // Le jeton, demande seulement quand ce navigateur ne connait pas encore
+  // celui du nom choisi.
+  const champ = champJeton(() => { msg.className = 'df-msg'; msg.textContent = ''; });
+  who.append(champ);
+  jetonPour(champ, sel.value);   // etat initial : cache tant qu'aucun nom
+  p.append(who);
+
+  // Changer de nom : recharger ses choix, et revoir s'il faut un jeton.
   sel.onchange = () => {
     const mine = schPicksFor(w.key).find(x => x.name === sel.value);
     for (const gid in chosen) delete chosen[gid];
     if (mine) Object.assign(chosen, mine.picks);
+    jetonPour(champ, sel.value);
+    msg.className = 'df-msg';
+    msg.textContent = '';
     paint();
   };
 
@@ -372,15 +399,34 @@ function schForm(w) {
                         (w.games.length - n > 1 ? 's' : '') + ' à choisir.';
       return;
     }
+    const jeton = jetonPour(champ, sel.value);
+    if (!jeton) {
+      champ.hidden = false;
+      champ._input.focus();
+      msg.className = 'df-msg bad';
+      msg.textContent = 'Entrez votre jeton pour confirmer que c’est bien vous.';
+      return;
+    }
+
     send.disabled = true;
     msg.textContent = 'Envoi…';
-    schSavePick(w.key, { name: sel.value, picks: chosen })
-      .then(() => schLoadPicks(w.key))
+    empreinteJeton(jeton, sel.value)
+      .then(preuve => schSavePick(w.key, { name: sel.value, picks: chosen, preuve: preuve }))
+      .then(() => {
+        // Accepte : ce navigateur peut retenir le jeton pour la suite.
+        retenirJeton(sel.value, jeton);
+        return schLoadPicks(w.key);
+      })
       .then(() => { schKey = w.key; render(); })
-      .catch(() => {
+      .catch(err => {
         send.disabled = false;
         msg.className = 'df-msg bad';
-        msg.textContent = 'Envoi impossible — vérifiez votre connexion.';
+        if (err && err.jeton) {
+          jetonRejete(champ, sel.value);
+          msg.textContent = 'Jeton refusé pour ' + sel.value + '. Vérifiez le code reçu.';
+        } else {
+          msg.textContent = 'Envoi impossible — vérifiez votre connexion.';
+        }
       });
   };
 

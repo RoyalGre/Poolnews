@@ -24,3 +24,13 @@ migrate-to-source-json.py
 # Feuille de comptes du pool — donnees personnelles, jamais dans un depot public.
 Comptes.xlsx
 *.xlsx
+
+# Les jetons des pooleurs. Le fichier des empreintes (jetons-firestore.json)
+# est sans danger, mais celui-ci porte les codes en clair : il se transmet en
+# prive, jamais par le depot.
+jetons-a-distribuer.txt
+
+# Les empreintes n'exposent aucun jeton, mais leur place est dans Firestore,
+# pas dans le depot : les commiter inviterait a les modifier ici plutot que
+# la ou elles comptent, et les deux finiraient par diverger.
+jetons-firestore.json

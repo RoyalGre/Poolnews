@@ -255,6 +255,39 @@ The strongest check: the Pooleurs page counts individual goals while
   weeks has nothing to come back to. The wide right column of `defis.html` was
   laid out with this in mind. Undecided: whether a missed week counts as zero or
   is skipped.
+## Les jetons — qui a le droit d'écrire
+
+Chaque pooleur a un jeton personnel. La page n'envoie jamais le jeton : elle
+envoie `sha256(jeton + '|' + nom)` dans le champ `preuve`, et les règles
+comparent cette empreinte à celle rangée dans `/secrets/<nom>`. Le document
+écrit s'appelant `picks/<nom>`, la règle lit le secret **du document qu'on
+écrit** — l'empreinte de Pascal ne peut donc pas autoriser une écriture sous
+le nom de Steve.
+
+**Pourquoi une empreinte et non le jeton.** Firestore ne permet pas d'envoyer
+une donnée visible des règles sans qu'elle soit écrite : un champ hors
+`updateMask` est ignoré avant même l'évaluation — mesuré sur la vraie base.
+Le jeton finirait donc stocké dans `/picks`, qui est public.
+
+**Ce que ça n'arrête pas** : l'empreinte étant stockée, un pooleur peut lire
+celle d'un autre et la rejouer pour écraser ses choix. Seule une vraie
+authentification (Firebase Auth) fermerait cette porte. Accepté en
+connaissance de cause.
+
+```powershell
+# genere les 12 jetons + les empreintes a deposer dans Firestore
+powershell -ExecutionPolicy Bypass -File Y:\HockeyPooluild-jetons.ps1
+```
+
+Deux fichiers en sortent : `jetons-a-distribuer.txt` (les codes en clair, dans
+`.gitignore`, à transmettre en privé) et `jetons-firestore.json` (les
+empreintes, à recopier dans la collection `secrets` de la console Firebase —
+un document par pooleur, un seul champ `preuve`).
+
+Le pooleur tape son jeton **une fois par appareil** ; `localStorage` le retient
+ensuite sous `hockeyPool.jeton`. Un lien *changer de jeton* permet d'en poser
+un autre.
+
 - **Firestore is open with no guard, until 2026-12-31.** `firestore.rules` in
   this repo is the source of truth. The repo is public, so anyone who finds the
   project id can read or overwrite every pick. Deliberate and temporary — the

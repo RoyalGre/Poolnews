@@ -165,14 +165,15 @@ function fromFields(f) {
   };
 }
 function toFields(p) {
-  return {
-    fields: {
-      name: { stringValue: p.name },
-      g: { integerValue: String(p.g) },
-      d: { integerValue: String(p.d) },
-      a: { integerValue: String(p.a) }
-    }
+  const f = {
+    name: { stringValue: p.name },
+    g: { integerValue: String(p.g) },
+    d: { integerValue: String(p.d) },
+    a: { integerValue: String(p.a) }
   };
+  // L'empreinte du jeton : les regles la comparent a /secrets/<nom>.
+  if (p.preuve) f.preuve = { stringValue: p.preuve };
+  return { fields: f };
 }
 
 /* Un document par fin de semaine : defi/2026-04-16, avec une sous-collection
@@ -204,6 +205,8 @@ function savePick(key, p) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(toFields(p))
   }).then(r => {
+    // 403 : les regles ont refuse -- l'empreinte ne correspond pas au nom.
+    if (r.status === 403 || r.status === 401) { const e = new Error('jeton'); e.jeton = true; throw e; }
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
   });
@@ -292,7 +295,12 @@ function buildForm(w) {
   const who = el('div', 'df-field');
   who.append(el('label', null, 'Pooleur'));
   const sel = el('select');
-  sel.append(el('option', null, '— choisir —'));
+  // value vide explicite : sans elle, sel.value rend le TEXTE de l'option
+  // (« — choisir — »), qui est verite -- et le champ du jeton paraissait
+  // avant meme qu'un nom soit choisi.
+  const vide = el('option', null, '— choisir —');
+  vide.value = '';
+  sel.append(vide);
   state.poolers.forEach(pl => {
     const o = el('option', null, pl.name);
     o.value = pl.name;
@@ -302,6 +310,8 @@ function buildForm(w) {
   form.append(who);
 
   const inputs = {};
+  // Le champ du jeton, renseigne plus bas quand msg existe.
+  let champ = null;
   ZONES.forEach(z => {
     const f = el('div', 'df-field');
     f.append(el('label', null, z.court));
@@ -323,6 +333,17 @@ function buildForm(w) {
 
   const msg = el('div', 'df-msg');
   p.append(msg);
+
+  // Le jeton, demande seulement quand ce navigateur ne connait pas encore
+  // celui du nom choisi. Place apres le menu des noms, avant les zones.
+  champ = champJeton(() => { msg.className = 'df-msg'; msg.textContent = ''; });
+  who.after(champ);
+  jetonPour(champ, sel.value);   // etat initial : cache tant qu'aucun nom
+  sel.onchange = () => {
+    jetonPour(champ, sel.value);
+    msg.className = 'df-msg';
+    msg.textContent = '';
+  };
 
   const read = () => ZONES.reduce((o, z) => {
     o[z.k] = Math.max(0, Math.min(100, parseInt(inputs[z.k].value, 10) || 0));
@@ -352,17 +373,32 @@ function buildForm(w) {
       return;
     }
 
-    const pick = { name: sel.value, g: v.g, d: v.d, a: v.a };
+    const jeton = jetonPour(champ, sel.value);
+    if (!jeton) {
+      champ.hidden = false;
+      champ._input.focus();
+      msg.className = 'df-msg bad';
+      msg.textContent = 'Entrez votre jeton pour confirmer que c’est bien vous.';
+      return;
+    }
+
     send.disabled = true;
     msg.textContent = 'Envoi…';
 
-    savePick(w.key, pick)
-      .then(() => loadPicks(w.key))
+    empreinteJeton(jeton, sel.value)
+      .then(preuve => savePick(w.key,
+              { name: sel.value, g: v.g, d: v.d, a: v.a, preuve: preuve }))
+      .then(() => { retenirJeton(sel.value, jeton); return loadPicks(w.key); })
       .then(() => { curKey = w.key; render(); })
-      .catch(() => {
+      .catch(err => {
         send.disabled = false;
         msg.className = 'df-msg bad';
-        msg.textContent = 'Envoi impossible — vérifiez votre connexion.';
+        if (err && err.jeton) {
+          jetonRejete(champ, sel.value);
+          msg.textContent = 'Jeton refusé pour ' + sel.value + '. Vérifiez le code reçu.';
+        } else {
+          msg.textContent = 'Envoi impossible — vérifiez votre connexion.';
+        }
       });
   };
 
