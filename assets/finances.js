@@ -86,6 +86,7 @@ function bilanSaison() {
     cotPool: cot.pool || 0,
     cotExpert: cot.poolexpert || 0,
     cotBouffe: cot.pizza || 0,
+    cotBouffeConnue: (typeof cot.pizza === 'number'),
     // « Pizza = » sans montant dans regles.txt : la part sera percue, le
     // prix n'est pas encore fixe. La colonne parait avec un tiret, sinon on
     // oublierait qu'elle doit etre remplie avant de reclamer l'argent.
@@ -130,6 +131,11 @@ const SUIV = (function () {
     pool: c.pool || 0,
     expert: c.poolexpert || 0,
     bouffe: c.pizza || 0,
+    // « Pizza = 0.0$ » dit que rien n'a ete percu ; l'absence de ligne dit
+    // qu'on ne sait pas encore. Les deux valent 0 en JavaScript, alors on
+    // retient separement si le fichier a vraiment donne un chiffre --
+    // sinon « 0,00 $ » et « prix inconnu » s'affichaient tous deux en tiret.
+    bouffeConnue: (typeof c.pizza === 'number'),
     bouffeAVenir: !!c.pizzaAVenir,
     // Les trades sont payes d'avance et rembourses s'ils ne servent pas.
     // Ils font partie de la cotisation : sans cette colonne, le cote droit
@@ -266,7 +272,7 @@ function render() {
     (SUIV
       ? ' <b>À droite du trait doré</b>, ce que demande la saison ' +
         SUIV.label + ' : ' + euro(SUIV.total) + ' par pooleur, déduits du solde' +
-        (SUIV.bouffe ? '.' : ', le repas restant à fixer.')
+        (SUIV.bouffeConnue ? '.' : ', le repas restant à fixer.')
       : '');
 
   const tw = el('div', 'tablewrap');
@@ -309,9 +315,12 @@ function render() {
       if (h === 'PIZZA') {
         const th = el('th', c + ' rg-th-pizza');
         th.append(pizzaSVG());
-        th.title = (SUIV && SUIV.bouffe)
-          ? 'Part du repas du repêchage ' + sLabel + ' — ' + euro(SUIV.bouffe) +
-            ' par pooleur, ajusté à la commande'
+        th.title = (SUIV && SUIV.bouffeConnue)
+          ? (SUIV.bouffe
+              ? 'Part du repas du repêchage ' + sLabel + ' — ' +
+                euro(SUIV.bouffe) + ' par pooleur, ajusté à la commande'
+              : 'Repas du repêchage ' + sLabel +
+                ' — aucune part perçue cette année-là')
           : 'Part du repas du repêchage ' + sLabel +
             ' — prix connu au moment de commander';
         hr.append(th);
@@ -397,8 +406,13 @@ function render() {
     tr.append(el('td', 'num sep', '−' + euro(SUIV ? SUIV.pool : 0)));
     tr.append(el('td', 'num', '−' + euro(SUIV ? SUIV.expert : 0)));
     if (colBouffe) {
+      // Un zero connu s'ecrit 0 $ ; seul un prix pas encore fixe donne un
+      // tiret. Confondre les deux ferait croire a une part a venir la ou le
+      // pool a decide de ne rien percevoir.
       tr.append(el('td', 'num rg-pizza-cell',
-                   SUIV && SUIV.bouffe ? '−' + euro(SUIV.bouffe) : '—'));
+                   !SUIV || !SUIV.bouffeConnue ? '—'
+                   : SUIV.bouffe ? '−' + euro(SUIV.bouffe)
+                   : euro(0)));
     }
     if (colTradesSuiv) {
       tr.append(el('td', 'num', '−' + euro(SUIV.nbTrades * SUIV.parTrade)));
@@ -443,7 +457,9 @@ function render() {
   fr.append(el('td', 'num', SUIV ? '−' + cents(SUIV.expert * n) : '—'));
   if (colBouffe) {
     fr.append(el('td', 'num rg-pizza-cell',
-                 SUIV && SUIV.bouffe ? '−' + cents(SUIV.bouffe * n) : '—'));
+                 !SUIV || !SUIV.bouffeConnue ? '—'
+                 : SUIV.bouffe ? '−' + cents(SUIV.bouffe * n)
+                 : euro(0)));
   }
   if (colTradesSuiv) {
     fr.append(el('td', 'num', '−' + cents(SUIV.nbTrades * SUIV.parTrade * n)));
