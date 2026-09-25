@@ -7,9 +7,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/theme.css?v=5d364fb2">
-<link rel="stylesheet" href="assets/site.css?v=122d8268">
+<link rel="stylesheet" href="assets/site.css?v=806ccea6">
 <script src="data/seasons.js?v=485b649d"></script>
-<script src="assets/season.js?v=482da3d1"></script>
+<script src="assets/season.js?v=6d1dd8c3"></script>
 <script src="assets/theme.js?v=30989c40"></script>
 </head>
 <body>
@@ -45,8 +45,11 @@
 <!-- Aucune donnée de saison ici : les règlements ne dépendent pas
      d'une année. Seul core.js est requis, pour el() et l'entête. -->
 <script>poolSeason.load(['regles', 'players', 'pool', 'trades'], { own: true });</script>
+<!-- Les tarifs de l'annee qui commence : cette page les annonce a cote du
+     solde de celle qui finit, et ils different (PoolExpert 2 $ -> 3 $). -->
+<script>poolSeason.loadNextRules();</script>
 <script src="assets/core.js?v=199ff213"></script>
 <script src="assets/pool-common.js?v=a6e88e98"></script>
-<script src="assets/finances.js?v=97f88fd0"></script>
+<script src="assets/finances.js?v=27bb977d"></script>
 </body>
 </html>

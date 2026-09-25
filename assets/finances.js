@@ -103,17 +103,44 @@ const SAISON_PRECEDENTE = bilanSaison();
 /* Les comptes se règlent au début de la saison suivante : le solde vient en
    déduction de sa cotisation. On la cherche dans l'index des saisons ; si la
    suivante n'existe pas encore, on retombe sur celle de l'année affichée. */
-const COTIS_SUIV = (function () {
-  const idx = window.NHL_SEASONS;
-  const R = window.NHL_REGLES;
-  if (!R) return 0;
-  if (idx && idx.seasons && idx.seasons.length) {
-    const i = idx.seasons.findIndex(x => x.label === R.label);
-    // seasons est trié du plus récent au plus ancien : la suivante est avant.
-    if (i > 0) return R.verse;   // la valeur exacte demanderait son regles.js
-  }
-  return R.verse || 0;
+/* Les tarifs de l'annee qui commence. season.js charge son regles.js sous
+   NHL_REGLES_SUIV : c'est la vraie grille, pas celle de l'annee soldee.
+   Les deux different -- PoolExpert est passe de 2 $ a 3 $ entre 2025-26 et
+   2026-27 -- et se tromper ici fausse le montant que le pooleur doit. Sans
+   ce fichier (derniere saison connue), on retombe sur la grille affichee et
+   on le dit dans la note sous le tableau. */
+const SUIV = (function () {
+  const N = window.NHL_REGLES_SUIV, R = window.NHL_REGLES;
+  const src = N || R;
+  if (!src) return null;
+  const c = src.cotisation || {};
+  // Sans fichier pour l'annee suivante on reprend la grille affichee : c'est
+  // la meilleure estimation possible. Mais il faut nommer l'annee a venir,
+  // pas celle qu'on solde -- « saison 2026-27 a payer » sur la page de
+  // 2026-27 ne veut rien dire.
+  const suite = (window.poolSeason && poolSeason.next && poolSeason.next()) || null;
+  const an = src.label.slice(0, 4);
+  const devine = an && /^\d{4}$/.test(an)
+    ? (+an + 1) + '-' + String((+an + 2) % 100).padStart(2, '0')
+    : '';
+  return {
+    label: N ? src.label : (suite || devine || src.label),
+    estime: !N,                       // vrai quand on a du deviner
+    total: src.verse || 0,
+    pool: c.pool || 0,
+    expert: c.poolexpert || 0,
+    bouffe: c.pizza || 0,
+    bouffeAVenir: !!c.pizzaAVenir,
+    // Les trades sont payes d'avance et rembourses s'ils ne servent pas.
+    // Ils font partie de la cotisation : sans cette colonne, le cote droit
+    // affichait 83 $ la ou le net en deduit 103 -- et le pooleur qui
+    // additionne les colonnes ne retombait pas sur son propre total.
+    nbTrades: (c.trades || 2),
+    parTrade: (c.parTrade || 0)
+  };
 })();
+
+const COTIS_SUIV = SUIV ? SUIV.total : 0;
 
 
 /* ---- Les transactions de la saison -------------------------------------
@@ -229,6 +256,12 @@ function render() {
     // chiffree : l'annoncer evite qu'on prenne 102 $ pour la note finale.
     (sp.bouffeAVenir
       ? ' <b>S’ajoutera la part du repas</b>, une fois le prix connu.'
+      : '') +
+    // Le tableau change d'annee en cours de route : le dire ici evite de
+    // lire les colonnes de droite comme si elles soldaient l'an dernier.
+    (SUIV
+      ? ' <b>À droite du trait doré</b>, ce que demande la saison ' +
+        SUIV.label + ' : ' + euro(SUIV.total) + ' par pooleur, déduits du solde.'
       : '');
 
   const tw = el('div', 'tablewrap');
@@ -236,35 +269,75 @@ function render() {
 
   const thead = el('thead');
   const hr = el('tr');
-  // « Prepaye » se lisait comme un bloc opaque. Les premieres colonnes disent
-  // maintenant ou va l'argent : le pot du pool, l'abonnement PoolExpert, la
-  // part du repas. Il y avait deux colonnes de repas -- celle-ci et un
-  // point d'interrogation pres du bout du tableau -- pour la meme depense ;
-  // une seule suffit, et c'est celle qui porte un montant.
+  /* Le tableau raconte deux annees, et c'est ce qui le rendait confus : on y
+     solde celle qui finit PUIS on annonce ce que coute celle qui commence.
+     Tout ce qui suit « Solde » appartient donc a l'annee suivante -- sa
+     cotisation detaillee (pool, PoolExpert, repas) et le net a regler -- et
+     une separation le dit a l'oeil.
+
+     Les trois colonnes de cotisation etaient a gauche, avec les montants de
+     l'annee soldee : elles decrivaient ce qui avait ete verse, pas ce qui
+     est du. Passees a droite, elles portent les tarifs de la saison qui
+     commence, qui ne sont pas les memes. */
+  const colBouffe = !!(SUIV && (SUIV.bouffe || SUIV.bouffeAVenir));
+
   const entetes = [['', ''], ['Pooleur', ''],
-                   ['Pool', 'num'], ['PoolExpert', 'num']];
-  const colBouffe = !!(sp.cotBouffe || sp.bouffeAVenir);
-  if (colBouffe) entetes.push(['PIZZA', 'num']);
-  entetes.push(['Trades', 'num'],
-   ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
+   ['Trades', 'num'], ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
    ['Bourse', 'num'], ['Ballot.', 'num'], ['Solde', 'num'],
-   ['Cotis. suiv.', 'num'], ['À régler', 'num']);
+   // --- bascule vers la saison suivante ---
+   ['Pool', 'num sep'], ['POOLEXPERT', 'num']];
+  if (colBouffe) entetes.push(['PIZZA', 'num']);
+  const colTradesSuiv = !!(SUIV && SUIV.parTrade);
+  if (colTradesSuiv) entetes.push(['Trades', 'num']);
+  entetes.push(['À régler', 'num']);
+
+  const sLabel = SUIV ? SUIV.label : '';
   entetes.forEach(([h, c]) => {
-      // La colonne du repas n'a pas de titre écrit : une pizza dit la même
-      // chose en moins large, et la largeur compte sur treize colonnes.
+      // Deux colonnes portent un logo plutot qu'un mot : « PoolExpert » est
+      // long et « Pizza » disait moins bien que le dessin. Sur treize
+      // colonnes, la largeur gagnee compte.
       if (h === 'PIZZA') {
         const th = el('th', c + ' rg-th-pizza');
         th.append(pizzaSVG());
-        th.title = sp.cotBouffe
-          ? 'Part du repas du repêchage — ' + euro(sp.cotBouffe) +
+        th.title = (SUIV && SUIV.bouffe)
+          ? 'Part du repas du repêchage ' + sLabel + ' — ' + euro(SUIV.bouffe) +
             ' par pooleur, ajusté à la commande'
-          : 'Part du repas du repêchage — prix connu au moment de commander';
+          : 'Part du repas du repêchage ' + sLabel +
+            ' — prix connu au moment de commander';
+        hr.append(th);
+      } else if (h === 'POOLEXPERT') {
+        const th = el('th', c + ' rg-th-pe');
+        const img = document.createElement('img');
+        img.className = 'rg-pe-mini';
+        img.src = 'assets/img/poolexpert.jpg';
+        img.alt = 'PoolExpert';
+        img.width = 62;
+        img.height = 20;
+        th.append(img);
+        th.title = 'Abonnement PoolExpert ' + sLabel +
+                   (SUIV ? ' — ' + euro(SUIV.expert) + ' par pooleur' : '');
         hr.append(th);
       } else {
         hr.append(el('th', c, h));
       }
     });
   thead.append(hr);
+
+  /* Une seconde ligne d'en-tete nomme les deux moities : sans elle, la
+     separation se voit mais ne se comprend pas. */
+  if (SUIV) {
+    const hr2 = el('tr', 'rg-eras');
+    const g = el('th', 'rg-era-l');
+    g.colSpan = 9;
+    g.textContent = 'Saison ' + sp.saison + ' — le bilan';
+    hr2.append(g);
+    const d = el('th', 'rg-era-r sep');
+    d.colSpan = 3 + (colBouffe ? 1 : 0) + (colTradesSuiv ? 1 : 0);
+    d.textContent = 'Saison ' + sLabel + ' — à payer' +
+                    (SUIV.estime ? ' (tarifs estimés)' : '');
+    hr2.append(d);
+    thead.append(hr2);
+  }
   t.append(thead);
 
   const tb = el('tbody');
@@ -281,14 +354,6 @@ function render() {
     const tr = el('tr', p.rang <= 3 ? 'top' : '');
     tr.append(el('td', 'rank' + (p.rang <= 3 ? ' r' + p.rang : ''), String(p.rang)));
     tr.append(el('td', 'rg-nm', p.nom));
-    // Le versement de depart, detaille. Les trades suivent dans leur propre
-    // colonne : c'est la seule part que le pooleur peut recuperer.
-    tr.append(el('td', 'num', euro(sp.cotPool)));
-    tr.append(el('td', 'num', euro(sp.cotExpert)));
-    if (colBouffe) {
-      tr.append(el('td', 'num rg-pizza-cell',
-                   sp.cotBouffe ? euro(sp.cotBouffe) : '—'));
-    }
     // Les trades employés d'abord : c'est eux qui expliquent le remboursement.
     tr.append(el('td', 'num' + (p.trades < sp.nbTrades ? ' gain' : ''),
                  p.trades + ' / ' + sp.nbTrades));
@@ -305,17 +370,32 @@ function render() {
     // Vides plutot qu'a zero -- un zero se lit comme un montant.
     if (!sp.jouee) {
       tr.append(el('td', 'num solde rg-vide', '—'));
+      tr.append(el('td', 'num sep rg-vide', '—'));
       tr.append(el('td', 'num rg-vide', '—'));
+      if (colBouffe) tr.append(el('td', 'num rg-vide', '—'));
+      if (colTradesSuiv) tr.append(el('td', 'num rg-vide', '—'));
       tr.append(el('td', 'num net rg-vide', '—'));
       tb.append(tr);
       return;
     }
     tr.append(el('td', 'num solde ' + (solde >= 0 ? 'gain' : 'perte'),
                  (solde >= 0 ? '+' : '') + solde.toFixed(2) + ' $'));
+
+    /* ---- A droite : la saison qui commence -----------------------------
+       Le detail de sa cotisation, puis le net. Les montants sont ceux de
+       CETTE saison-la, pas de celle qu'on vient de solder. */
+    tr.append(el('td', 'num sep', '−' + euro(SUIV ? SUIV.pool : 0)));
+    tr.append(el('td', 'num', '−' + euro(SUIV ? SUIV.expert : 0)));
+    if (colBouffe) {
+      tr.append(el('td', 'num rg-pizza-cell',
+                   SUIV && SUIV.bouffe ? '−' + euro(SUIV.bouffe) : '—'));
+    }
+    if (colTradesSuiv) {
+      tr.append(el('td', 'num', '−' + euro(SUIV.nbTrades * SUIV.parTrade)));
+    }
     // Les comptes se règlent une fois l'an : le solde vient en déduction de
     // la cotisation de la saison qui commence.
     const net = solde - COTIS_SUIV;
-    tr.append(el('td', 'num', '−' + euro(COTIS_SUIV)));
     tr.append(el('td', 'num net ' + (net >= 0 ? 'gain' : 'perte'),
                  (net >= 0 ? '+' : '') + net.toFixed(2) + ' $'));
     tb.append(tr);
@@ -330,29 +410,34 @@ function render() {
   // Arrondi au cent : 2,85 $ x 12 en virgule flottante peut sortir
   // 34,199999999999996, et personne ne veut lire ca dans un total.
   const cents = v => euro(Math.round(v * 100) / 100);
-  // Chaque total porte sa classe : la colonne du repas garde sa teinte
-  // jusqu'en bas, sinon le pied rompt la colonne qu'on suivait des yeux.
-  const pieds = [[cents(sp.cotPool * n), ''], [cents(sp.cotExpert * n), '']];
-  if (colBouffe) {
-    pieds.push([sp.cotBouffe ? cents(sp.cotBouffe * n) : '—', ' rg-pizza-cell']);
-  }
   // Penalites, bourses et ballottage se decident au classement final : avant
   // le repechage un « 0 $ » se lirait comme un resultat alors qu'il n'y a
   // rien a totaliser. Les trades non employes, eux, sont bel et bien dus --
   // personne n'en a fait, donc tout le monde recupere sa mise.
   const z = v => sp.jouee ? v : '—';
   const zc = sp.jouee ? '' : ' rg-vide';
-  pieds.push([tot.tr + ' / ' + (sp.nbTrades * n), ''],
+  const pieds = [
+   [tot.tr + ' / ' + (sp.nbTrades * n), ''],
    ['+' + cents(tot.pre - tot.uti), ''],
    [z(euro(tot.pena)), zc], [z(euro(tot.pos)), zc], [z(euro(tot.bou)), zc],
-   [z(tot.bal.toFixed(2) + ' $'), zc]);
+   [z(tot.bal.toFixed(2) + ' $'), zc]];
   pieds.forEach(([v, c]) => fr.append(el('td', 'num' + c, v)));
   // Pas de total pour le solde : additionner des gains et des pertes donne un
-  // nombre que personne ne verse ni ne reçoit. Pas de total non plus pour la
-  // cotisation suivante -- c'est le meme montant repete, pas une somme qui
-  // s'additionne, et l'empiler douze fois n'apprend rien.
+  // nombre que personne ne verse ni ne reçoit.
   fr.append(el('td', 'num solde', '—'));
-  fr.append(el('td', 'num', '—'));
+
+  /* A droite, les totaux de la saison qui commence : ce que le groupe verse
+     au pot, ce que coute l'abonnement, ce que pese le repas. Ceux-la
+     s'additionnent vraiment -- contrairement au solde. */
+  fr.append(el('td', 'num sep', SUIV ? '−' + cents(SUIV.pool * n) : '—'));
+  fr.append(el('td', 'num', SUIV ? '−' + cents(SUIV.expert * n) : '—'));
+  if (colBouffe) {
+    fr.append(el('td', 'num rg-pizza-cell',
+                 SUIV && SUIV.bouffe ? '−' + cents(SUIV.bouffe * n) : '—'));
+  }
+  if (colTradesSuiv) {
+    fr.append(el('td', 'num', '−' + cents(SUIV.nbTrades * SUIV.parTrade * n)));
+  }
   fr.append(el('td', 'num net', '—'));
   tf.append(fr);
   t.append(tf);

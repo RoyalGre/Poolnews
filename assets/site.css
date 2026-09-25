@@ -1095,6 +1095,35 @@ svg.rink text.df-lbl-s {
 /* La colonne du repas. Le montant n'est pas connu : la colonne existe pour
    rappeler qu'il viendra s'ajouter, d'ou le point d'interrogation plutot
    qu'un zero, qui laisserait croire a la gratuite. */
+/* ---- La bascule d'une saison a l'autre ---------------------------------
+   Le tableau solde l'annee qui finit a gauche, annonce ce que coute celle
+   qui commence a droite. L'ecart se voit avant de se lire : un vrai blanc,
+   pas juste un trait, parce que deux colonnes collees se lisent comme une
+   suite meme quand un filet les separe. */
+.rg-tbl th.sep, .rg-tbl td.sep {
+  border-left: 2px solid var(--gold);
+  padding-left: 18px !important;
+}
+.rg-tbl th.sep { border-left-color: var(--gold); }
+
+/* La rangee qui nomme les deux moities. Discrete : elle situe, elle ne
+   reclame pas l'attention que meritent les chiffres. */
+.rg-tbl tr.rg-eras th {
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .1em;
+  text-transform: uppercase; font-weight: 600;
+  padding: 3px 8px 7px; border-bottom: 1px solid var(--line-strong);
+}
+.rg-tbl tr.rg-eras .rg-era-l { text-align: left;  color: var(--muted); }
+.rg-tbl tr.rg-eras .rg-era-r { text-align: right; color: var(--gold); }
+
+/* Le logo PoolExpert en en-tete, comme la pizza : le mot est long et
+   l'image se reconnait mieux. */
+.rg-th-pe { text-align: center !important; padding: 4px 8px !important; }
+.rg-pe-mini {
+  display: block; margin: 0 auto; border-radius: 3px;
+  width: 62px; height: auto;
+}
+
 .rg-th-pizza { text-align: center !important; padding: 4px 8px !important; }
 .rg-th-pizza .rg-pizza { width: 22px; height: 22px; display: block; margin: 0 auto; }
 /* La colonne du repas porte un vrai montant depuis que le prix est connu :

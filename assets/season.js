@@ -224,4 +224,37 @@
       document.write('<scr' + 'ipt src="data/' + from + '/' + n + '.js"></scr' + 'ipt>');
     }
   };
+
+  /* L'etiquette de la saison qui SUIT celle affichee, quand le site l'a.
+     `all` est trie du plus recent au plus ancien : la suivante est donc
+     juste avant dans la liste. */
+  window.poolSeason.next = function () {
+    for (var i = 1; i < all.length; i++) {
+      if (all[i].label === label) return all[i - 1].label;
+    }
+    return null;
+  };
+
+  /* Charger les REGLES de la saison suivante, sous window.NHL_REGLES_SUIV.
+
+     La page Finances fait le pont entre deux annees : elle solde celle qui
+     finit et annonce ce que coute celle qui commence. Sans ce second
+     fichier elle reprenait les tarifs de l'annee soldee -- 102 $ pour
+     2025-26 alors que 2026-27 en demande 103, PoolExpert etant passe de
+     2 $ a 3 $. Un chiffre faux a l'endroit exact ou le pooleur cherche
+     combien il doit.
+
+     Le fichier assigne window.NHL_REGLES ; on le deplace aussitot pour que
+     le prochain ecrase la variable sans emporter celui de la saison
+     affichee. D'ou le petit script inline apres, plutot qu'un onload. */
+  window.poolSeason.loadNextRules = function () {
+    var nx = window.poolSeason.next();
+    if (!nx) return;
+    var rec2 = known(nx);
+    if (!rec2 || rec2.files.indexOf('regles') < 0) return;
+    document.write('<scr' + 'ipt>window.NHL_REGLES_AVANT=window.NHL_REGLES;</scr' + 'ipt>');
+    document.write('<scr' + 'ipt src="data/' + nx + '/regles.js"></scr' + 'ipt>');
+    document.write('<scr' + 'ipt>window.NHL_REGLES_SUIV=window.NHL_REGLES;' +
+                   'window.NHL_REGLES=window.NHL_REGLES_AVANT;</scr' + 'ipt>');
+  };
 })();
