@@ -255,13 +255,18 @@ function render() {
     // La part du repas n'est pas dans ce total puisqu'elle n'est pas
     // chiffree : l'annoncer evite qu'on prenne 102 $ pour la note finale.
     (sp.bouffeAVenir
-      ? ' <b>S’ajoutera la part du repas</b>, une fois le prix connu.'
+      ? ' <b>S’ajoutera la part du repas de ' + sp.saison +
+        '</b>, une fois le prix connu.'
       : '') +
     // Le tableau change d'annee en cours de route : le dire ici evite de
     // lire les colonnes de droite comme si elles soldaient l'an dernier.
+    // Deux repas peuvent etre en attente a la fois -- celui de l'annee
+    // soldee et celui de l'annee qui commence -- d'ou l'annee nommee dans
+    // les deux phrases.
     (SUIV
       ? ' <b>À droite du trait doré</b>, ce que demande la saison ' +
-        SUIV.label + ' : ' + euro(SUIV.total) + ' par pooleur, déduits du solde.'
+        SUIV.label + ' : ' + euro(SUIV.total) + ' par pooleur, déduits du solde' +
+        (SUIV.bouffe ? '.' : ', le repas restant à fixer.')
       : '');
 
   const tw = el('div', 'tablewrap');
@@ -279,7 +284,12 @@ function render() {
      l'annee soldee : elles decrivaient ce qui avait ete verse, pas ce qui
      est du. Passees a droite, elles portent les tarifs de la saison qui
      commence, qui ne sont pas les memes. */
-  const colBouffe = !!(SUIV && (SUIV.bouffe || SUIV.bouffeAVenir));
+  /* Le repas a toujours sa colonne des qu'il y a une saison suivante, meme
+     quand son regles.txt n'en dit rien encore. Elle disparaissait alors, et
+     le pooleur ne pouvait pas savoir si la part etait offerte, oubliee ou
+     simplement pas fixee -- une colonne absente ne pose pas de question,
+     un tiret si. Le prix se remplit le jour de la commande. */
+  const colBouffe = !!SUIV;
 
   const entetes = [['', ''], ['Pooleur', ''],
    ['Trades', 'num'], ['Remis', 'num'], ['Pénal.', 'num'], ['Pos.', 'num'],
