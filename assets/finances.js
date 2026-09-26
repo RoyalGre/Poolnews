@@ -485,25 +485,15 @@ function render() {
     bh.innerHTML = 'Les pénalités paient la <b>bouffe du repêchage</b>';
     bt.append(bh);
     const bl = el('div', 'rg-bouffe-l');
-    // Le repas a deux sources : les penalites et, les saisons ou elle est
-    // percue, la part versee par chaque pooleur. N'en nommer qu'une donnait
-    // un budget plus petit que la realite.
-    const partBouffe = Math.round(sp.cotBouffe * sp.poolers.length * 100) / 100;
-    let txt = 'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités ' +
-              'de trade <b>' + euro(penaTrade) + '</b>';
-    if (partBouffe) {
-      txt += ' + la part de chacun <b>' + euro(partBouffe) + '</b> (' +
-             euro(sp.cotBouffe) + ' × ' + sp.poolers.length + ')';
-    }
-    txt += ' = <b>' +
-           euro(Math.round((penaPos + penaTrade + partBouffe) * 100) / 100) +
-           '</b> au menu du prochain repêchage.';
-    // Une part est prevue mais pas encore chiffree : sans le dire, le total
-    // se lirait comme le budget definitif alors qu'il va monter.
-    if (sp.bouffeAVenir) {
-      txt += ' <b>La part de chacun s’ajoutera</b> dès que le prix du repas ' +
-             'sera connu.';
-    }
+    // Deux sources, pas trois. La part versee par chaque pooleur figurait
+    // ici dans la somme : elle n'y a pas sa place. Le pot des penalites est
+    // ce que la saison qui finit legue au repas de la suivante ; la part de
+    // chacun est justement ce qui RESTE a payer une fois ce pot epuise.
+    // L'additionner comptait le meme repas deux fois et gonflait le menu.
+    const txt = 'Pénalités de position <b>' + euro(penaPos) + '</b> + pénalités ' +
+                'de trade <b>' + euro(penaTrade) + '</b> = <b>' +
+                euro(Math.round((penaPos + penaTrade) * 100) / 100) +
+                '</b> au menu du prochain repêchage.';
     bl.innerHTML = txt;
     bt.append(bl);
     bouffe.append(bt);
