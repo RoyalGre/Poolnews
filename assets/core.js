@@ -509,6 +509,18 @@ function seasonNotStarted() {
   if (poolSeason.isPast()) return false;
   var d = window.NHL_DATA;
   if (!d || !d.players || !d.players.length) return false;
+
+  // Le fichier porte le nom de la saison d'ou viennent ses points. Avant le
+  // premier match, players.js liste bien les joueurs de l'annee qui commence
+  // -- rosters a jour, recrues comprises -- mais avec les points de l'annee
+  // precedente, pour qu'on ait de quoi repecher. Le classement, lui, ne doit
+  // pas les presenter comme ceux de cette annee : 795 points a Martin M.
+  // sous le titre 2026-27 alors qu'aucun match n'a eu lieu.
+  //
+  // Le test des zeros ne suffit donc pas ; l'etiquette tranche. Elle est
+  // absente des vieux fichiers, d'ou le repli sur les zeros en dessous.
+  if (d.statsSeason && d.statsSeason !== poolSeason.label) return true;
+
   for (var i = 0; i < d.players.length; i++) {
     var p = d.players[i];
     if ((+p.g || 0) + (+p.a || 0) > 0) return false;
