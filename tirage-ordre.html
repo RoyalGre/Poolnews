@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tirage de l'ordre de repêchage — billets à découper</title>
+<style>
+  :root { --ink:#0f1720; --line:#9aa6b2; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; background:#fff; color:var(--ink);
+              font-family:"Segoe UI",Calibri,Arial,sans-serif; }
+
+  .feuille {
+    width:8.5in; height:11in; margin:0 auto; padding:0.35in;
+    display:flex; flex-direction:column;
+  }
+  .titre {
+    text-align:center; font-size:13pt; letter-spacing:.08em;
+    text-transform:uppercase; color:#5b6773; font-weight:600;
+    padding-bottom:.18in; border-bottom:1px solid var(--line);
+    margin-bottom:.18in;
+  }
+  .grille {
+    flex:1; display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(4,1fr);
+  }
+  .billet {
+    border:1px dashed var(--line);
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:.1in;
+    /* les bordures voisines se superposent : un seul trait de ciseaux */
+    margin:-0.5px;
+  }
+  .nom { font-size:26pt; font-weight:700; line-height:1.15; }
+  .pied {
+    margin-top:.15in; text-align:center; font-size:8pt; color:#8a949e;
+  }
+
+  @media print {
+    @page { size:letter portrait; margin:0; }
+    .feuille { width:auto; height:100vh; margin:0; }
+    .titre, .pied { color:#666; }
+  }
+</style>
+</head>
+<body>
+<div class="feuille">
+  <div class="titre">Tirage de l'ordre de repêchage &middot; 2026-27</div>
+  <div class="grille">
+    <div class="billet"><span class="nom">Martin Pr.</span></div>
+    <div class="billet"><span class="nom">Steve T.</span></div>
+    <div class="billet"><span class="nom">Frédérick D.</span></div>
+    <div class="billet"><span class="nom">Dany P.</span></div>
+    <div class="billet"><span class="nom">Patrick C.</span></div>
+    <div class="billet"><span class="nom">Martin M.</span></div>
+    <div class="billet"><span class="nom">Pascal R.</span></div>
+    <div class="billet"><span class="nom">Eric C.</span></div>
+    <div class="billet"><span class="nom">Yanick M.</span></div>
+    <div class="billet"><span class="nom">François C.</span></div>
+    <div class="billet"><span class="nom">Manuel T.</span></div>
+    <div class="billet"><span class="nom">Antoine D.</span></div>
+  </div>
+  <div class="pied">Découper sur les pointillés, plier, déposer dans le bol.</div>
+</div>
+</body>
+</html>
