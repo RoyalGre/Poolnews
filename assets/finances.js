@@ -46,9 +46,15 @@ function bilanSaison() {
 
   // Le classement, avec la regle du pool.
   // Une saison pas encore repechee n'a pas de classement : douze alignements
-  // vides se valent tous. Le detecter ici plutot qu'en dur evite d'avoir un
-  // drapeau a lever le jour du repechage -- le premier choix publie suffit.
-  const jouee = pool.poolers.some(pl => (pl.picks || []).some(x => x));
+  // vides se valent tous. Mais le repechage ne suffit pas -- il a lieu des
+  // septembre, des mois avant le premier match. Entre les deux, la page
+  // soldait une annee qui n'avait pas commence : « Bilan de la saison
+  // 2026-27 », 600 $ a Martin M., 35 $ de penalite a Frederick D., le tout
+  // calcule sur les points de 2025-26 que players.js porte pour permettre
+  // de repecher. Il faut les deux : des choix publies ET des matchs joues.
+  const repechee = pool.poolers.some(pl => (pl.picks || []).some(x => x));
+  const jouee = repechee &&
+                !(typeof seasonNotStarted === 'function' && seasonNotStarted());
 
   const rows = pool.poolers.map(pl => {
     const sc = scoreRoster(pl.picks, statsSeason());
@@ -82,6 +88,7 @@ function bilanSaison() {
   return {
     saison: R.label,
     jouee: jouee,
+    repechee: repechee,
     prepaye: verse,
     cotPool: cot.pool || 0,
     cotExpert: cot.poolexpert || 0,
@@ -156,7 +163,19 @@ const COTIS_SUIV = SUIV ? SUIV.total : 0;
    l'afficher. */
 function blocTrades() {
   const T = window.NHL_TRADES;
-  if (!T || !T.trades || !T.trades.length) return null;
+  if (!T) return null;
+
+  // Zero transaction se dit, plutot que de faire disparaitre la section.
+  // Avant le premier match c'est l'etat normal et c'est la seule chose vraie
+  // que la page ait a annoncer : une section absente laisserait croire que
+  // l'information manque, pas qu'il n'y a rien a montrer.
+  if (!T.trades || !T.trades.length) {
+    const vide = el('p', 'hint');
+    vide.textContent = (typeof seasonNotStarted === 'function' && seasonNotStarted())
+      ? 'Aucune transaction : la saison ' + T.label + " n'a pas encore commencé."
+      : 'Aucune transaction pour l’instant cette saison.';
+    return bloc('Transactions ' + T.label, [vide]);
+  }
 
   const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
                 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
@@ -235,8 +254,10 @@ function render() {
       ' pooleurs</b>. Les montants de cette page sont ceux de ' + sp.saison +
       ' — pour les tarifs de la saison en cours, voir <a href="reglements.html">' +
       'Règlements</a>.'
-    : '<b>La saison ' + sp.saison + ' n’a pas encore été repêchée.</b> Les ' +
-      'tarifs sont connus — ' + euro(sp.prepaye) + ' par pooleur, à <b>' +
+    : '<b>La saison ' + sp.saison + (sp.repechee
+        ? ' n’a pas encore commencé.</b> Le repêchage est fait'
+        : ' n’a pas encore été repêchée.</b> Les tarifs sont connus') +
+      ' — ' + euro(sp.prepaye) + ' par pooleur, à <b>' +
       sp.poolers.length + ' pooleurs</b> — mais rien n’est encore dû ni gagné : ' +
       'le solde, la cotisation suivante et le montant à régler attendent le ' +
       'classement final. Voir <a href="reglements.html">Règlements</a>.';
@@ -269,7 +290,9 @@ function render() {
     // Deux repas peuvent etre en attente a la fois -- celui de l'annee
     // soldee et celui de l'annee qui commence -- d'ou l'annee nommee dans
     // les deux phrases.
-    (SUIV
+    // Sans tableau -- saison pas encore jouee -- la phrase designerait un
+    // trait dore qui n'est pas la.
+    (SUIV && sp.jouee
       ? ' <b>À droite du trait doré</b>, ce que demande la saison ' +
         SUIV.label + ' : ' + euro(SUIV.total) + ' par pooleur, déduits du solde' +
         (SUIV.bouffeConnue ? '.' : ', le repas restant à fixer.')
@@ -536,7 +559,11 @@ function render() {
   // Un lien qui porte la saison : « regarde les finances de 2023-24 » doit
   // ouvrir 2023-24 chez le destinataire, pas la saison qu'il consultait.
   const lien = seasonLinkButton('ce bilan');
-  const bas = [rappel, tw, duo, noteFin];
+  // Avant le premier match, le tableau n'a que des tirets : douze lignes
+  // classees 1 a 12 sur les points de l'an dernier, avec rien dedans. L'ordre
+  // seul suggerait un classement qui n'existe pas encore. On garde ce qui est
+  // vrai -- ce que chacun a verse -- et on laisse tomber la grille vide.
+  const bas = sp.jouee ? [rappel, tw, duo, noteFin] : [rappel, duo];
   if (lien) bas.push(lien);
   box.append(bloc(sp.jouee ? 'Qui doit quoi' : 'Ce qui est déjà versé', bas));
 
