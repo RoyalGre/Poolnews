@@ -56,6 +56,11 @@ function Get-Amount([string] $text) {
     # "$500", "500$", "2.85$" -> 500 / 2.85
     if ($text -match '\$\s*([\d]+(?:[.,]\d+)?)') { return [double]($Matches[1] -replace ',', '.') }
     if ($text -match '([\d]+(?:[.,]\d+)?)\s*\$') { return [double]($Matches[1] -replace ',', '.') }
+    # "Total = 208" -- un montant nu, sans le signe. Le bloc Repas de
+    # regles.txt s'ecrit ainsi dans son propre commentaire, et un total
+    # silencieusement perdu affichait un point d'interrogation comme si
+    # le repas n'avait pas eu lieu. Ne se declenche que faute de "$".
+    if ($text -match '=\s*([\d]+(?:[.,]\d+)?)\s*$') { return [double]($Matches[1] -replace ',', '.') }
     return $null
 }
 
@@ -144,6 +149,107 @@ foreach ($sid in $targets) {
             '(?i)^Repas' {
                 if     ($line -match '(?i)^Total\s*=\s*(.+)')        { $repas['total'] = Get-Amount $line }
                 elseif ($line -match '(?i)^Divise entre\s*=\s*(\d+)') { $repas['parts'] = [int]$Matches[1] }
+                elseif ($line -match '(?i)^Budget penalites\s*=') {
+                    # Les penalites paient la bouffe : ce que le pot couvre
+                    # se soustrait du total avant de diviser. Ligne vide =
+                    # on calcule le pot de la saison PRECEDENTE (voir plus
+                    # bas) ; un montant ecrit ici le remplace.
+                    $m = Get-Amount $line
+                    if ($null -ne $m) { $repas['budget'] = $m }
+                }
+            }
+        }
+    }
+
+    # Le repas : « Les penalites paient la bouffe du repechage ». Le pot
+    # vient de la saison QUI VIENT DE FINIR, pas de celle qui commence : les
+    # penalites de 2026-27 ne seront percues qu'en 2027, des mois apres le
+    # repas du repechage de 2026. C'est l'argent de 2025-26 qui paie la
+    # bouffe de 2026-27. Seul le reste se divise entre les pooleurs.
+    #
+    # Deux sources, exactement celles que la page Finances additionne :
+    # les penalites de position (le bareme de cette saison-la, tous les
+    # rangs ayant ete occupes) et les penalites de trade -- 10 $ par joueur
+    # acquis qui ne finit pas dans les dix qui comptent, drapeau « counted:
+    # false » pose par build-trades.ps1.
+    #
+    # La part derivee ne remplace jamais un « Pizza = » ecrit a la main dans
+    # Cotisations : celui-la reste la source de verite.
+    if ($repas['total']) {
+        if ($null -eq $repas['budget']) {
+            # La saison precedente : 20262027 -> 20252026.
+            $an   = [int]$sid.Substring(0, 4)
+            $prev = '{0}{1}' -f ($an - 1), $an
+            $repas['budgetSaison'] = Get-SeasonLabel -Season $prev
+
+            $pos = 0
+            $tp  = 0
+            $ok  = $false
+
+            # Le bareme des penalites de position de la saison precedente.
+            $rf = Get-SeasonPath -Root $root -Season $prev -Name 'regles'
+            $parT = 0
+            if (Test-Path $rf) {
+                try {
+                    $txt = [IO.File]::ReadAllText($rf, [Text.Encoding]::UTF8)
+                    $k   = $txt.IndexOf('{')
+                    if ($k -ge 0) {
+                        $rj = $txt.Substring($k).TrimEnd() -replace ';\s*$', '' | ConvertFrom-Json
+                        foreach ($pn in @($rj.penalites)) {
+                            if ($null -ne $pn) { $pos += [double]$pn.montant }
+                        }
+                        if ($rj.cotisation -and $rj.cotisation.parTrade) {
+                            $parT = [double]$rj.cotisation.parTrade
+                        }
+                        $ok = $true
+                    }
+                } catch {
+                    Write-Warning ("  {0} : regles.js de {1} illisible" -f $label, $repas['budgetSaison'])
+                }
+            }
+
+            # Les penalites de trade de cette meme saison precedente.
+            $tf = Get-SeasonPath -Root $root -Season $prev -Name 'trades'
+            if (Test-Path $tf) {
+                try {
+                    $txt = [IO.File]::ReadAllText($tf, [Text.Encoding]::UTF8)
+                    $k   = $txt.IndexOf('{')
+                    if ($k -ge 0) {
+                        $tj = $txt.Substring($k).TrimEnd() -replace ';\s*$', '' | ConvertFrom-Json
+                        foreach ($x in @($tj.trades)) {
+                            if ($null -ne $x -and $x.counted -eq $false) { $tp += $parT }
+                        }
+                    }
+                } catch {
+                    Write-Warning ("  {0} : trades.js de {1} illisible, penalites de trade a 0" -f $label, $repas['budgetSaison'])
+                }
+            }
+
+            # Pas de saison precedente sur le disque -- la premiere annee du
+            # site, ou un dossier absent. Mieux vaut ne rien deriver que
+            # diviser 208 $ par 12 comme si le pot etait vide : la page sait
+            # afficher un point d'interrogation, elle ne sait pas deviner.
+            if (-not $ok) {
+                Write-Warning ("  {0} : pas de saison precedente ({1}) -- part du repas non calculee" -f $label, $repas['budgetSaison'])
+                $repas.Remove('budgetSaison')
+            } else {
+                $repas['penPosition'] = $pos
+                $repas['penTrade']    = $tp
+                $repas['budget']      = $pos + $tp
+            }
+        }
+
+        if ($null -ne $repas['budget']) {
+            $reste = [double]$repas['total'] - [double]$repas['budget']
+            if ($reste -lt 0) { $reste = 0 }   # le pot couvre tout le repas
+            $repas['reste'] = [math]::Round($reste, 2)
+
+            $parts = if ($repas['parts']) { [int]$repas['parts'] } else { $poolers }
+            if ($parts -gt 0) {
+                $repas['part'] = [math]::Round($reste / $parts, 2)
+                if ($null -eq $cot['pizza'] -and -not $cot['pizzaAVenir']) {
+                    $cot['pizza'] = $repas['part']
+                }
             }
         }
     }

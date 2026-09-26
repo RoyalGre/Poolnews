@@ -35,9 +35,9 @@ Repas
 	# A remplir quand le repas aura eu lieu. Laisser vide tant qu'on ne
 	# connait pas le montant : la page affiche alors un point d'interrogation
 	# plutot qu'un faux zero.
-	Total =
-	Divise entre =
-	Budget penalites =
+	Total = 208
+	Divise entre = 12
+	Budget penalites = 
 
 Paiements
 	# Qui a regle, une ligne par pooleur, quand les comptes sont faits.
