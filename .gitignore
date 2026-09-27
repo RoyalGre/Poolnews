@@ -34,3 +34,12 @@ jetons-a-distribuer.txt
 # pas dans le depot : les commiter inviterait a les modifier ici plutot que
 # la ou elles comptent, et les deux finiraient par diverger.
 jetons-firestore.json
+
+# Les coordonnees des pooleurs -- telephones, courriels, adresses. Le depot
+# est public : ces lignes seraient lisibles par n'importe qui, indexables, et
+# resteraient dans l'historique meme apres suppression. Elles se transmettent
+# en prive, jamais par le depot. Le motif couvre aussi contacts-2026.txt ou
+# contacts.csv, pour qu'une copie renommee ne passe pas au travers.
+contacts.txt
+contacts*.txt
+contacts*.csv
