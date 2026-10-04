@@ -25,14 +25,27 @@ $ErrorActionPreference = 'Stop'
 $root = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
 
-# La saison sur laquelle tester : la plus recente qui a un history.js, donc
-# une saison reellement jouee. Se deduit du disque plutot que d'etre ecrite
-# en dur, pour qu'ouvrir 2027-28 ne demande pas de toucher a ce fichier.
+# La saison sur laquelle tester. Les suites comparent a des valeurs fixes --
+# « Kucherov : 130 points » -- donc il leur faut une saison TERMINEE, dont
+# les chiffres ne bougent plus. La saison en cours ne convient pas : au
+# 4 octobre Kucherov en a 2, et chaque nuit changerait le resultat.
+#
+# On prend donc la plus recente saison COMPLETE : celle qui a un history.js
+# et qui n'est pas la saison courante. Deduite du disque, pour qu'ouvrir
+# 2027-28 ne demande pas de toucher a ce fichier.
+$courante = ''
+$idxFile = Join-Path (Join-Path $root 'data') 'seasons.js'
+if (Test-Path $idxFile) {
+    $t = [System.IO.File]::ReadAllText($idxFile, [Text.Encoding]::UTF8)
+    $j = ($t.Substring($t.IndexOf('{')) -replace ';\s*$', '') | ConvertFrom-Json
+    $courante = [string]$j.current
+}
 $TestSeason = (Get-ChildItem (Join-Path $root 'data') -Directory |
     Where-Object { $_.Name -match '^\d{4}-\d{2}$' -and
+                   $_.Name -ne $courante -and
                    (Test-Path (Join-Path $_.FullName 'history.js')) } |
     Sort-Object Name -Descending | Select-Object -First 1).Name
-if (-not $TestSeason) { throw 'Aucune saison avec history.js : rien a tester.' }
+if (-not $TestSeason) { throw 'Aucune saison terminee avec history.js : rien a tester.' }
 Write-Host ("Saison de test : {0}" -f $TestSeason) -ForegroundColor DarkGray
 
 $suites = @(
