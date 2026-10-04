@@ -325,10 +325,17 @@ un autre.
 
 ## The weekend mini-game — settled 2026-09-13
 
-Poolers predict the **percentage** split of goals scored **Thursday, Friday and
+Poolers predict the **percentage** split of goals scored **Thursday through
 Sunday** across three zones: left slot / right slot / everywhere else. Scoring is
-the **sum of the three absolute errors**; lowest total wins. Saturday is excluded
-on purpose — it is the big hockey night and would swamp the other three days.
+the **sum of the three absolute errors**; lowest total wins.
+
+Saturday was excluded at first — it is the big hockey night, and 2025-26 bears
+that out: 1947 goals on Saturdays against 2996 for Thursday, Friday and Sunday
+together, so 65 % more to predict. It was added on 2026-10-04 to match
+« Qui va gagner ? », which already runs Thursday to Sunday: a pooler now fills
+both forms over the same window. Measured consequence: the targets barely move
+(37.8 → 37.6 and 43.4 → 43.2) but the **standard deviation drops from 7.0 to
+5.6** — more goals, less week-to-week noise, so scores cluster closer together.
 
 A slot is within **34 ft of the goal line** (x ≥ 55, net at 89) and within
 **±22 ft** of the centre axis. Re-validated against all 8,086 goals in

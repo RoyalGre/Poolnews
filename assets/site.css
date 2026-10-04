@@ -739,6 +739,11 @@ svg.rink text.df-lbl-s {
    Ne paraît que la première fois, sur un appareil qui ne connaît pas encore
    le code du pooleur choisi. Le liseré doré le distingue des champs de jeu :
    ce n'est pas une prédiction, c'est une preuve d'identité. */
+/* display:flex sur .df-field l'emporte sur le [hidden] par defaut du
+   navigateur : sans cette ligne, le champ du jeton reste visible alors que
+   le code le croit cache, et il apparait avant meme qu'un nom soit choisi. */
+.df-field[hidden] { display: none !important; }
+
 .jeton-field .jeton-input {
   width: 168px; font-size: 14px; font-family: var(--f-mono);
   background: var(--surface); color: var(--text);

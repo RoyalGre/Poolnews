@@ -54,10 +54,21 @@ const G_INFO = G_DATA ? (G_DATA.gameInfo || {}) : {};
 function gDate(g) { const m = G_INFO[g.gid]; return m ? m[0] : ''; }
 
 /* ---- La fin de semaine --------------------------------------------------
-   Jeudi, vendredi, dimanche. Le samedi est exclu volontairement : c'est le
-   gros soir de hockey et il écraserait les trois autres jours à lui seul.
+   Jeudi, vendredi, samedi, dimanche — les mêmes jours que « Qui va gagner ? »,
+   pour qu'un pooleur remplisse les deux formulaires sur la même fenêtre.
+
+   Le samedi était d'abord exclu : c'est le gros soir de hockey et il pesait
+   plus que les trois autres jours réunis. Mesuré sur 2025-26 : 1947 buts le
+   samedi contre 2996 pour jeudi, vendredi et dimanche ensemble, soit 65 % de
+   plus à prédire. Mais c'est justement le soir que les pooleurs regardent, et
+   l'ajouter ne déplace pas les cibles — les moyennes bougent de deux dixièmes
+   (37,8 → 37,6 et 43,4 → 43,2). Ce qui change, c'est l'écart-type : il tombe
+   de 7,0 à 5,6. Plus de buts, moins de hasard d'une semaine à l'autre, donc
+   des pointages plus serrés : deviner la moyenne de la saison devient un peu
+   moins perdant qu'avant, mais départage encore.
+
    Une fin de semaine est identifiée par la date de son jeudi. */
-const JOURS_DEFI = [4, 5, 0];   // getUTCDay : 0 = dimanche, 4 = jeudi
+const JOURS_DEFI = [4, 5, 6, 0];   // getUTCDay : 0 = dimanche, 4 = jeudi
 
 /* Les dates arrivent en 'YYYY-MM-DD'. On les lit en UTC pour qu'un fuseau
    ne décale pas un match d'un jour. */
@@ -266,7 +277,7 @@ function render() {
   if (!list.length) {
     const p = el('div', 'panel');
     p.append(el('div', 'empty-state',
-      'Aucune partie de jeudi, vendredi ou dimanche dans les données.'));
+      'Aucune partie de jeudi, vendredi, samedi ou dimanche dans les données.'));
     box.append(p);
     return;
   }
@@ -465,7 +476,7 @@ function buildRules() {
   p.append(el('h2', null, 'La règle'));
   const d = el('div', 'prose');
   d.innerHTML =
-    'Devinez comment les buts du <b>jeudi, vendredi et dimanche</b> vont se ' +
+    'Devinez comment les buts du <b>jeudi au dimanche</b> vont se ' +
     'partager entre les trois zones — en pourcentages qui totalisent 100. ' +
     'Une <b>enclave</b> va jusqu\'à ' + SLOT_DEPTH + ' pi de la ligne de but et ' +
     SLOT_HALFW + ' pi de chaque côté de l\'axe. Le pointage est la somme des ' +
