@@ -43,3 +43,7 @@ jetons-firestore.json
 contacts.txt
 contacts*.txt
 contacts*.csv
+
+# Le journal de la mise a jour de la nuit. Local : il raconte ce qui s'est
+# passe sur CETTE machine, et n'a rien a faire dans le depot.
+logs/

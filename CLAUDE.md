@@ -255,6 +255,35 @@ The strongest check: the Pooleurs page counts individual goals while
   weeks has nothing to come back to. The wide right column of `defis.html` was
   laid out with this in mind. Undecided: whether a missed week counts as zero or
   is skipped.
+## La mise à jour de la nuit
+
+`nightly.ps1` enchaîne les trois gestes qu'il fallait faire à la main :
+`update.ps1`, puis `run-selftest.ps1`, puis commit et push — **et il ne
+publie que si les tests passent**. Une nuit où l'API renvoie n'importe quoi,
+rien ne part et le site en ligne reste sur sa dernière version saine. C'est
+toute la différence avec un `git push` automatique.
+
+Les nuits sans match, `update.ps1` sort en une seconde, le dépôt reste propre
+et le script s'arrête sans rien publier.
+
+```powershell
+# essayer la chaîne complète sans publier
+powershell -ExecutionPolicy Bypass -File Y:\HockeyPool
+ightly.ps1 -DryRun
+
+# installer la tâche planifiée (UNE FOIS, en administrateur)
+powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\install-tache.ps1
+```
+
+La tâche tourne **tous les jours à 4 h 30** : les matchs de la côte ouest
+finissent vers 1 h 30 heure de l'Est et la LNH met un moment à publier les
+feuilles de match. `-StartWhenAvailable` rattrape les nuits où le poste
+dormait ; `-LogonType S4U` évite de stocker un mot de passe tout en gardant
+accès aux identifiants git de Windows.
+
+Le journal vit dans `logs/nightly-AAAA-MM.log`, un fichier par mois, hors du
+dépôt. C'est ce qu'on lit le matin où quelque chose a cloché.
+
 ## Les jetons — qui a le droit d'écrire
 
 Chaque pooleur a un jeton personnel. La page n'envoie jamais le jeton : elle
