@@ -178,7 +178,12 @@ function schLoadPicks(key) {
 }
 
 function schSavePick(key, p) {
-  const id = encodeURIComponent(p.name);
+  // Le point final doit etre encode %2E. encodeURIComponent le laisse tel
+  // quel, et le moteur de regles traite alors « Steve T. » autrement :
+  // le joker {pooleur} ne capture pas le nom, get(/secrets/...) echoue, et
+  // l'envoi est refuse 403 meme avec la bonne empreinte. Mesure sur la vraie
+  // base : « Steve%20T. » refuse, « Steve%20T%2E » accepte.
+  const id = encodeURIComponent(p.name).replace(/\./g, '%2E');
   return fetch(SCH_FB_BASE + '/' + key + '/picks/' + id + '?key=' + SCH_FB_KEY, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },

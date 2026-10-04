@@ -42,10 +42,19 @@ service cloud.firestore {
     /* L'empreinte attendue pour ce pooleur. exists() d'abord : sans ce
        garde-fou, un nom absent de /secrets ferait echouer get() au lieu de
        refuser proprement. */
+    /* path() construit le chemin a partir d'une CHAINE, au lieu d'interpoler
+       le joker dans une litterale de chemin. Avec $(pooleur) directement, un
+       identifiant contenant une espace -- « Steve T. », et ils en ont tous
+       une -- ne resout pas vers le bon document, et la regle refuse meme une
+       empreinte exacte. Mesure sur la base : toutes les ecritures legitimes
+       recevaient 403. */
+    function cheminSecret(pooleur) {
+      return path('/databases/' + database + '/documents/secrets/' + pooleur);
+    }
+
     function preuveValide(pooleur) {
-      return exists(/databases/$(database)/documents/secrets/$(pooleur))
-          && request.resource.data.preuve ==
-             get(/databases/$(database)/documents/secrets/$(pooleur)).data.preuve;
+      return exists(cheminSecret(pooleur))
+          && request.resource.data.preuve == get(cheminSecret(pooleur)).data.preuve;
     }
 
     /* Le Defi de la semaine -- les zones de but.
