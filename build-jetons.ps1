@@ -28,12 +28,22 @@
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-jetons.ps1 -Pooleur "Steve T."
+.EXAMPLE
+    # Choisir soi-meme les jetons. mesjetons.txt contient :
+    #     Steve T. = papillon-rouge
+    #     Dany P.  = 1234-vieux-poele
+    # Les pooleurs absents du fichier gardent un jeton tire au sort.
+    powershell -File build-jetons.ps1 -Depuis mesjetons.txt
 #>
 
 [CmdletBinding()]
 param(
     [string] $Season  = '',
     [string] $Pooleur = '',
+    # Choisir soi-meme les jetons plutot que de les tirer au hasard.
+    # Fichier texte : « Nom du pooleur = jeton », un par ligne. Les pooleurs
+    # absents du fichier gardent un jeton tire au sort.
+    [string] $Depuis  = '',
     [switch] $Quiet
 )
 
@@ -92,15 +102,40 @@ function Empreinte([string] $jeton, [string] $nom) {
     } finally { $sha.Dispose() }
 }
 
+# Les jetons imposes, s'il y en a. Format volontairement permissif :
+# « Pooleur X. = mon-jeton », espaces libres, lignes vides et # ignores.
+$impose = @{}
+if ($Depuis) {
+    if (-not (Test-Path $Depuis)) { throw "Introuvable : $Depuis" }
+    foreach ($ln in (Get-Content -LiteralPath $Depuis -Encoding UTF8)) {
+        $t = $ln.Trim()
+        if (-not $t -or $t.StartsWith('#')) { continue }
+        $i = $t.IndexOf('=')
+        if ($i -lt 1) { continue }
+        $n = $t.Substring(0, $i).Trim()
+        $j = $t.Substring($i + 1).Trim()
+        if ($n -and $j) { $impose[$n] = $j }
+    }
+    Say ("  {0} jeton(s) impose(s) depuis {1}" -f $impose.Count, (Split-Path $Depuis -Leaf)) 'Cyan'
+
+    # Un nom mal orthographie passerait inapercu : le signaler tout de suite.
+    foreach ($k in $impose.Keys) {
+        if ($noms -notcontains $k) {
+            Say ("  ! « {0} » ne figure pas parmi les pooleurs de {1} -- ignore" -f $k, $label) 'Red'
+        }
+    }
+}
+
 $aDistribuer = New-Object System.Collections.ArrayList
 $secrets = [ordered]@{}
 
 foreach ($nom in $noms) {
-    $jeton = Nouveau-Jeton
+    $jeton = if ($impose.ContainsKey($nom)) { $impose[$nom] } else { Nouveau-Jeton }
     $emp   = Empreinte $jeton $nom
     [void]$aDistribuer.Add([pscustomobject]@{ Pooleur = $nom; Jeton = $jeton })
     $secrets[$nom] = [ordered]@{ preuve = $emp }
-    Say ("  {0,-16} {1}" -f $nom, $jeton) 'Green'
+    $marque = if ($impose.ContainsKey($nom)) { ' (choisi)' } else { '' }
+    Say ("  {0,-16} {1}{2}" -f $nom, $jeton, $marque) 'Green'
 }
 
 # ---- Ce que Yanick distribue -------------------------------------------
