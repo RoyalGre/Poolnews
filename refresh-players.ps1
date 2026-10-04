@@ -246,6 +246,64 @@ if ($StatsSeason) {
 }
 
 # -----------------------------------------------------------------------------
+# 3b. Les joueurs repeches mais introuvables
+#
+#     Une liste batie sur les alignements COURANTS perd les blesses a long
+#     terme : une equipe les retire de son effectif actif. S'ils n'ont pas
+#     encore joue, ils echappent aussi au relais des statistiques. Un pooleur
+#     qui a repeche Dylan Larkin voyait donc « Joueur inconnu » dans son
+#     alignement -- exact quant aux points (zero), mais illisible.
+#
+#     On va chercher leur fiche une par une. C'est une requete par joueur
+#     manquant, et il y en a une poignee : les pools comptent 144 choix, pas
+#     mille, et la plupart jouent.
+# -----------------------------------------------------------------------------
+$poolFile = Join-Path (Split-Path -Parent $OutPath) 'pool.js'
+if (Test-Path $poolFile) {
+    $pj = [System.IO.File]::ReadAllText($poolFile, [Text.Encoding]::UTF8)
+    try {
+        $pool = ($pj.Substring($pj.IndexOf('{')) -replace ';\s*$', '') | ConvertFrom-Json
+        $vides = New-Object System.Collections.ArrayList
+        foreach ($pl in $pool.poolers) {
+            foreach ($id in $pl.picks) {
+                if ($null -eq $id) { continue }
+                $i = [int]$id
+                if (-not $byId.ContainsKey($i) -and -not $vides.Contains($i)) { [void]$vides.Add($i) }
+            }
+        }
+        if ($vides.Count) {
+            Write-Host ("Fetching {0} drafted player(s) missing from rosters..." -f $vides.Count) -ForegroundColor Cyan
+            $ajoutes = 0
+            foreach ($i in $vides) {
+                try {
+                    $f = Get-Json "$WEB/player/$i/landing"
+                    $nom = ($f.firstName.default + ' ' + $f.lastName.default).Trim()
+                    if (-not $nom) { continue }
+                    $rec = [ordered]@{
+                        i = $i
+                        n = $nom
+                        p = [string]$f.position
+                        t = [string]$f.currentTeamAbbrev
+                        s = $null
+                        g = 0
+                        a = 0
+                    }
+                    $players.Add($rec)
+                    $byId[$i] = $rec
+                    $ajoutes++
+                    Write-Host ("  + {0} ({1} {2})" -f $nom, $rec.p, $rec.t) -ForegroundColor DarkGray
+                } catch {
+                    Write-Warning ("  joueur {0} introuvable : {1}" -f $i, $_.Exception.Message)
+                }
+            }
+            if ($ajoutes) { Write-Host ("  added {0} drafted player(s) not on any roster" -f $ajoutes) }
+        }
+    } catch {
+        Write-Warning "  pool.js illisible, aucun choix complete : $($_.Exception.Message)"
+    }
+}
+
+# -----------------------------------------------------------------------------
 # 4. Write data/players.js
 # -----------------------------------------------------------------------------
 $seasonLabel = if ($StatsSeason) {
