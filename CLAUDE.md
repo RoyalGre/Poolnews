@@ -277,9 +277,28 @@ powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\install-tache.ps1
 
 La tâche tourne **tous les jours à 4 h 30** : les matchs de la côte ouest
 finissent vers 1 h 30 heure de l'Est et la LNH met un moment à publier les
-feuilles de match. `-StartWhenAvailable` rattrape les nuits où le poste
-dormait ; `-LogonType S4U` évite de stocker un mot de passe tout en gardant
-accès aux identifiants git de Windows.
+feuilles de match.
+
+**`-WakeToRun` sort la machine de veille** pour l'occasion. Vérifié sur ce
+poste avant de s'y fier : `powercfg /query SCHEME_CURRENT SUB_SLEEP RTCWAKE`
+rend `0x1` sur secteur et sur batterie, et la veille S3 comme l'hibernation
+sont disponibles — sans ces deux conditions l'option serait acceptée sans
+effet. Un poste **vraiment éteint** ne se réveille pas pour autant ;
+`-StartWhenAvailable` rattrape alors au démarrage suivant. C'est ce qui s'est
+passé les 5 et 6 octobre 2026, où la tâche a tourné le 6 à 20 h au lieu de
+4 h 30, sans rien perdre : `update.ps1` repart de l'API, pas du dernier jour.
+
+`-RandomDelay` de deux minutes, **sur le déclencheur et non les paramètres** :
+Windows ne réveille pas à la seconde près et le lecteur réseau `Y:` met un
+instant à répondre. `-LogonType S4U` évite de stocker un mot de passe tout en
+gardant accès aux identifiants git de Windows.
+
+**`git` écrit ses messages normaux sur stderr** — « Everything up-to-date »,
+« To https://github.com/… ». Avec `2>&1` et `$ErrorActionPreference = 'Stop'`,
+PowerShell 5.1 en fait une exception : le push réussissait et `nightly.ps1`
+annonçait un échec. Les appels à git et à `powershell.exe` ne redirigent donc
+plus stderr, et le script juge sur le code de sortie, puis compare le commit
+local à `origin/main` avant de dire « publié ».
 
 Le journal vit dans `logs/nightly-AAAA-MM.log`, un fichier par mois, hors du
 dépôt. C'est ce qu'on lit le matin où quelque chose a cloché.

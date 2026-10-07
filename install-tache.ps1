@@ -13,11 +13,22 @@ if (-not (Test-Path $script)) { throw "Introuvable : $script" }
 $action  = New-ScheduledTaskAction -Execute 'powershell.exe' `
              -Argument ('-ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File "{0}"' -f $script) `
              -WorkingDirectory 'Y:\HockeyPool'
-$trigger = New-ScheduledTaskTrigger -Daily -At $heure
+# -RandomDelay appartient au DECLENCHEUR, pas aux parametres. Windows ne
+# reveille pas a la seconde pres et le lecteur reseau Y: met un instant a
+# repondre : deux minutes de marge evitent qu'update.ps1 parte avant lui.
+$trigger = New-ScheduledTaskTrigger -Daily -At $heure -RandomDelay (New-TimeSpan -Minutes 2)
 
 # StartWhenAvailable : si le poste dormait a 4 h 30, la tache part au reveil
 # plutot que d'etre sautee -- c'est le cas normal pour un poste de maison.
-$params = New-ScheduledTaskSettingsSet -StartWhenAvailable `
+# -WakeToRun : le planificateur sort la machine de veille pour la tache.
+# Verifie au prealable sur ce poste : les minuteries de reveil sont permises
+# (powercfg SUB_SLEEP RTCWAKE = 0x1) et la veille S3 comme l'hibernation sont
+# disponibles. Sans ces deux conditions l'option serait acceptee sans effet.
+#
+# -StartWhenAvailable reste : si la machine etait eteinte -- pas en veille,
+# vraiment eteinte -- aucun reveil n'est possible, et la tache se rattrape au
+# prochain demarrage. C'est la ceinture en plus des bretelles.
+$params = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun `
             -DontStopIfGoingOnBatteries -AllowStartIfOnBatteries `
             -ExecutionTimeLimit (New-TimeSpan -Hours 1) `
             -MultipleInstances IgnoreNew
@@ -39,6 +50,7 @@ Register-ScheduledTask -TaskName $nom -Action $action -Trigger $trigger `
 
 Write-Host ''
 Write-Host ("Tache creee : {0}, tous les jours a {1}" -f $nom, $heure) -ForegroundColor Green
+Write-Host '  la machine se reveillera d elle-meme si elle est en veille' -ForegroundColor Green
 Write-Host ''
 Write-Host 'Pour la verifier :'
 Write-Host '  Get-ScheduledTask -TaskName "Poolnews - mise a jour"'
