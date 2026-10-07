@@ -72,7 +72,9 @@ try {
     Note 'statistiques : update.ps1'
     # Sans -Quiet : c'est precisement ce que update.ps1 raconte qu'on veut
     # retrouver dans le journal le matin ou quelque chose a cloche.
-    $sortie = & powershell -ExecutionPolicy Bypass -NoProfile -File (Join-Path $root 'update.ps1') 2>&1
+    # Pas de 2>&1 : powershell.exe est un exe natif comme git, et une ligne
+    # sur stderr deviendrait une exception qui masquerait le vrai message.
+    $sortie = & powershell -ExecutionPolicy Bypass -NoProfile -File (Join-Path $root 'update.ps1')
     $rcUpdate = $LASTEXITCODE
     foreach ($l in $sortie) { Note ("    " + $l) 'DarkGray' }
     if ($rcUpdate -ne 0) { throw "update.ps1 a echoue (code $rcUpdate)" }
@@ -92,7 +94,7 @@ try {
         Note 'self-test saute (-SkipTests)' 'Yellow'
     } else {
         Note 'verification : run-selftest.ps1'
-        $t = & powershell -ExecutionPolicy Bypass -NoProfile -File (Join-Path $root 'run-selftest.ps1') 2>&1
+        $t = & powershell -ExecutionPolicy Bypass -NoProfile -File (Join-Path $root 'run-selftest.ps1')
         $rcTest = $LASTEXITCODE
         if ($rcTest -ne 0) {
             # On garde TOUTE la sortie quand ca echoue : c'est le seul moment
@@ -122,15 +124,37 @@ try {
     $detail = if ($quoi.Count) { $quoi -join ', ' } else { 'donnees' }
     $msg = 'Mise a jour automatique : {0} ({1})' -f $detail, (Get-Date -Format 'yyyy-MM-dd')
 
+    # git ecrit ses messages normaux sur stderr -- « Everything up-to-date »,
+    # « To https://github.com/... ». Avec 2>&1 et ErrorActionPreference=Stop,
+    # PowerShell 5.1 transforme chacune de ces lignes en exception : le push
+    # reussissait et le script annoncait un echec. Le meme piege que celui
+    # deja note pour Invoke-RestMethod ; il vaut pour tout exe natif.
+    #
+    # On capture donc la sortie SANS rediriger stderr, et on juge sur le code
+    # de sortie -- la seule chose fiable.
     Note 'publication'
-    & git add -A 2>&1 | Out-Null
-    & git commit -m $msg 2>&1 | ForEach-Object { Note ("    " + $_) 'DarkGray' }
-    if ($LASTEXITCODE -ne 0) { throw "git commit a echoue (code $LASTEXITCODE)" }
+    & git add -A | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "git add a echoue (code $LASTEXITCODE)" }
 
-    & git push origin main 2>&1 | ForEach-Object { Note ("    " + $_) 'DarkGray' }
-    if ($LASTEXITCODE -ne 0) { throw "git push a echoue (code $LASTEXITCODE)" }
+    $sortieCommit = & git commit -m $msg
+    $rcCommit = $LASTEXITCODE
+    foreach ($l in $sortieCommit) { Note ("    " + $l) 'DarkGray' }
+    if ($rcCommit -ne 0) { throw "git commit a echoue (code $rcCommit)" }
 
+    $sortiePush = & git push origin main
+    $rcPush = $LASTEXITCODE
+    foreach ($l in $sortiePush) { Note ("    " + $l) 'DarkGray' }
+    if ($rcPush -ne 0) { throw "git push a echoue (code $rcPush)" }
+
+    # Preuve que c'est bien parti : le commit local doit etre celui du distant.
+    $local = (& git rev-parse HEAD).Trim()
+    & git fetch origin --quiet
+    $distant = (& git rev-parse origin/main).Trim()
+    if ($local -ne $distant) {
+        throw "le push semble avoir reussi mais origin/main est a $distant, pas a $local"
+    }
     Note ('publie : ' + $msg) 'Green'
+    Note ('    origin/main = ' + $local.Substring(0, 7)) 'DarkGray'
 }
 catch {
     Note ('ECHEC : ' + $_.Exception.Message) 'Red'
