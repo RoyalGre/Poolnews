@@ -405,6 +405,23 @@ rerunning it with **`-Full`** — the bank is keyed to the old day set.
   `gameWeek[].date` is the local day — key on that. The builder throws if any
   game lands outside Thu–Sun.
 
+**Les choix se dévoilent après la limite.** Avant le mercredi 23 h 59, le
+classement ne montre que les pointages : afficher les choix donnerait la
+réponse aux retardataires, qui n'auraient qu'à recopier le meneur. Après, un
+clic sur un nom déplie ses pronostics match par match — l'équipe choisie en
+gras, ✓ ou ✗ avec le pointage et la prolongation. `schLocked()` décide, en
+lisant la limite en heure **locale** : un pooleur de Montréal pense à son
+mercredi soir. Avant la limite, rien ne part dans le HTML — vérifié : aucun
+choix n'est lisible dans la source.
+
+**`[hidden]` doit cacher, toujours.** Le navigateur applique
+`[hidden] { display: none }` avec la spécificité la plus faible, donc tout
+`display: flex` ou `display: grid` posé ensuite l'emporte et l'élément reste
+visible alors que le code le croit caché. Ça a mordu deux fois — le champ du
+jeton visible avant qu'un nom soit choisi, puis tous les détails dépliés d'un
+coup. `site.css` porte maintenant une règle globale `[hidden] { display: none
+!important; }` plutôt qu'une exception par classe.
+
 Firestore uses a **separate top-level collection**, `defis/{weekend}/picks/{name}`.
 A rule on `/defi` does **not** cover `/defis`; they are unrelated collections and
 each needs its own `match` block, or the tab sits permanently at "hors ligne".

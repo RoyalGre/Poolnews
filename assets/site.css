@@ -120,6 +120,15 @@ main.wide { max-width: 1320px; }
 }
 .banner.ok { background: var(--surface-2); border-color: var(--green); color: var(--ink); }
 
+/* ---- [hidden] doit cacher, toujours -------------------------------------
+   Le navigateur applique « [hidden] { display: none } » avec la specificite
+   la plus faible : n'importe quel display:flex ou display:grid pose ensuite
+   l'emporte, et l'element reste visible alors que le code le croit cache.
+   Ca s'est produit deux fois ici -- le champ du jeton qui paraissait avant
+   qu'un nom soit choisi, et les choix des pooleurs tous deplies d'un coup.
+   Une regle globale vaut mieux qu'une exception par classe. */
+[hidden] { display: none !important; }
+
 .empty-state { color: var(--muted); padding: 30px 10px; text-align: center; }
 
 /* ---- La saison qui n'a pas encore commence ------------------------------
@@ -739,11 +748,6 @@ svg.rink text.df-lbl-s {
    Ne paraît que la première fois, sur un appareil qui ne connaît pas encore
    le code du pooleur choisi. Le liseré doré le distingue des champs de jeu :
    ce n'est pas une prédiction, c'est une preuve d'identité. */
-/* display:flex sur .df-field l'emporte sur le [hidden] par defaut du
-   navigateur : sans cette ligne, le champ du jeton reste visible alors que
-   le code le croit cache, et il apparait avant meme qu'un nom soit choisi. */
-.df-field[hidden] { display: none !important; }
-
 .jeton-field .jeton-input {
   width: 168px; font-size: 14px; font-family: var(--f-mono);
   background: var(--surface); color: var(--text);
@@ -791,6 +795,54 @@ svg.rink text.df-lbl-s {
 .df-row:hover { background: var(--hover-wash); }
 
 .df-rh { display: flex; align-items: baseline; gap: 8px; }
+
+/* ---- Les choix d'un pooleur, deplies ------------------------------------
+   Visibles seulement une fois la limite passee. La ligne devient cliquable :
+   le curseur et le chevron le disent avant qu'on essaie. */
+.df-rh-open { cursor: pointer; }
+.df-rh-open::after {
+  content: '▸';
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform .14s;
+}
+.df-rh-shown::after { transform: rotate(90deg); }
+.df-rh-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.sc-detail {
+  margin: 7px 0 2px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  /* Trente matchs tiennent sans etirer la page : deux colonnes quand la
+     place le permet, une seule sur un telephone. */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 2px 14px;
+}
+.sc-dline {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px; padding: 2px 0;
+  font-size: 12px;
+}
+.sc-dmatch { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+/* L'equipe choisie ressort : c'est l'information qu'on vient chercher. */
+.sc-dteam.pick { color: var(--ink); font-weight: 700; }
+.sc-dat { opacity: .45; margin: 0 3px; }
+.sc-dmark { font-family: var(--f-mono); font-size: 11px; white-space: nowrap; }
+.sc-dline.ok  .sc-dmark { color: var(--ok); }
+.sc-dline.ko  .sc-dmark { color: var(--danger); }
+.sc-dline.att .sc-dmark { color: var(--faint); }
+.sc-dsum {
+  grid-column: 1 / -1;
+  margin: 6px 0 0; padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-family: var(--f-mono); font-size: 10px;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted);
+}
 .df-rh .rank { width: 16px; flex: none; font-size: 13px; }
 .df-nm {
   flex: 1; min-width: 0; font-weight: 600; font-size: 14px;

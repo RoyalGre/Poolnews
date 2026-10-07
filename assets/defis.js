@@ -106,6 +106,23 @@ function schLockOf(key) {
 }
 const SCH_LOCK_TXT = 'le mercredi à 23 h 59';
 
+/* La limite est-elle passée ?
+
+   AVANT : montrer les choix d'un pooleur donnerait la réponse aux autres —
+   il suffirait d'attendre et de recopier le meneur. APRÈS : plus rien à
+   protéger, et c'est justement là qu'on veut voir qui a parié quoi.
+
+   Le mercredi 23 h 59 se lit en heure LOCALE, pas en UTC : un pooleur de
+   Montréal pense à son mercredi soir, pas au nôtre décalé de quatre heures.
+   schLockOf rend « AAAA-MM-JJ 23:59 » et new Date() sur cette forme-là
+   l'interprète dans le fuseau du lecteur, ce qui est exactement voulu. */
+function schLocked(key) {
+  const t = schLockOf(key).replace(' ', 'T');
+  const lim = new Date(t);
+  if (isNaN(lim.getTime())) return false;   // date illisible : ne rien cacher
+  return Date.now() > lim.getTime();
+}
+
 /* ---- Pointage ----------------------------------------------------------
    Une bonne réponse par match joué. Les matchs à venir ne comptent pas
    encore : le score affiché est donc « sur ce qui a été joué », ce qui
@@ -441,6 +458,70 @@ function schForm(w) {
   return p;
 }
 
+/* ---- Les choix d'un pooleur, match par match ----------------------------
+   Visible seulement une fois la limite passee. Trois etats par match :
+
+     juste   le match est joue et le choix etait bon
+     rate    le match est joue et le choix etait mauvais
+     attente le match n'est pas encore joue -- ni l'un ni l'autre
+
+   On montre l'equipe choisie, pas seulement une pastille de couleur : savoir
+   que Steve a eu tort n'apprend rien, savoir qu'il avait misé sur Montreal
+   contre Toronto, si. */
+function schDetail(r, w) {
+  const box = el('div', 'sc-detail');
+
+  let juste = 0, rate = 0, attente = 0;
+  w.games.forEach(g => {
+    const choix = r.picks ? r.picks[g.id] : null;
+    const ligne = el('div', 'sc-dline');
+
+    // Le match, dans le sens ou il se joue : visiteur @ receveur.
+    const match = el('span', 'sc-dmatch');
+    match.append(el('span', 'sc-dteam' + (choix === g.a ? ' pick' : ''), g.a));
+    match.append(el('span', 'sc-dat', '@'));
+    match.append(el('span', 'sc-dteam' + (choix === g.h ? ' pick' : ''), g.h));
+    ligne.append(match);
+
+    if (!choix) {
+      // Un pooleur peut avoir envoye avant qu'un match soit ajoute au
+      // calendrier : on le dit plutot que de le compter comme une erreur.
+      ligne.classList.add('att');
+      ligne.append(el('span', 'sc-dmark', '—'));
+      attente++;
+    } else if (!g.w) {
+      ligne.classList.add('att');
+      ligne.append(el('span', 'sc-dmark', '·'));
+      attente++;
+    } else {
+      // Le pointage et la prolongation sont dans schedule.js : les montrer
+      // transforme « tu as eu tort » en « tu as perdu 3-2 en prolongation ».
+      const pts = (g.as !== undefined && g.hs !== undefined)
+        ? g.as + '–' + g.hs + (g.r && g.r !== 'REG' ? ' ' + g.r : '')
+        : '';
+      if (choix === g.w) {
+        ligne.classList.add('ok');
+        ligne.append(el('span', 'sc-dmark', '✓' + (pts ? ' ' + pts : '')));
+        juste++;
+      } else {
+        ligne.classList.add('ko');
+        // Dire qui a gagne : sinon on sait qu'il a eu tort sans savoir pourquoi.
+        ligne.append(el('span', 'sc-dmark', '✗ ' + g.w + (pts ? ' ' + pts : '')));
+        rate++;
+      }
+    }
+    box.append(ligne);
+  });
+
+  const bilan = el('p', 'sc-dsum');
+  const bouts = [juste + ' juste' + (juste > 1 ? 's' : '')];
+  if (rate) bouts.push(rate + ' raté' + (rate > 1 ? 's' : ''));
+  if (attente) bouts.push(attente + ' à venir');
+  bilan.textContent = bouts.join(' · ');
+  box.append(bilan);
+  return box;
+}
+
 /* ---- Le tableau ---------------------------------------------------------
    Même forme compacte que le défi des zones : rien qui déborde, même dans
    une colonne étroite. */
@@ -448,9 +529,12 @@ function schBoard(w) {
   const p = el('div', 'panel df-podium');
   p.append(el('h2', null, 'Le classement'));
 
+  // On garde les choix avec la ligne : une fois la limite passee, cliquer un
+  // nom les deplie. Avant, les montrer donnerait la reponse aux retardataires.
+  const ouvert = schLocked(w.key);
   const rows = schPicksFor(w.key).map(pk => {
     const s = scoreEntry(pk.picks, w.games);
-    return { name: pk.name, right: s.right, decided: s.decided };
+    return { name: pk.name, right: s.right, decided: s.decided, picks: pk.picks };
   }).sort((a, b) => b.right - a.right || a.name.localeCompare(b.name));
 
   if (!rows.length) {
@@ -479,6 +563,29 @@ function schBoard(w) {
     fill.style.width = (r.decided ? 100 * r.right / r.decided : 0).toFixed(1) + '%';
     track.append(fill);
     row.append(track);
+
+    /* Le detail des choix, une fois la limite passee. Replie par defaut :
+       douze pooleurs deplies d'un coup noieraient le classement, qui reste
+       ce qu'on vient lire en premier. */
+    if (ouvert) {
+      head.classList.add('df-rh-open');
+      head.title = 'Voir les choix de ' + r.name;
+      head.setAttribute('role', 'button');
+      head.tabIndex = 0;
+
+      const detail = schDetail(r, w);
+      detail.hidden = true;
+      row.append(detail);
+
+      const bascule = () => {
+        detail.hidden = !detail.hidden;
+        head.classList.toggle('df-rh-shown', !detail.hidden);
+      };
+      head.onclick = bascule;
+      head.onkeydown = e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bascule(); }
+      };
+    }
 
     board.append(row);
   });
