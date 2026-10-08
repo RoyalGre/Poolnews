@@ -167,6 +167,8 @@ try {
     # nature -- it only ever fetches games it has not already banked -- so it
     # runs in both gears: after an evening of 10 games it costs 10 requests.
     Run-Step 'goal locations' 'build-goals.ps1' @('-Season', $Season)
+    # Same banking, same feed: every penalty, for the Faits saillants page.
+    Run-Step 'penalties'      'build-penalties.ps1' @('-Season', $Season)
 
     # The Thu/Fri/Sun schedule behind the "Qui va gagner ?" challenge. Like the
     # goal locations it banks finished games and only refetches weeks that still

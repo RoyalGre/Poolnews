@@ -147,6 +147,7 @@ function render() {
     chartPanel('Temps de jeu contre efficacité', 'Vers la droite = plus de minutes. Vers le haut = plus fait avec. Taille = points.',
                bubbleChart()),
     tablePanel(),
+    penaltiesPanel(),
     oddsAndEnds()
   );
 }
@@ -512,6 +513,226 @@ function tablePanel() {
     'Les points sont le total du classement (les 10 qui comptent). Minutes, tirs, part AN et minutes ' +
     'de pénalité couvrent ces mêmes 10 joueurs. La part AN est la portion des points obtenue en avantage numérique.');
   panel.append(note);
+  return panel;
+}
+
+/* ---- Penalties against the final rank ------------------------------------
+   Every penalty comes from data/<season>/penalties.js (build-penalties.ps1):
+   one row per infraction, [gid, playerId, type, kind, minutes]. Same 10 as the
+   rest of the page, so the minutes here agree with the table above.
+
+   The question the panel answers: did the roughest rosters finish higher or
+   lower? With 11 poolers a season that is a hint, never a proof, and the
+   wording says so. */
+const PEN = window.NHL_PENALTIES || null;
+
+/* French names for the feed's descKey. Unknown keys fall back to the key with
+   its dashes turned into spaces -- readable, and a sign to add a line here. */
+const PEN_FR = {
+  'tripping': 'Faire trébucher', 'hooking': 'Accrocher', 'holding': 'Retenir',
+  'holding-the-stick': 'Retenir le bâton', 'interference': 'Obstruction',
+  'interference-goalkeeper': 'Obstruction sur le gardien', 'roughing': 'Rudesse',
+  'slashing': 'Cingler', 'high-sticking': 'Bâton élevé',
+  'high-sticking-double-minor': 'Bâton élevé (double)', 'cross-checking': 'Double-échec',
+  'boarding': 'Mise en échec contre la bande', 'elbowing': 'Coup de coude',
+  'kneeing': 'Coup de genou', 'fighting': 'Bagarre', 'charging': 'Charge',
+  'unsportsmanlike-conduct': 'Conduite antisportive', 'misconduct': 'Inconduite',
+  'game-misconduct': 'Inconduite de match', 'match-penalty': 'Pénalité de match',
+  'abuse-of-officials': 'Injures à un officiel', 'delaying-game': 'Retarder le match',
+  'delaying-game-puck-over-glass': 'Rondelle hors de la patinoire',
+  'delaying-game-face-off-violation': 'Retarder le match (mise au jeu)',
+  'delaying-game-equipment': 'Retarder le match (équipement)',
+  'delaying-game-smothering-puck': 'Couvrir la rondelle',
+  'too-many-men-on-the-ice': 'Trop de joueurs sur la glace',
+  'closing-hand-on-puck': 'Refermer la main sur la rondelle',
+  'illegal-check-to-head': 'Coup à la tête', 'clipping': 'Coup bas',
+  'spearing': 'Darder', 'butt-ending': 'Six-pouces', 'head-butting': 'Coup de tête',
+  'embellishment': 'Embellissement', 'diving': 'Plonger',
+  'instigator': 'Instigateur', 'aggressor': 'Agresseur',
+  'instigator-misconduct': 'Instigateur (inconduite)', 'abusive-language': 'Langage abusif',
+  'checking-from-behind': 'Mise en échec par derrière', 'spearing-double-minor': 'Darder (double)',
+  'roughing-removing-opponents-helmet': 'Retirer le casque d’un adversaire',
+  'goalie-leave-crease': 'Gardien hors de son territoire',
+  'goalie-participation-beyond-center': 'Gardien au-delà du centre',
+  'delaying-game-illegal-play-by-goalie': 'Jeu illégal du gardien',
+  'playing-without-a-helmet': 'Jouer sans casque', 'throwing-equipment': 'Lancer de l’équipement',
+  'broken-stick': 'Jouer avec un bâton brisé', 'illegal-stick': 'Bâton illégal',
+  'ps-tripping-on-breakaway': 'Tir de pénalité : faire trébucher en échappée',
+  'ps-hooking-on-breakaway': 'Tir de pénalité : accrocher en échappée',
+  'ps-holding-on-breakaway': 'Tir de pénalité : retenir en échappée',
+  'ps-slash-on-breakaway': 'Tir de pénalité : cingler en échappée',
+  'ps-covering-puck-in-crease': 'Tir de pénalité : couvrir la rondelle dans le demi-cercle',
+  'ps-throwing-object-at-puck': 'Tir de pénalité : objet lancé sur la rondelle',
+  'ps-net-displaced': 'Tir de pénalité : filet déplacé'
+};
+function penName(key) { return PEN_FR[key] || key.replace(/^ps-/, 'tir de pénalité : ').replace(/-/g, ' '); }
+
+/* playerId -> { n, min, types: Map(type -> count) }, built once. */
+let PEN_BY_PLAYER = null;
+function penByPlayer() {
+  if (PEN_BY_PLAYER) return PEN_BY_PLAYER;
+  PEN_BY_PLAYER = new Map();
+  if (!PEN) return PEN_BY_PLAYER;
+  for (const r of PEN.pen) {
+    let o = PEN_BY_PLAYER.get(r[1]);
+    if (!o) PEN_BY_PLAYER.set(r[1], o = { n: 0, min: 0, types: new Map() });
+    o.n++;
+    o.min += r[4];
+    const t = PEN.types[r[2]];
+    o.types.set(t, (o.types.get(t) || 0) + 1);
+  }
+  return PEN_BY_PLAYER;
+}
+
+/* The standings' rank, by the written rule: points, then the 11th pick, then
+   the 12th; a true tie shares the better rank (1, 1, 3). Same as
+   computeSeries() in standings.js, on season totals. */
+function finalRanks() {
+  const rows = state.poolers.map(pl => {
+    const sc = scoreRoster(pl.picks, statsSeason());
+    return { id: pl.id, pts: sc.pts, p11: sc.p11, p12: sc.p12 };
+  }).sort((a, b) => b.pts - a.pts || b.p11 - a.p11 || b.p12 - a.p12);
+  const m = new Map();
+  rows.forEach((r, i) => {
+    const p = i > 0 ? rows[i - 1] : null;
+    const tied = p && p.pts === r.pts && p.p11 === r.p11 && p.p12 === r.p12;
+    m.set(r.id, tied ? m.get(p.id) : i + 1);
+  });
+  return m;
+}
+
+/* Spearman's rho: Pearson on ranks, ties given their average rank. */
+function spearman(xs, ys) {
+  const rk = v => {
+    const idx = v.map((x, i) => [x, i]).sort((a, b) => a[0] - b[0]);
+    const out = new Array(v.length);
+    for (let i = 0; i < idx.length;) {
+      let j = i;
+      while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++;
+      for (let k = i; k <= j; k++) out[idx[k][1]] = (i + j) / 2 + 1;
+      i = j + 1;
+    }
+    return out;
+  };
+  const a = rk(xs), b = rk(ys), n = a.length;
+  const ma = a.reduce((t, x) => t + x, 0) / n, mb = b.reduce((t, x) => t + x, 0) / n;
+  let num = 0, da = 0, db = 0;
+  for (let i = 0; i < n; i++) {
+    num += (a[i] - ma) * (b[i] - mb);
+    da  += (a[i] - ma) ** 2;
+    db  += (b[i] - mb) ** 2;
+  }
+  return da && db ? num / Math.sqrt(da * db) : 0;
+}
+
+function penaltyRows() {
+  const by = penByPlayer();
+  const ranks = finalRanks();
+  return POOLER_ROWS.map(pr => {
+    let n = 0, min = 0, worst = null;
+    const types = new Map();
+    for (const r of pr.rows) {
+      const o = by.get(r.id);
+      if (!o) continue;
+      n += o.n;
+      min += o.min;
+      o.types.forEach((c, t) => types.set(t, (types.get(t) || 0) + c));
+      if (!worst || o.min > worst.min || (o.min === worst.min && o.n > worst.n)) worst = { name: r.name, min: o.min, n: o.n };
+    }
+    const top = [...types].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] || null;
+    return { pl: pr.pl, rank: ranks.get(pr.pl.id), n, min, top, worst };
+  }).sort((a, b) => a.rank - b.rank || a.pl.name.localeCompare(b.pl.name));
+}
+
+function penaltiesPanel() {
+  const panel = el('div', 'panel');
+  const past = !!(window.poolSeason && poolSeason.isPast());
+  const rankWord = past ? 'rang final' : 'rang actuel';
+  const h = el('h2', null, 'Pénalités et classement ');
+  h.append(el('span', 'note', '— les plus punis ont-ils fini en haut ou en bas ?'));
+  panel.append(h);
+
+  if (!PEN) {
+    panel.append(el('div', 'hint', 'Aucune donnée de pénalités pour cette saison. ' +
+      'Exécutez build-penalties.ps1 pour créer data/<saison>/penalties.js.'));
+    return panel;
+  }
+
+  const rows = penaltyRows();
+
+  // Bars in rank order: if penalties and rank are linked, the bars visibly
+  // grow (or shrink) down the list.
+  const rowH = 28, W = 920, m = { l: 230, r: 120, t: 6, b: 6 };
+  const H = m.t + m.b + rows.length * rowH;
+  const iw = W - m.l - m.r;
+  const max = Math.max(1, ...rows.map(r => r.min));
+  const svg = svgEl('svg', { class: 'chart', viewBox: '0 0 ' + W + ' ' + H,
+                             preserveAspectRatio: 'xMidYMid meet' });
+  rows.forEach((r, i) => {
+    const y = m.t + i * rowH;
+    const nm = svgEl('text', { x: m.l - 10, y: y + rowH / 2 + 4, 'text-anchor': 'end', class: 'lbl' });
+    nm.textContent = r.rank + '. ' + r.pl.name;
+    svg.append(nm);
+    const bw = Math.max(1, (r.min / max) * iw);
+    const bar = svgEl('rect', { class: 'bar', x: m.l, y: y + 4, width: bw, height: rowH - 11,
+                                fill: poolerColor(r.pl), opacity: .82 });
+    const tip = svgEl('title', {});
+    tip.textContent = r.pl.name + ' — ' + rankWord + ' ' + r.rank + '\n' + r.n + ' pénalités, ' +
+                      r.min + ' minutes' + (r.top ? '\nSurtout : ' + penName(r.top[0]) + ' (' + r.top[1] + ')' : '');
+    bar.append(tip);
+    svg.append(bar);
+    const v = svgEl('text', { x: m.l + bw + 8, y: y + rowH / 2 + 4 });
+    v.textContent = r.min + ' min  (' + r.n + ')';
+    svg.append(v);
+  });
+  const wrap = el('div', 'chartwrap');
+  wrap.append(svg);
+  panel.append(wrap);
+
+  // The verdict. rho > 0: more minutes go with a bigger rank number, i.e. a
+  // worse finish. Eleven points cannot carry more than "a tendency".
+  const rho = spearman(rows.map(r => r.min), rows.map(r => r.rank));
+  const strength = Math.abs(rho) >= 0.6 ? 'nette' : Math.abs(rho) >= 0.3 ? 'légère' : null;
+  const verdict = !strength
+    ? 'Aucun lien net cette saison entre les minutes de pénalité et le ' + rankWord + '.'
+    : 'Tendance ' + strength + ' : les alignements les plus punis ont fini plutôt ' +
+      (rho < 0 ? 'en haut' : 'en bas') + ' du classement.';
+  panel.append(el('div', 'prose', verdict + ' (corrélation de rang : ' +
+    (rho >= 0 ? '+' : '−') + fmt(Math.abs(rho)) + ', sur ' + rows.length + ' pooleurs.)'));
+
+  const table = el('table', 'standings');
+  const thr = el('tr');
+  [['#', ''], ['Pooleur', ''], ['Pénalités', 'right'], ['Minutes', 'right'],
+   ['Infraction la plus fréquente', ''], ['Le plus puni', '']]
+    .forEach(([t, c]) => thr.append(el('th', c, t)));
+  const thead = el('thead'); thead.append(thr); table.append(thead);
+  const tbody = el('tbody');
+  for (const r of rows) {
+    const tr = el('tr');
+    tr.append(el('td', null, String(r.rank)));
+    const td = el('td');
+    const who = el('div', 'who-cell');
+    const chip = el('span', 'chip');
+    chip.style.background = poolerColor(r.pl);
+    who.append(chip, el('span', 'nm', r.pl.name));
+    td.append(who);
+    tr.append(td);
+    tr.append(el('td', 'right', String(r.n)));
+    tr.append(el('td', 'right', String(r.min)));
+    tr.append(el('td', null, r.top ? penName(r.top[0]) + ' (' + r.top[1] + ')' : '—'));
+    tr.append(el('td', null, r.worst ? r.worst.name + ' — ' + r.worst.min + ' min' : '—'));
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  const tw = el('div', 'tablewrap');
+  tw.append(table);
+  panel.append(tw);
+
+  panel.append(el('div', 'hint',
+    'Les 10 qui comptent de chaque pooleur, pour la saison entière. Les pénalités de banc ' +
+    'n’appartiennent à aucun joueur et ne sont pas comptées. Un tir de pénalité compte pour une ' +
+    'pénalité sans minute. Une corrélation de rang va de −1 (les plus punis finissent premiers) ' +
+    'à +1 (ils finissent derniers) ; près de 0, pas de lien.'));
   return panel;
 }
 

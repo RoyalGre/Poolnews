@@ -177,7 +177,7 @@
      n'apparaissait nulle part. Les pages qui n'ont rien a montrer disent
      maintenant que la saison n'a pas commence (voir seasonNotStarted dans
      core.js) plutot que d'emprunter un classement. */
-  var STATS = ['players', 'history', 'advanced', 'goals'];
+  var STATS = ['players', 'history', 'advanced', 'goals', 'penalties'];
 
   /* Ou vivent les chiffres. Une saison qui a ses propres joueurs les garde :
      emprunter les points de l'an dernier pour les afficher sous le nom de

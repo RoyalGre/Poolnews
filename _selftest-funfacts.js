@@ -15,7 +15,8 @@
   window.confirm = () => true;
 
   const bars   = () => document.querySelectorAll('svg.chart .bar').length;
-  const rows   = () => document.querySelectorAll('table.standings tbody tr');
+  // The first table is the P/60 one; the penalties panel brings a second.
+  const rows   = () => document.querySelector('table.standings').querySelectorAll('tbody tr');
   const byName = n => PLAYERS.find(p => p.n === n);
 
   try {
@@ -70,7 +71,7 @@
     ok(PLAYER_ROWS.length === 30, 'counting 10 per pooler makes 30 player rows, got ' + PLAYER_ROWS.length);
     ok(POOLER_ROWS.length === 3, 'one summary row per pooler');
     ok(document.querySelectorAll('.cards .card').length === 4, 'four summary cards');
-    ok(document.querySelectorAll('svg.chart').length === 3, 'three charts drawn');
+    ok(document.querySelectorAll('svg.chart').length === 4, 'four charts drawn (three P/60, one penalties)');
     ok(rows().length === 3, 'the table has a row per pooler');
     ok(document.querySelectorAll('.legend .item').length === 3, 'legend has an entry per pooler');
     ok(document.querySelectorAll('.facts .fact').length >= 6, 'odds-and-ends facts rendered');
@@ -135,6 +136,35 @@
     } else {
       out.push('      (no player without ice time in the data — skipped that check)');
     }
+
+    /* ---- 10b. penalties: counted one by one, checked against the season totals ---- */
+    ok(PEN && PEN.pen.length > 5000, 'penalty data loaded (' + (PEN ? PEN.pen.length : 0) + ' penalties)');
+    ok(PEN.label === ADV.label, 'penalties and ice time come from the same season (' + PEN.label + ')');
+    // penalties.js adds up play-by-play rows; advanced.js asks the stats API
+    // for season PIM. No shared code -- if they agree, both are right.
+    const pbp = penByPlayer();
+    let checked = 0, off = [];
+    ADV.ids.forEach((id, i) => {
+      const mine = pbp.has(id) ? pbp.get(id).min : 0;
+      checked++;
+      if (mine !== ADV.pim[i]) off.push(id + ': ' + mine + ' vs ' + ADV.pim[i]);
+    });
+    ok(off.length === 0, 'every player\'s penalty minutes match the stats API (' + checked +
+       ' players' + (off.length ? '; ' + off.length + ' off: ' + off.slice(0, 5).join(', ') : '') + ')');
+    const pr = penaltyRows();
+    ok(pr.length === 3, 'one penalty row per pooler');
+    ok(pr.every(r => r.min === POOLER_ROWS.find(x => x.pl === r.pl).pim),
+       'each pooler\'s penalty minutes equal the Min. pén. column of the table above');
+    ok(pr.every((r, i) => i === 0 || pr[i - 1].rank <= r.rank), 'penalty rows are in rank order');
+    ok(pr[0].rank === 1, 'the leader is ranked 1');
+    near(spearman([1, 2, 3, 4], [10, 20, 30, 40]), 1, 1e-9, 'rank correlation: same order is +1');
+    near(spearman([1, 2, 3, 4], [4, 3, 2, 1]), -1, 1e-9, 'rank correlation: reversed order is -1');
+    near(spearman([5, 5, 5, 1], [1, 2, 3, 4]), -0.7746, 1e-3, 'rank correlation: ties share an average rank');
+    ok(/corrélation de rang/.test(document.getElementById('content').textContent), 'the verdict is printed');
+    ok(penName('tripping') === 'Faire trébucher' && penName('some-new-thing') === 'some new thing',
+       'infractions are named in French, unknown ones stay readable');
+    const unnamed = PEN.types.filter(t => !PEN_FR[t]);
+    if (unnamed.length) out.push('      (infractions without a French name: ' + unnamed.join(', ') + ')');
 
     /* ---- 11. empty pool ---- */
     state = { version: 2, rosterSize: 12, poolers: [] };
