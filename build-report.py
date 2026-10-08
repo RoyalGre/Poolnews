@@ -135,8 +135,17 @@ for s in H['seasons']:
     for i, e in enumerate(entries, 1):
         e['rank'] = i
 
+    draft = s.get('draftOrder')
+    if draft:
+        known = {e['pooler'] for e in entries}
+        if set(draft) != known or len(draft) != len(entries):
+            fail('saison %s : draftOrder ne correspond pas aux entries (%s)'
+                 % (s['year'], ', '.join(sorted(set(draft) ^ known)) or 'doublon'))
+            draft = None
+
     seasons.append(dict(year=s['year'], season=s['season'], fieldSize=len(entries),
-                        format=fmt, entries=entries))
+                        format=fmt, entries=entries,
+                        draftOrder=draft, draftSource=s.get('draftOrderSource')))
 
 seasons.sort(key=lambda x: x['year'])
 
@@ -309,6 +318,102 @@ efficiency = [dict(name=nm, pct=round(a / b * 100, 1), counted=int(a), total=int
               for nm, (a, b) in sorted(eff.items(), key=lambda kv: -(kv[1][0] / kv[1][1]))
               if b >= 3000]
 
+# ==========================================================================
+# Parler tot, finir devant ? — l'ordre du repechage contre le resultat final
+#
+# draftOrder donne la place de chacun au repechage. On la compare au rang
+# final. Les tailles de groupe changent (4 a 12 poolers), donc tout est
+# normalise sur 0..1 : la 1re place vaut 0, la derniere 1. Les points le sont
+# aussi, en ecart-type a la moyenne de leur propre saison, parce que les
+# formats n'ont pas le meme bareme — 10 choix comptes en 1994, 12 aujourd'hui.
+# ==========================================================================
+def _pearson(xs, ys):
+    n = len(xs)
+    if n < 3:
+        return 0.0
+    mx, my = sum(xs) / n, sum(ys) / n
+    sx = sum((x - mx) ** 2 for x in xs) ** .5
+    sy = sum((y - my) ** 2 for y in ys) ** .5
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / (sx * sy) if sx and sy else 0.0
+
+
+draftRows, draftSeasons = [], []
+for s in seasons:
+    if not s['draftOrder']:
+        continue
+    n = s['fieldSize']
+    if n < 2:
+        continue
+    rank = {e['pooler']: e['rank'] for e in s['entries']}
+    sc = {e['pooler']: e['score'] for e in s['entries']}
+    m = st.mean(sc.values())
+    sd = st.pstdev(sc.values()) or 1
+    for pos, nm in enumerate(s['draftOrder'], 1):
+        draftRows.append(dict(year=s['year'], n=n, pos=pos, name=nm, rank=rank[nm],
+                              posPct=(pos - 1) / (n - 1), rankPct=(rank[nm] - 1) / (n - 1),
+                              z=(sc[nm] - m) / sd))
+    draftSeasons.append(dict(year=str(s['year']), n=n, source=s['draftSource'],
+                             first=s['draftOrder'][0], firstRank=rank[s['draftOrder'][0]],
+                             champ=s['entries'][0]['pooler'],
+                             champPos=s['draftOrder'].index(s['entries'][0]['pooler']) + 1))
+
+draftBySlot = []
+if draftRows:
+    bypos = defaultdict(list)
+    for r in draftRows:
+        bypos[r['pos']].append(r)
+    for pos in sorted(bypos):
+        g = bypos[pos]
+        draftBySlot.append(dict(
+            pos=pos, n=len(g),
+            avgRank=round(st.mean([x['rank'] for x in g]), 2),
+            finish=round(100 * st.mean([x['rankPct'] for x in g]), 1),
+            z=round(st.mean([x['z'] for x in g]), 3),
+            titles=sum(1 for x in g if x['rank'] == 1),
+            top3=sum(1 for x in g if x['rank'] <= 3),
+            last=sum(1 for x in g if x['rank'] == x['n'])))
+
+draftThirds = []
+for lab, lo, hi in (('Premier tiers', 0, 1 / 3.), ('Milieu', 1 / 3., 2 / 3.),
+                    ('Dernier tiers', 2 / 3., 1.001)):
+    g = [x for x in draftRows if lo <= x['posPct'] < hi]
+    if g:
+        draftThirds.append(dict(
+            label=lab, n=len(g), finish=round(100 * st.mean([x['rankPct'] for x in g]), 1),
+            titles=sum(1 for x in g if x['rank'] == 1),
+            top3=sum(1 for x in g if x['rank'] <= 3)))
+
+draftStat = None
+if draftRows:
+    # pente : points gagnes ou perdus par rang de recul, moyenne des pentes
+    # calculees saison par saison (jamais entre saisons : les bareme differe).
+    slopes = []
+    for s in seasons:
+        if not s['draftOrder'] or s['fieldSize'] < 3:
+            continue
+        g = [x for x in draftRows if x['year'] == s['year']]
+        xs = [x['pos'] for x in g]
+        ys = [e['score'] for nm in s['draftOrder']
+              for e in s['entries'] if e['pooler'] == nm]
+        mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+        den = sum((x - mx) ** 2 for x in xs)
+        if den:
+            slopes.append(sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den)
+    champFirst = sum(1 for d in draftSeasons if d['champPos'] == 1)
+    byChance = sum(1.0 / d['n'] for d in draftSeasons)
+    draftStat = dict(
+        seasons=len(draftSeasons), rows=len(draftRows),
+        rRank=round(_pearson([x['posPct'] for x in draftRows],
+                             [x['rankPct'] for x in draftRows]), 3),
+        rPts=round(_pearson([x['posPct'] for x in draftRows],
+                            [x['z'] for x in draftRows]), 3),
+        slope=round(st.mean(slopes), 2) if slopes else 0,
+        slopeNeg=sum(1 for x in slopes if x < 0), slopeN=len(slopes),
+        champFirst=champFirst, champFirstPct=round(100 * champFirst / len(draftSeasons)),
+        byChance=round(byChance, 1), byChancePct=round(100 * byChance / len(draftSeasons)),
+        sources=dict(Counter(d['source'] for d in draftSeasons)))
+    draftStat['r2Pts'] = round(draftStat['rPts'] ** 2 * 100, 1)
+
 years_of = defaultdict(list)
 for s in seasons:
     for e in s['entries']:
@@ -342,6 +447,8 @@ payload = dict(
                 out=x['excludedHigher'][-1]['player'], outPts=x['excludedHigher'][-1]['pts'])
            for x in swaps],
     unresolved=unresolved, names=names,
+    draftStat=draftStat, draftBySlot=draftBySlot, draftThirds=draftThirds,
+    draftSeasons=draftSeasons,
 )
 
 tpl = open(TPL, encoding='utf-8').read()

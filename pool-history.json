@@ -29,7 +29,8 @@
      ]
     }
    ]
-  }
+  },
+  "etape6": "Facultatif : \"draftOrder\", la liste des pooleurs dans l'ordre ou ils ont parle au repechage (1er choix en tete), et \"draftOrderSource\" qui dit d'ou elle vient. Voir la cle \"draftOrderNote\"."
  },
  "poolers": {
   "François C.": {
@@ -219,6 +220,16 @@
    "year": 1994,
    "season": "1993-94",
    "format": "skaters10best9",
+   "draftOrder": [
+    "Stéphane M.",
+    "Jean-Sébastien L.",
+    "Nicholas C.",
+    "François C.",
+    "Patrick C.",
+    "Yanick M.",
+    "Patrick M."
+   ],
+   "draftOrderSource": "image",
    "entries": [
     {
      "pooler": "François C.",
@@ -618,6 +629,15 @@
    "year": 1995,
    "season": "1994-95",
    "format": "skaters15best10",
+   "draftOrder": [
+    "Stéphane M.",
+    "François C.",
+    "Patrick M.",
+    "Yanick M.",
+    "Nicholas C.",
+    "Patrick C."
+   ],
+   "draftOrderSource": "image",
    "entries": [
     {
      "pooler": "Stéphane M.",
@@ -1021,6 +1041,13 @@
    "year": 1996,
    "season": "1995-96",
    "format": "skaters18best10",
+   "draftOrder": [
+    "Patrick C.",
+    "Dany P.",
+    "Nicholas C.",
+    "François C."
+   ],
+   "draftOrderSource": "image",
    "entries": [
     {
      "pooler": "François C.",
@@ -1412,6 +1439,17 @@
    "year": 1997,
    "season": "1996-97",
    "format": "standard12",
+   "draftOrder": [
+    "Stéphane M.",
+    "Alain P.",
+    "Patrick C.",
+    "Francis B.",
+    "Dany P.",
+    "Yanick M.",
+    "François C.",
+    "Martin Pe."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "François C.",
@@ -2043,6 +2081,14 @@
    "year": 1998,
    "season": "1997-98",
    "format": "standard12",
+   "draftOrder": [
+    "Philippe B.",
+    "Patrick C.",
+    "Pascal R.",
+    "François C.",
+    "Yanick M."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "François C.",
@@ -2440,6 +2486,16 @@
    "year": 1999,
    "season": "1998-99",
    "format": "skaters12goalies2",
+   "draftOrder": [
+    "Pascal R.",
+    "Pierre C.",
+    "Yanick M.",
+    "François C.",
+    "Francis B.",
+    "Patrick C.",
+    "Dany P."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Patrick C.",
@@ -3091,6 +3147,14 @@
    "year": 2000,
    "season": "1999-00",
    "format": "skaters12goalies3team",
+   "draftOrder": [
+    "Patrick C.",
+    "Pascal R.",
+    "François C.",
+    "Yanick M.",
+    "Dany P."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Dany P.",
@@ -3618,6 +3682,14 @@
    "year": 2001,
    "season": "2000-01",
    "format": "mixed16",
+   "draftOrder": [
+    "Yanick M.",
+    "Pascal R.",
+    "Dany P.",
+    "François C.",
+    "Patrick C."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Yanick M.",
@@ -4135,6 +4207,16 @@
    "year": 2002,
    "season": "2001-02",
    "format": "mixed14",
+   "draftOrder": [
+    "Yanick M.",
+    "Dany P.",
+    "François C.",
+    "Pascal R.",
+    "Patrick C.",
+    "Francis B.",
+    "Martin Pe."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "François C.",
@@ -4772,6 +4854,19 @@
    "year": 2003,
    "season": "2002-03",
    "format": "skaters14",
+   "draftOrder": [
+    "Patrick B.",
+    "Martin Pe.",
+    "Dany P.",
+    "Patrick P.",
+    "Pascal R.",
+    "Pierre C.",
+    "Annie P.",
+    "Yanick M.",
+    "François C.",
+    "Patrick C."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Yanick M.",
@@ -5679,6 +5774,17 @@
    "year": 2004,
    "season": "2003-04",
    "format": "skaters14",
+   "draftOrder": [
+    "Yanick M.",
+    "Patrick B.",
+    "Pascal R.",
+    "Louis-Carl B.",
+    "François C.",
+    "Dany P.",
+    "Patrick C.",
+    "Martin Pe."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Patrick C.",
@@ -6406,6 +6512,17 @@
    "year": 2006,
    "season": "2005-06",
    "format": "standard12",
+   "draftOrder": [
+    "Pascal R.",
+    "François C.",
+    "Patrick P.",
+    "Patrick C.",
+    "Yanick M.",
+    "Patrick B.",
+    "Guy M.",
+    "Dany P."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "François C.",
@@ -7037,6 +7154,16 @@
    "year": 2007,
    "season": "2006-07",
    "format": "standard12",
+   "draftOrder": [
+    "Yanick M.",
+    "Martin D.",
+    "Dany P.",
+    "Patrick B.",
+    "François C.",
+    "Patrick P.",
+    "Patrick C."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Yanick M.",
@@ -7590,6 +7717,19 @@
    "year": 2008,
    "season": "2007-08",
    "format": "standard12",
+   "draftOrder": [
+    "Yanick M.",
+    "François C.",
+    "Patrick B.",
+    "Pascal R.",
+    "Patrick P.",
+    "Patrick C.",
+    "Martin D.",
+    "Dany P.",
+    "Frédérick D.",
+    "Anthony P."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Dany P.",
@@ -8377,6 +8517,18 @@
    "year": 2009,
    "season": "2008-09",
    "format": "standard12",
+   "draftOrder": [
+    "Anthony P.",
+    "Dany P.",
+    "Frédérick D.",
+    "Yanick M.",
+    "Patrick C.",
+    "Martin D.",
+    "Patrick P.",
+    "François C.",
+    "Pascal R."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Patrick P.",
@@ -9086,6 +9238,19 @@
    "year": 2010,
    "season": "2009-10",
    "format": "standard12",
+   "draftOrder": [
+    "Patrick C.",
+    "Martin D.",
+    "Frédérick D.",
+    "Pascal R.",
+    "Dany P.",
+    "Yanick M.",
+    "Patrick P.",
+    "Benoît L.",
+    "François C.",
+    "Eric C."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Frédérick D.",
@@ -9873,6 +10038,20 @@
    "year": 2011,
    "season": "2010-11",
    "format": "standard12",
+   "draftOrder": [
+    "Frédérick D.",
+    "Benoît L.",
+    "Dany P.",
+    "Patrick C.",
+    "Pascal R.",
+    "François C.",
+    "Martin D.",
+    "Eric C.",
+    "Martin Pr.",
+    "Martin M.",
+    "Patrick P."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Benoît L.",
@@ -10738,6 +10917,21 @@
    "year": 2012,
    "season": "2011-12",
    "format": "standard12",
+   "draftOrder": [
+    "Patrick P.",
+    "Frédérick D.",
+    "Pascal R.",
+    "Yanick M.",
+    "François C.",
+    "Patrick C.",
+    "Martin D.",
+    "Eric C.",
+    "Sylvain D.",
+    "Dany P.",
+    "Martin Pr.",
+    "Martin M."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Dany P.",
@@ -11681,6 +11875,19 @@
    "year": 2013,
    "season": "2012-13",
    "format": "standard12",
+   "draftOrder": [
+    "Martin M.",
+    "François C.",
+    "Martin D.",
+    "Frédérick D.",
+    "Patrick P.",
+    "Pascal R.",
+    "Dany P.",
+    "Patrick C.",
+    "Eric C.",
+    "Yanick M."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Eric C.",
@@ -12468,6 +12675,19 @@
    "year": 2014,
    "season": "2013-14",
    "format": "standard12",
+   "draftOrder": [
+    "Frédérick D.",
+    "François C.",
+    "Yanick M.",
+    "Dany P.",
+    "Pascal R.",
+    "Martin M.",
+    "Eric C.",
+    "Patrick C.",
+    "Martin Pr.",
+    "Martin D."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Frédérick D.",
@@ -13255,6 +13475,19 @@
    "year": 2015,
    "season": "2014-15",
    "format": "standard12",
+   "draftOrder": [
+    "François C.",
+    "Dany P.",
+    "Pascal R.",
+    "Martin Pr.",
+    "Frédérick D.",
+    "Patrick C.",
+    "Martin D.",
+    "Yanick M.",
+    "Eric C.",
+    "Martin M."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "François C.",
@@ -14042,6 +14275,18 @@
    "year": 2016,
    "season": "2015-16",
    "format": "standard12",
+   "draftOrder": [
+    "Martin Pr.",
+    "Pascal R.",
+    "Dany P.",
+    "Eric C.",
+    "Yanick M.",
+    "Patrick C.",
+    "François C.",
+    "Frédérick D.",
+    "Martin M."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "François C.",
@@ -14751,6 +14996,19 @@
    "year": 2017,
    "season": "2016-17",
    "format": "standard12",
+   "draftOrder": [
+    "Steve T.",
+    "Frédérick D.",
+    "Eric C.",
+    "Pascal R.",
+    "Martin M.",
+    "Patrick C.",
+    "Dany P.",
+    "Yanick M.",
+    "François C.",
+    "Martin Pr."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Yanick M.",
@@ -15538,6 +15796,20 @@
    "year": 2018,
    "season": "2017-18",
    "format": "standard12",
+   "draftOrder": [
+    "Dany P.",
+    "François C.",
+    "Eric C.",
+    "Frédérick D.",
+    "Patrick C.",
+    "Martin M.",
+    "Yanick M.",
+    "Pascal R.",
+    "Steve T.",
+    "Manuel T.",
+    "Martin Pr."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Dany P.",
@@ -16403,6 +16675,21 @@
    "year": 2019,
    "season": "2018-19",
    "format": "standard12",
+   "draftOrder": [
+    "Pascal R.",
+    "Steve T.",
+    "Patrick C.",
+    "Frédérick D.",
+    "Jim",
+    "Martin Pr.",
+    "Martin M.",
+    "François C.",
+    "Dany P.",
+    "Manuel T.",
+    "Yanick M.",
+    "Eric C."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Patrick C.",
@@ -17346,6 +17633,20 @@
    "year": 2020,
    "season": "2019-20",
    "format": "standard12",
+   "draftOrder": [
+    "Martin Pr.",
+    "Frédérick D.",
+    "Martin M.",
+    "Steve T.",
+    "François C.",
+    "Yanick M.",
+    "Patrick C.",
+    "Dany P.",
+    "Eric C.",
+    "Pascal R.",
+    "Manuel T."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Pascal R.",
@@ -18211,6 +18512,20 @@
    "year": 2021,
    "season": "2020-21",
    "format": "standard12",
+   "draftOrder": [
+    "François C.",
+    "Dany P.",
+    "Patrick C.",
+    "Martin M.",
+    "Yanick M.",
+    "Manuel T.",
+    "Pascal R.",
+    "Steve T.",
+    "Martin Pr.",
+    "Eric C.",
+    "Frédérick D."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "François C.",
@@ -19076,6 +19391,20 @@
    "year": 2022,
    "season": "2021-22",
    "format": "standard12",
+   "draftOrder": [
+    "Eric C.",
+    "Pascal R.",
+    "Dany P.",
+    "Steve T.",
+    "Martin M.",
+    "Patrick C.",
+    "François C.",
+    "Frédérick D.",
+    "Martin Pr.",
+    "Manuel T.",
+    "Yanick M."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Martin M.",
@@ -19941,6 +20270,20 @@
    "year": 2023,
    "season": "2022-23",
    "format": "standard12",
+   "draftOrder": [
+    "Martin M.",
+    "Martin Pr.",
+    "Manuel T.",
+    "Steve T.",
+    "Yanick M.",
+    "Patrick C.",
+    "François C.",
+    "Eric C.",
+    "Pascal R.",
+    "Dany P.",
+    "Frédérick D."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Martin M.",
@@ -20806,6 +21149,20 @@
    "year": 2024,
    "season": "2023-24",
    "format": "standard12",
+   "draftOrder": [
+    "Eric C.",
+    "Frédérick D.",
+    "Manuel T.",
+    "Dany P.",
+    "Martin Pr.",
+    "Steve T.",
+    "Pascal R.",
+    "Yanick M.",
+    "Martin M.",
+    "François C.",
+    "Patrick C."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Yanick M.",
@@ -21671,6 +22028,19 @@
    "year": 2025,
    "season": "2024-25",
    "format": "standard12",
+   "draftOrder": [
+    "Martin Pr.",
+    "Eric C.",
+    "Steve T.",
+    "Patrick C.",
+    "Dany P.",
+    "Pascal R.",
+    "Frédérick D.",
+    "François C.",
+    "Yanick M.",
+    "Manuel T."
+   ],
+   "draftOrderSource": "colonne",
    "entries": [
     {
      "pooler": "Eric C.",
@@ -22458,6 +22828,20 @@
    "year": 2026,
    "season": "2025-26",
    "format": "standard12",
+   "draftOrder": [
+    "Martin Pr.",
+    "Steve T.",
+    "Frédérick D.",
+    "Dany P.",
+    "Patrick C.",
+    "Martin M.",
+    "Pascal R.",
+    "Eric C.",
+    "Yanick M.",
+    "François C.",
+    "Manuel T."
+   ],
+   "draftOrderSource": "blocs",
    "entries": [
     {
      "pooler": "Martin Pr.",
@@ -23205,5 +23589,11 @@
     }
    ]
   }
- ]
+ ],
+ "draftOrderNote": {
+  "quoi": "draftOrder liste les pooleurs dans l'ordre du repechage, le 1er choix en tete. Le repechage est direct, pas en serpentin : le 1er parle aussi le premier a chaque ronde. Reconstitue depuis Historique_PoolNews_1994-2025.xlsx, ou il n'etait stocke dans aucun champ.",
+  "colonne": "L'ordre est lu dans une colonne du classeur qui donne explicitement l'ordre de repechage, et il concorde avec la disposition des blocs de la feuille. C'est la source la plus sure.",
+  "blocs": "L'ordre est lu dans la disposition des blocs de la feuille (de gauche a droite, puis de haut en bas). Verifie : sur ces feuilles le joueur pris en 1re ronde perd de la valeur a mesure qu'on recule dans l'ordre (r = -0,31), ce qui confirme que la disposition suit bien le repechage. 2016 corrige la coquille \"Matrin Montreuil\" ; 2020 nomme le bloc laisse sans en-tete, dont l'alignement correspond a Manuel T. sur 12 choix sur 12 et a personne d'autre.",
+  "image": "Saisons sans feuille de calcul : les donnees viennent d'une feuille manuscrite scannee (xl/media/image1-3.jpeg). Les totaux concordent score pour score avec ce fichier. L'ordre des colonnes est pris pour l'ordre du repechage sur indication du proprietaire du pool. ATTENTION : contrairement aux autres saisons, rien dans l'image ne le corrobore -- le test du 1er choix qui decline y donne r = -0,001 sur 17 choix. A traiter comme un temoignage, pas comme une mesure."
+ }
 }
