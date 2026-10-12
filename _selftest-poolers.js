@@ -159,6 +159,38 @@
     const ghostEvents = collect(ghost, { start: null, end: null });
     ok(ghostEvents.length === 0, 'an empty roster collects no goals instead of throwing');
 
+    /* ---- 11b. injuries ---- */
+    // The suite runs on a finished season: the loader must NOT borrow today's
+    // injury list for it, so neither badge nor panel may appear.
+    curPooler = state.poolers[0]; curPlayer = null; curDay = null;
+    render();
+    ok(window.NHL_INJURIES === undefined && !document.querySelector('.pl-inj, .inj'),
+       'an archived season shows no injuries (today\'s list is never borrowed)');
+
+    // Positive path, on a fixture: two of the first pooler's picks hurt.
+    const hp = state.poolers[0].picks.filter(id => id !== null);
+    INJ_DATA = { updated: '2026-10-12 04:30', players: {
+      [hp[0]]: { s: 'IR',  d: '2026-10-06', c: 'Out 6-8 weeks (lower body).' },
+      [hp[1]]: { s: 'DTD', d: '2026-10-11', c: '' }
+    } };
+    render();
+    const badges = document.querySelectorAll('.pl-roster .inj');
+    ok(badges.length === 2, 'the roster flags exactly the injured picks (' + badges.length + ')');
+    ok([...badges].some(b => b.textContent === 'LB' && /Liste des blessés — Out 6-8 weeks/.test(b.title)),
+       'the badge carries the status and the note in its tooltip');
+    const items = document.querySelectorAll('.pl-inj .inj-item');
+    ok(items.length === 2, 'the infirmary panel lists both players');
+    ok(/Au jour le jour/.test(items[0].textContent) &&
+       /Out 6-8 weeks/.test(items[1].textContent) && /Liste des blessés/.test(items[1].textContent),
+       'the note and the status are written out in full, newest report first');
+    ok(/\(2 blessés\)/.test(document.getElementById('selPooler').options[0].textContent),
+       'the pooler picker shows how many are hurt');
+    INJ_DATA = { updated: '2026-10-12 04:30', players: {} };
+    render();
+    ok(/tout l’alignement est en santé/.test(text()), 'a healthy roster says so');
+    INJ_DATA = null;
+    render();
+
     /* ---- 12. empty pool ---- */
     state = { version: 2, rosterSize: 12, poolers: [] };
     curPooler = null;

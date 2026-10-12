@@ -42,6 +42,31 @@ GOAL_LIST.forEach((g, i) => {
   noteRole(g.a2, i, 'P');
 });
 
+/* ---- Blessés -------------------------------------------------------------
+   data/<saison>/injuries.js (build-injuries.ps1) : la liste d'ESPN du jour,
+   rattachée aux identifiants LNH. Absente pour une saison archivée — le
+   chargeur ne l'emprunte jamais — et la page n'en dit alors rien. */
+let INJ_DATA = window.NHL_INJURIES || null;     // let : le self-test y pose un jeu d'essai
+const INJ_LABEL = {
+  IR:   ['LB',  'Liste des blessés'],
+  DTD:  ['JàJ', 'Au jour le jour'],
+  OUT:  ['ABS', 'Absent'],
+  SUSP: ['SUS', 'Suspendu']
+};
+function injuryOf(pid) {
+  return INJ_DATA && INJ_DATA.players ? INJ_DATA.players[String(pid)] || null : null;
+}
+function injLabel(inj) { return INJ_LABEL[inj.s] || [inj.s, inj.s]; }
+function injuredOf(pooler) {
+  return pooler.picks.filter(pid => pid !== null && injuryOf(pid));
+}
+function injBadge(inj) {
+  const [short, long] = injLabel(inj);
+  const b = el('span', 'inj ' + String(inj.s).toLowerCase(), short);
+  b.title = long + (inj.c ? ' — ' + inj.c : '') + (inj.d ? ' (' + frDate(inj.d) + ')' : '');
+  return b;
+}
+
 /* La date d'un but vit dans la table des matchs, pas sur le but lui-même. */
 function goalDate(g)    { const m = GAME_INFO[g.gid]; return m ? m[0] : ''; }
 function goalMatchup(g) { const m = GAME_INFO[g.gid]; return m ? m[1] : ''; }
@@ -254,6 +279,7 @@ function render() {
   split.append(buildRosterPanel(events));
   box.append(split);
 
+  if (INJ_DATA) box.append(buildInjuryPanel());
   box.append(buildDayStrip(events, win));
   box.append(buildNote());
 }
@@ -283,7 +309,9 @@ function buildToolbar() {
   who.id = 'selPooler';
   state.poolers.forEach((p, i) => {
     const o = document.createElement('option');
-    o.value = p.id; o.textContent = p.name;
+    const nInj = injuredOf(p).length;
+    o.value = p.id;
+    o.textContent = p.name + (nInj ? '  (' + nInj + ' blessé' + (nInj > 1 ? 's' : '') + ')' : '');
     if (p === curPooler) o.selected = true;
     who.append(o);
   });
@@ -548,6 +576,8 @@ function buildRosterPanel(events) {
     row.append(el('i', 'dot'));
     const nm = el('span', 'nm', r.p ? r.p.n : 'Joueur inconnu');
     row.append(nm);
+    const inj = injuryOf(r.pid);
+    if (inj) row.append(injBadge(inj));
     const pos = el('span', 'pos' + (r.p && r.p.p === 'D' ? ' D' : '') +
       (r.p && r.p.p === 'G' ? ' G' : ''), r.p ? r.p.p : '?');
     row.append(pos);
@@ -565,6 +595,46 @@ function buildRosterPanel(events) {
     list.append(row);
   });
   panel.append(list);
+  return panel;
+}
+
+/* ---- Infirmerie ----------------------------------------------------------
+   Le badge de l'alignement porte le statut en infobulle, mais une infobulle
+   ne s'ouvre pas au doigt : le statut et la note sont donc aussi écrits ici
+   en toutes lettres. La note reste en anglais — c'est celle du journaliste,
+   et la traduire en inventerait la moitié. */
+function buildInjuryPanel() {
+  const panel = el('div', 'panel pl-inj');
+  const h = el('h2', null, 'À l’infirmerie');
+  h.append(el('span', 'note', ' — liste ESPN du ' + frDate(String(INJ_DATA.updated).slice(0, 10))));
+  panel.append(h);
+
+  const hurt = injuredOf(curPooler)
+    .map(pid => ({ pid, p: BY_ID.get(pid) || null, inj: injuryOf(pid) }))
+    .sort((a, b) => (b.inj.d || '').localeCompare(a.inj.d || ''));
+
+  if (!hurt.length) {
+    panel.append(el('div', 'empty-state', 'Personne : tout l’alignement est en santé.'));
+    return panel;
+  }
+
+  const list = el('div', 'inj-list');
+  hurt.forEach(r => {
+    const item = el('div', 'inj-item');
+    const head = el('div', 'inj-head');
+    head.append(injBadge(r.inj));
+    head.append(el('b', null, r.p ? r.p.n : 'Joueur inconnu'));
+    if (r.p) head.append(el('span', 'inj-team', r.p.t + ' · ' + r.p.p));
+    head.append(el('span', 'inj-st', injLabel(r.inj)[1] +
+      (r.inj.d ? ' · ' + frDate(r.inj.d, true) : '')));
+    item.append(head);
+    if (r.inj.c) item.append(el('div', 'inj-note', r.inj.c));
+    list.append(item);
+  });
+  panel.append(list);
+  panel.append(el('div', 'inj-src',
+    'Source : ESPN, d’après les journalistes qui couvrent chaque équipe — la LNH ' +
+    'ne publie pas de liste officielle. Notes en anglais, telles que publiées.'));
   return panel;
 }
 

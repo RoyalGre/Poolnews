@@ -121,6 +121,7 @@ try {
     if ($modifs -match 'goals\.js')    { $quoi += 'buts' }
     if ($modifs -match 'advanced\.js') { $quoi += 'temps de jeu' }
     if ($modifs -match 'schedule\.js') { $quoi += 'calendrier' }
+    if ($modifs -match 'injuries\.js') { $quoi += 'blessures' }
     $detail = if ($quoi.Count) { $quoi -join ', ' } else { 'donnees' }
     $msg = 'Mise a jour automatique : {0} ({1})' -f $detail, (Get-Date -Format 'yyyy-MM-dd')
 

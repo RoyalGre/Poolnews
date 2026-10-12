@@ -512,6 +512,22 @@ svg.rink .puck:focus-visible { outline: 2px solid var(--accent); outline-offset:
 
 .pl-note { margin-top: 14px; }
 
+/* Blessés : badge dans l'alignement, détail dans le panneau « À l'infirmerie ».
+   Rouge pour qui manquera du temps, or pour l'incertain, gris pour le suspendu. */
+.inj { flex: none; font-family: var(--f-mono); font-size: 10px; font-weight: 600; line-height: 1.5;
+       padding: 0 5px; border-radius: 4px; border: 1px solid currentColor; color: var(--red); cursor: help; }
+.inj.dtd  { color: var(--gold); }
+.inj.susp { color: var(--muted); }
+.pl-inj { margin-top: 14px; }
+.inj-list { display: flex; flex-direction: column; }
+.inj-item { padding: 9px 2px; border-bottom: 1px solid var(--border); }
+.inj-item:last-child { border-bottom: 0; }
+.inj-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 14px; }
+.inj-team { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.inj-st { margin-left: auto; font-size: 12px; color: var(--ink-2); }
+.inj-note { margin-top: 4px; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+.inj-src { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
 /* =========================================================================
    Page d'accueil — index.html
 

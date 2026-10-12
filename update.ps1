@@ -104,6 +104,16 @@ try {
             }
         }
     }
+    # Injuries change on nights without games too -- a player goes on IR on a
+    # Tuesday -- so this runs BEFORE the "nothing new" exits below. The file
+    # is only rewritten when the list changed, so a quiet night stays clean.
+    # ESPN is a third-party feed: if it is down, the stats must still update.
+    try {
+        Run-Step 'injuries' 'build-injuries.ps1' @('-Quiet')
+    } catch {
+        Log '  injuries skipped -- previous list kept' 'Yellow'
+    }
+
     if (-not $Season) { Log 'No season has any games yet -- nothing to do.' 'Yellow'; exit 0 }
 
     # -------------------------------------------------------------------------

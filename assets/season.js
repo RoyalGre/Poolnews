@@ -192,7 +192,14 @@
     return label;
   }
 
+  /* Les instantanes du jour. La liste des blesses dit qui est blesse
+     AUJOURD'HUI : l'emprunter pour 2023-24 afficherait les blessures
+     d'octobre 2026 sous une saison terminee. Seule la saison choisie la
+     fournit, sinon rien. */
+  var TODAY = ['injuries'];
+
   function folderFor(name) {
+    if (TODAY.indexOf(name) >= 0) return holds(label, name) ? label : null;
     if (STATS.indexOf(name) >= 0) {
       var home = statsHome();
       return holds(home, name) ? home : (holds(label, name) ? label : null);
