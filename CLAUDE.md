@@ -74,8 +74,15 @@ ne dit pas est absent du résultat, et la page masque le bloc plutôt que
 d'inventer un montant.
 
 `build-trades.ps1` reads a hand-written `data/<season>/trades.txt` — one
-indented block per pooler, `Out X In Y (12 jan 2026)` — and resolves each
-incoming player against the final rosters to flag the 10 $ penalties. It
+indented block per pooler, `Out X In Y (12 jan 2026)` — resolves both players
+to ids, replays the swaps on the drafted rosters, and flags the 10 $
+penalties. **`pool.js` stays the draft**; the pages replay `trades.js` on top
+of it (`applyTrades()` in `core.js`), so Classement, Pooleurs, Faits
+saillants and Repêchage all score the current roster. **Rule settled
+2026-10-28: the incoming player counts his whole season**, as if drafted —
+a plain id swap, no date split. Replaying is idempotent, so the archived
+seasons, whose `pool.js` already holds final rosters, come out unchanged.
+It
 matches pooler names **accent-insensitively**: the file says `Francois C.`
 while the pool says `François C.`, and an exact match silently loses two
 trades.

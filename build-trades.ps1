@@ -63,6 +63,13 @@ $MOIS['mai'] = 5;  $MOIS['may'] = 5;   $MOIS['jun'] = 6;  $MOIS['juin'] = 6
 $MOIS['jul'] = 7;  $MOIS['juil'] = 7;  $MOIS['aou'] = 8;  $MOIS['aug'] = 8
 $MOIS['sep'] = 9;  $MOIS['sept'] = 9;  $MOIS['oct'] = 10; $MOIS['nov'] = 11
 $MOIS['dec'] = 12
+# Les noms complets aussi : « 17 Octobre 2026 » est la premiere chose qu'on
+# tape. Les accents sont retires avant la recherche (fevrier, aout, decembre).
+$MOIS['janvier'] = 1; $MOIS['january'] = 1; $MOIS['fevrier'] = 2; $MOIS['february'] = 2
+$MOIS['march'] = 3;   $MOIS['avril'] = 4;   $MOIS['april'] = 4;   $MOIS['june'] = 6
+$MOIS['juillet'] = 7; $MOIS['july'] = 7;    $MOIS['aout'] = 8;    $MOIS['august'] = 8
+$MOIS['septembre'] = 9; $MOIS['september'] = 9; $MOIS['octobre'] = 10; $MOIS['october'] = 10
+$MOIS['novembre'] = 11; $MOIS['november'] = 11; $MOIS['decembre'] = 12; $MOIS['december'] = 12
 
 $text  = [System.IO.File]::ReadAllText($src, [System.Text.Encoding]::UTF8)
 $lines = $text -split "`r?`n"
@@ -89,7 +96,7 @@ foreach ($raw in $lines) {
         $iso = ''
         if ($dateRaw -match '^(\d{1,2})\s+([A-Za-z\u00C0-\u00FF]+)\.?\s+(\d{4})$') {
             $dd = [int]$Matches[1]
-            $mo = $Matches[2].ToLower()
+            $mo = ($Matches[2].Normalize([Text.NormalizationForm]::FormD) -replace '\p{Mn}', '').ToLower()
             $yy = [int]$Matches[3]
             if ($MOIS.ContainsKey($mo)) {
                 $iso = '{0:d4}-{1:d2}-{2:d2}' -f $yy, $MOIS[$mo], $dd
@@ -115,7 +122,12 @@ foreach ($raw in $lines) {
 # pour que la page affiche l'absence de transaction plutot que rien du tout.
 if ($trades.Count -eq 0) { Say '  aucun trade pour l''instant' 'Yellow' }
 
-# ---- did the incoming player count in that pooler's top ten? ---------------
+# ---- resolve the names, apply the swaps, judge the top ten -----------------
+# pool.js holds the rosters as drafted. Each trade is replayed on a copy, in
+# date order, and the resulting ids go into trades.js so the pages apply the
+# exact same swaps (core.js, applyTrades). Archived seasons whose pool.js
+# already holds the final rosters come out unchanged: a swap whose incoming
+# player is already on the roster is a no-op.
 $poolPath    = Get-SeasonPath -Root $root -Season $Season -Name 'pool'
 $playersPath = Get-SeasonPath -Root $root -Season $Season -Name 'players'
 $scored = 0
@@ -123,6 +135,17 @@ $scored = 0
 function Fold([string] $s) {
     $n = $s.Normalize([Text.NormalizationForm]::FormD)
     ($n -replace '\p{Mn}', '').ToLower().Trim()
+}
+
+# Distance de Levenshtein simplifiee : proportion de caracteres communs dans
+# le meme ordre.
+function Likeness([string] $want, [string] $f) {
+    $common = 0; $j = 0
+    foreach ($ch in $want.ToCharArray()) {
+        $k = $f.IndexOf($ch, $j)
+        if ($k -ge 0) { $common++; $j = $k + 1 }
+    }
+    $common / [Math]::Max($want.Length, $f.Length)
 }
 
 if ((Test-Path $poolPath) -and (Test-Path $playersPath)) {
@@ -133,14 +156,106 @@ if ((Test-Path $poolPath) -and (Test-Path $playersPath)) {
 
     $byId = @{}
     foreach ($p in $pl.players) { $byId[[int]$p.i] = $p }
+    $allFold = @($pl.players | ForEach-Object { [pscustomobject]@{ p = $_; f = (Fold $_.n) } })
+
+    # Le fichier est tape a la main : « Barbachev » pour Barbashev, « Adam
+    # fox » sans majuscule, parfois le nom de famille seul. On cherche d'abord
+    # dans l'alignement du pooleur, ou douze joueurs laissent peu de place a
+    # la confusion, puis dans toute la ligue -- au nom exact d'abord, au plus
+    # proche ensuite, en le signalant.
+    function Find-Player([string] $name, $roster) {
+        $want = Fold $name
+        $mine = @($roster | Where-Object { $null -ne $_ } | ForEach-Object { $byId[[int]$_] } |
+                  Where-Object { $_ })
+        $hit = @($mine | Where-Object { $f = Fold $_.n; $f -eq $want -or $f.EndsWith(' ' + $want) })
+        if ($hit.Count -gt 0) { return $hit[0] }
+        $hit = @($allFold | Where-Object { $_.f -eq $want })
+        if ($hit.Count -gt 1) {
+            Say ("  ! {0} : {1} joueurs portent ce nom, on prend celui qui a le plus de points" -f $name, $hit.Count) 'Yellow'
+            $hit = @($hit | Sort-Object { -([int]$_.p.g + [int]$_.p.a) })
+        }
+        if ($hit.Count -gt 0) { return $hit[0].p }
+        $best = $null; $bestScore = 0
+        foreach ($p in $mine) {
+            $s = Likeness $want (Fold $p.n)
+            if ($s -gt $bestScore) { $bestScore = $s; $best = $p }
+        }
+        if ($bestScore -ge 0.8) { Say ("  ~ {0} -> {1}" -f $name, $best.n) 'DarkGray'; return $best }
+        # « Valisy Podkolzin » : le prenom ecorche, le nom juste. Un nom de
+        # famille porte par un seul joueur de la ligue suffit.
+        $last = ($want -split '\s+')[-1]
+        $hit = @($allFold | Where-Object { ($_.f -split '\s+')[-1] -eq $last })
+        if ($hit.Count -eq 1) { Say ("  ~ {0} -> {1} (a verifier)" -f $name, $hit[0].p.n) 'Yellow'; return $hit[0].p }
+        $best = $null; $bestScore = 0
+        foreach ($x in $allFold) {
+            $s = Likeness $want $x.f
+            if ($s -gt $bestScore) { $bestScore = $s; $best = $x.p }
+        }
+        if ($bestScore -ge 0.85) { Say ("  ~ {0} -> {1} (a verifier)" -f $name, $best.n) 'Yellow'; return $best }
+        return $null
+    }
+
+    $rosters = @{}
+    foreach ($pooler in $pool.poolers) {
+        $rosters[$pooler.name] = [System.Collections.ArrayList]@($pooler.picks | ForEach-Object { if ($null -eq $_) { $null } else { [int]$_ } })
+    }
+
+    foreach ($t in @($trades | Sort-Object { $_.date })) {
+        # « Francois C. » y cotoie « François C. » du pool, et « Martin P. »
+        # y designe « Martin Pr. ». On compare sans accents, et on accepte
+        # qu'une abreviation soit le prefixe de l'autre.
+        $ft = (Fold $t.pooler) -replace '[^a-z]', ''
+        $who = @($pool.poolers | Where-Object {
+            $fp = (Fold $_.name) -replace '[^a-z]', ''
+            $ft -eq $fp -or $fp.StartsWith($ft) -or $ft.StartsWith($fp)
+        })
+        # « Frederic D. » pour « Frederick D. » : douze noms seulement, le plus
+        # proche gagne s'il est tres proche, et on le signale.
+        if ($who.Count -eq 0) {
+            $best = $null; $bestScore = 0
+            foreach ($p in $pool.poolers) {
+                $s = Likeness $ft ((Fold $p.name) -replace '[^a-z]', '')
+                if ($s -gt $bestScore) { $bestScore = $s; $best = $p }
+            }
+            if ($bestScore -ge 0.8) {
+                Say ("  ~ {0} -> {1}" -f $t.pooler, $best.name) 'Yellow'
+                $who = @($best)
+            }
+        }
+        if ($who.Count -eq 0) { Say ("  ! pooleur inconnu : {0}" -f $t.pooler) 'Yellow'; continue }
+        $t.pooler = [string]$who[0].name   # graphie canonique
+        $roster   = $rosters[$t.pooler]
+
+        $o = Find-Player $t.out $roster
+        $i = Find-Player $t.joueur $roster
+        if (-not $o) { Say ("  ! joueur sortant introuvable : {0} ({1})" -f $t.out, $t.pooler) 'Yellow' }
+        if (-not $i) { Say ("  ! joueur entrant introuvable : {0} ({1})" -f $t.joueur, $t.pooler) 'Yellow' }
+        if ($o) { $t.outId = [int]$o.i; $t.out = [string]$o.n }
+        if ($i) { $t.inId  = [int]$i.i; $t.player = [string]$i.n }
+        if (-not ($o -and $i)) { continue }
+
+        # Un joueur n'appartient qu'a un pooleur : un nom mal tape qui tombe
+        # sur le joueur d'un autre se verrait ici, pas dans la page.
+        foreach ($other in $rosters.Keys) {
+            if ($other -ne $t.pooler -and ($rosters[$other] -contains [int]$i.i)) {
+                Say ("  ! {0} appartient deja a {1} (echange de {2})" -f $i.n, $other, $t.pooler) 'Red'
+            }
+        }
+
+        $k = $roster.IndexOf([int]$o.i)
+        $already = $roster -contains [int]$i.i
+        if ($k -ge 0 -and -not $already) { $roster[$k] = [int]$i.i }
+        elseif (-not $already) { Say ("  ! {0} n'est pas dans l'alignement de {1}" -f $o.n, $t.pooler) 'Yellow' }
+    }
 
     foreach ($pooler in $pool.poolers) {
         $rows = @()
-        foreach ($id in $pooler.picks) {
+        foreach ($id in $rosters[$pooler.name]) {
             if ($null -eq $id) { continue }
             $p = $byId[[int]$id]
             if (-not $p) { continue }
             $rows += [pscustomobject]@{
+                i   = [int]$p.i
                 n   = [string]$p.n
                 pos = [string]$p.p
                 pts = [int]$p.g + [int]$p.a
@@ -154,51 +269,15 @@ if ((Test-Path $poolPath) -and (Test-Path $playersPath)) {
             if ($d.Count -gt 0) { $top = @($rows | Select-Object -First 9) + $d }
             else                { $top = @($rows | Select-Object -First 9) }
         }
-        $topFold = @($top | ForEach-Object { Fold $_.n })
+        $topIds = @($top | ForEach-Object { $_.i })
 
         foreach ($t in $trades) {
-            # Le fichier est tape a la main : « Francois C. » y cotoie
-            # « Francois C. » du pool, et « Martin P. » y designe
-            # « Martin Pr. ». On compare sans accents, et on accepte qu'une
-            # abreviation soit le prefixe de l'autre.
-            $ft = (Fold $t.pooler) -replace '[^a-z]', ''
-            $fp = (Fold $pooler.name) -replace '[^a-z]', ''
-            if ($ft -ne $fp -and -not $fp.StartsWith($ft) -and -not $ft.StartsWith($fp)) { continue }
-            $want = Fold $t.joueur
-            $hit = @($rows | Where-Object {
-                $f = Fold $_.n
-                $f -eq $want -or $f.EndsWith($want) -or $want.EndsWith($f)
-            })
-            # Le fichier est tape a la main : « Barbachev » pour Barbashev,
-            # « Marchement » pour Marchment. Plutot que d'echouer en silence,
-            # on retombe sur le nom le plus proche de l'alignement -- qui ne
-            # compte que douze joueurs, donc le risque de confusion est nul.
-            if ($hit.Count -eq 0) {
-                $best = $null; $bestScore = 0
-                foreach ($r in $rows) {
-                    $f = Fold $r.n
-                    # Distance de Levenshtein simplifiee : proportion de
-                    # caracteres communs dans le meme ordre.
-                    $common = 0; $j = 0
-                    foreach ($ch in $want.ToCharArray()) {
-                        $k = $f.IndexOf($ch, $j)
-                        if ($k -ge 0) { $common++; $j = $k + 1 }
-                    }
-                    $score = $common / [Math]::Max($want.Length, $f.Length)
-                    if ($score -gt $bestScore) { $bestScore = $score; $best = $r }
-                }
-                if ($bestScore -ge 0.8) {
-                    $hit = @($best)
-                    Say ("  ~ {0} -> {1}" -f $t.joueur, $best.n) 'DarkGray'
-                }
-            }
-            if ($hit.Count -gt 0) {
-                $t.player  = [string]$hit[0].n
-                $t.pts     = [int]$hit[0].pts
-                $t.counted = [bool]($topFold -contains (Fold $hit[0].n))
-                $t.pooler  = [string]$pooler.name   # graphie canonique
-                $scored++
-            }
+            if ($t.pooler -ne $pooler.name -or -not $t.Contains('inId')) { continue }
+            $hit = @($rows | Where-Object { $_.i -eq $t.inId })
+            if ($hit.Count -eq 0) { continue }   # reparti dans un echange suivant
+            $t.pts     = [int]$hit[0].pts
+            $t.counted = [bool]($topIds -contains $t.inId)
+            $scored++
         }
     }
 }

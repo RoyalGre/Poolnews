@@ -341,6 +341,19 @@ table.standings tbody tr.open td:first-child { box-shadow: inset 3px 0 0 var(--a
   color: var(--d-color); border: 1px solid var(--d-color); border-radius: 4px;
   padding: 0 4px;
 }
+.rline .tag.trade { color: var(--accent); border-color: var(--accent); text-transform: none; }
+
+/* ---- Échanges (Classement et Pooleurs) ---------------------------------- */
+.tradelist { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.tradelist .trow {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 14px;
+}
+.tradelist .tdate { font-family: var(--f-mono); font-size: 11px; color: var(--muted); min-width: 52px; }
+.tradelist .tout { color: var(--muted); text-decoration: line-through; }
+.tradelist .tarrow { color: var(--muted); }
+.trade-tag { color: var(--accent); font-size: 12px; flex: none; cursor: help; }
+.pl-trades .tradelist { margin: 4px 0 10px; }
 
 /* ---- Charts ------------------------------------------------------------- */
 .chartwrap { position: relative; width: 100%; overflow-x: auto; }

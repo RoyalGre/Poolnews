@@ -280,6 +280,7 @@ function render() {
   box.append(split);
 
   if (INJ_DATA) box.append(buildInjuryPanel());
+  if (tradesOf(curPooler).length) box.append(buildTradePanel());
   box.append(buildDayStrip(events, win));
   box.append(buildNote());
 }
@@ -576,6 +577,12 @@ function buildRosterPanel(events) {
     row.append(el('i', 'dot'));
     const nm = el('span', 'nm', r.p ? r.p.n : 'Joueur inconnu');
     row.append(nm);
+    const via = acquiredBy(curPooler, r.pid);
+    if (via) {
+      const t = el('span', 'trade-tag', '⇄');
+      t.title = 'Acquis le ' + tradeDate(via) + ' en échange de ' + via.out;
+      row.append(t);
+    }
     const inj = injuryOf(r.pid);
     if (inj) row.append(injBadge(inj));
     const pos = el('span', 'pos' + (r.p && r.p.p === 'D' ? ' D' : '') +
@@ -635,6 +642,22 @@ function buildInjuryPanel() {
   panel.append(el('div', 'inj-src',
     'Source : ESPN, d’après les journalistes qui couvrent chaque équipe — la LNH ' +
     'ne publie pas de liste officielle. Notes en anglais, telles que publiées.'));
+  return panel;
+}
+
+/* ---- Échanges ------------------------------------------------------------
+   Le joueur acquis compte pour toute sa saison, comme s'il avait été
+   repêché : ses buts d'avant l'échange sont donc sur la patinoire aussi, et
+   ceux du joueur cédé n'y sont plus. La note le dit, sinon la patinoire
+   d'octobre semble avoir changé toute seule. */
+function buildTradePanel() {
+  const list = tradesOf(curPooler);
+  const panel = el('div', 'panel pl-trades');
+  panel.append(el('h2', null, list.length === 1 ? 'L’échange' : 'Les échanges'));
+  panel.append(tradeList(list));
+  panel.append(el('div', 'inj-src',
+    'Le joueur acquis compte pour toute sa saison, comme s’il avait été ' +
+    'repêché ; le joueur cédé ne compte plus du tout.'));
   return panel;
 }
 

@@ -1,4 +1,13 @@
 Trade 2026-2027
+	Frédéric D.
+		Out Bowen Byram In Valisy Podkolzin (17 Octobre 2026)
+	Steve T.
+		Out Matt Duchene In Artturi Lehkonen (23 Octobre 2026)
+	Antoine D.
+		Out Bryan Rust In Easton Cowan (23 Octobre 2026)
+	Patrick C.
+		Out Aleksander Barkov In Seth Jones (27 Octobre 2026)
+	
 
 # Un bloc par pooleur, une ligne par echange :
 #
@@ -14,6 +23,11 @@ Trade 2026-2027
 # Ensuite :
 #     powershell -ExecutionPolicy Bypass -File Y:\HockeyPool\build-trades.ps1
 #
-# Le script retrouve chaque joueur acquis dans l'alignement final et marque
-# ceux qui ne finissent pas dans les dix qui comptent : c'est la penalite de
-# 10 $. Rien a calculer a la main.
+# Le script retrouve les deux joueurs dans la ligue et fait l'echange dans
+# l'alignement repeche : le Classement et la page Pooleurs le montrent tout
+# de suite. Le joueur acquis compte pour TOUTE sa saison, comme s'il avait
+# ete repeche ; le joueur cede ne compte plus.
+#
+# Il marque aussi ceux qui ne finissent pas dans les dix qui comptent :
+# c'est la penalite de 10 $. Rien a calculer a la main. Un nom mal tape ou
+# un joueur qui appartient deja a un autre pooleur est signale en couleur.

@@ -78,6 +78,74 @@ const PUBLISHED = window.POOL_DATA || null;
 
 let state = load();
 
+/* =========================================================================
+   Trades
+
+   pool.js holds the rosters as drafted; trades.js (build-trades.ps1, from the
+   hand-written trades.txt) lists every swap with both player ids. They are
+   replayed here, on whatever state loaded, so every page scores the same
+   current roster. Rule chosen 2026-10-28: the incoming player counts his
+   WHOLE season, as if drafted -- so this is a plain id swap in the same slot.
+
+   Replaying is idempotent: a swap whose incoming player is already on the
+   roster does nothing. Archived seasons, whose pool.js already holds the
+   final rosters, therefore come out unchanged.
+
+   A trades.js borrowed from another season than the pool's would swap
+   players that were never on these rosters, so it is ignored.
+   ========================================================================= */
+const TRADES = (function () {
+  const T = window.NHL_TRADES;
+  if (!T || !Array.isArray(T.trades)) return [];
+  const b = (window.poolSeason && window.poolSeason.borrowed) || {};
+  if ((b.trades || null) !== (b.pool || null)) return [];
+  return T.trades.filter(t => t.inId && t.outId)
+    .slice().sort((x, y) => (x.date || '').localeCompare(y.date || ''));
+})();
+
+function applyTrades(s) {
+  for (const t of TRADES) {
+    const pl = s.poolers.find(p => p.name === t.pooler);
+    if (!pl || pl.picks.includes(t.inId)) continue;
+    const k = pl.picks.indexOf(t.outId);
+    if (k >= 0) pl.picks[k] = t.inId;
+  }
+  return s;
+}
+applyTrades(state);
+
+/* The trades of one pooler, oldest first. */
+function tradesOf(pl) {
+  return TRADES.filter(t => t.pooler === pl.name);
+}
+
+/* The trade that brought pid onto this pooler's roster, or null. */
+function acquiredBy(pl, pid) {
+  const list = tradesOf(pl).filter(t => t.inId === pid);
+  return list.length ? list[list.length - 1] : null;
+}
+
+/* « 12 nov » from an ISO date -- the date a trade was made. */
+function tradeDate(t) {
+  if (!t.date) return t.dateTxt || '';
+  const m = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'];
+  return (+t.date.slice(8, 10)) + ' ' + m[+t.date.slice(5, 7) - 1];
+}
+
+/* A pooler's trades as a list -- the Classement detail and the Pooleurs page
+   both show it. Built lazily: el() is defined further down. */
+function tradeList(list) {
+  const box = el('div', 'tradelist');
+  list.forEach(t => {
+    const row = el('div', 'trow');
+    row.append(el('span', 'tdate', tradeDate(t)),
+               el('span', 'tout', t.out), el('span', 'tarrow', '→'),
+               el('b', 'tin', t.player || t.joueur));
+    box.append(row);
+  });
+  return box;
+}
+
 function blankState() {
   return { version: 2, rosterSize: ROSTER_SIZE, poolers: [] };
 }

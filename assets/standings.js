@@ -417,6 +417,13 @@ function rosterDetail(r) {
       t.title = 'Dans les 10 qui comptent uniquement parce qu’au moins un D est exigé';
       d.append(t);
     }
+    const via = acquiredBy(r.pl, p.id);
+    if (via) {
+      const t = el('span', 'tag trade', '⇄ ' + tradeDate(via));
+      t.title = 'Acquis le ' + tradeDate(via) + ' en échange de ' + via.out +
+        ' — ses points de toute la saison comptent';
+      d.append(t);
+    }
     const pts = el('span', 'pts', String(p.pts));
     pts.title = p.g + 'G + ' + p.a + 'A';
     d.append(pts);
@@ -430,6 +437,13 @@ function rosterDetail(r) {
   foot.style.marginTop = '8px';
   foot.textContent = 'Les lignes en surbrillance sont les ' + COUNTING_SIZE + ' qui comptent ; les lignes pâles sont laissées de côté.';
   inner.append(foot);
+
+  const done = tradesOf(r.pl);
+  if (done.length) {
+    const h = el('div', 'hint', done.length === 1 ? '1 échange' : done.length + ' échanges');
+    h.style.marginTop = '12px';
+    inner.append(h, tradeList(done));
+  }
 
   td.append(inner);
   tr.append(td);
