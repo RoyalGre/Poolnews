@@ -288,19 +288,33 @@ function tablePanel() {
   const thead = el('thead');
   const tr    = el('tr');
 
+  // tip : l'infobulle de l'en-tête. Les colonnes sont abrégées pour tenir
+  // sur un téléphone ; « Sur le banc » surtout ne s'explique pas tout seul.
   const cols = [
-    { k: 'rank',  t: '#',        cls: '' },
-    { k: 'name',  t: 'Pooler',   cls: '' },
-    { k: 'pts',   t: 'Points',   cls: 'right' },
-    { k: 'g',     t: 'B',        cls: 'right' },
-    { k: 'a',     t: 'A',        cls: 'right' },
-    { k: 'gain',  t: 'Δ semaine', cls: 'right' },
-    { k: 'bench', t: 'Sur le banc', cls: 'right' },
-    { k: null,    t: 'Meilleur joueur', cls: '' }
+    { k: 'rank',  t: '#',        cls: '',
+      tip: 'Rang au classement. La flèche compare à la semaine précédente.' },
+    { k: 'name',  t: 'Pooler',   cls: '',
+      tip: 'Le pooleur. Cliquez une ligne pour voir son alignement.' },
+    { k: 'pts',   t: 'Points',   cls: 'right',
+      tip: 'Total des ' + COUNTING_SIZE + ' meilleurs joueurs sur ' + ROSTER_SIZE +
+           ' (buts + passes), dont au moins un défenseur. C’est ce qui décide du classement.' },
+    { k: 'g',     t: 'B',        cls: 'right',
+      tip: 'Buts des ' + COUNTING_SIZE + ' joueurs qui comptent.' },
+    { k: 'a',     t: 'A',        cls: 'right',
+      tip: 'Passes (aides) des ' + COUNTING_SIZE + ' joueurs qui comptent.' },
+    { k: 'gain',  t: 'Δ semaine', cls: 'right',
+      tip: 'Points gagnés pendant la semaine affichée.' },
+    { k: 'bench', t: 'Sur le banc', cls: 'right',
+      tip: 'Points marqués par les joueurs qui ne comptent pas — ceux qui restent ' +
+           'hors des ' + COUNTING_SIZE + ' meilleurs. Des points perdus : plus le ' +
+           'chiffre est gros, plus le banc est fort.' },
+    { k: null,    t: 'Meilleur joueur', cls: '',
+      tip: 'Le joueur de l’alignement qui a le plus de points.' }
   ];
 
   for (const c of cols) {
     const th = el('th', c.cls + (c.k ? ' sortable' : ''), c.t + (sortKey === c.k ? (sortDir === -1 ? ' ▾' : ' ▴') : ''));
+    th.title = c.tip + (c.k ? ' Cliquez pour trier.' : '');
     if (c.k) th.onclick = () => {
       if (sortKey === c.k) sortDir = -sortDir;
       else { sortKey = c.k; sortDir = c.k === 'name' ? 1 : -1; }

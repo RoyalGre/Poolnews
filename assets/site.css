@@ -281,6 +281,8 @@ table.standings th {
 }
 table.standings th.sortable { cursor: pointer; user-select: none; }
 table.standings th.sortable:hover { color: var(--text); }
+/* Le pointillé signale qu'une infobulle explique la colonne. */
+table.standings th[title] { text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-color: var(--muted); }
 table.standings th.right, table.standings td.right { text-align: right; }
 table.standings td { padding: 8px; border-bottom: 1px solid var(--border); }
 table.standings tbody tr { cursor: pointer; }
