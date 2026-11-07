@@ -656,10 +656,22 @@ function bumpChart() {
     svg.append(t);
   });
 
+  /* The lines sit in a clipped group so the replay can reveal them left to
+     right. At rest the clip covers the whole chart and changes nothing. */
+  const clip = svgEl('clipPath', { id: 'bumpClip' });
+  const clipRect = svgEl('rect', { x: 0, y: 0, width: W, height: H });
+  clip.append(clipRect);
+  const defs = svgEl('defs', {});
+  defs.append(clip);
+  svg.append(defs);
+  const linesG = svgEl('g', { 'clip-path': 'url(#bumpClip)' });
+  svg.append(linesG);
+
+  const labels = [];
   for (const pl of poolers) {
     const pts = [];
     for (let i = 0; i < WEEK_COUNT; i++) pts.push(x(i) + ',' + y(rankAt(pl, i)));
-    svg.append(svgEl('path', {
+    linesG.append(svgEl('path', {
       class: 'line', d: 'M' + pts.join('L'),
       stroke: poolerColor(pl), 'data-pooler': pl.id
     }));
@@ -670,21 +682,125 @@ function bumpChart() {
     t.setAttribute('fill', poolerColor(pl));
     t.textContent = pl.name;
     svg.append(t);
+    labels.push({ pl, t });
   }
 
+  // The week marker and its dots, hidden while the replay runs.
+  const cursorG = svgEl('g', {});
   if (weekIdx >= 0) {
-    svg.append(svgEl('line', { class: 'cursor-line', x1: x(weekIdx), x2: x(weekIdx), y1: m.t, y2: m.t + ih }));
+    cursorG.append(svgEl('line', { class: 'cursor-line', x1: x(weekIdx), x2: x(weekIdx), y1: m.t, y2: m.t + ih }));
     for (const pl of poolers) {
-      svg.append(svgEl('circle', {
+      cursorG.append(svgEl('circle', {
         class: 'dot', cx: x(weekIdx), cy: y(rankAt(pl, weekIdx)), r: 4,
         fill: poolerColor(pl), 'data-pooler': pl.id
       }));
     }
   }
+  svg.append(cursorG);
 
   const wrap = el('div', 'chartwrap');
   wrap.append(svg);
-  return wrap;
+  if (WEEK_COUNT < 2) return wrap;
+
+  /* ---- Replay: draw the season from week 1 to the latest one ----------
+     t runs from 0 to WEEK_COUNT-1 in fractional weeks. Each name rides the
+     tip of its own line; because the lines are straight segments between
+     weeks, interpolating the rank linearly keeps the dot exactly on the line.
+     Any render() (slider, legend) replaces this SVG, and the loop notices it
+     is detached and stops by itself. */
+  const heads = svgEl('g', {});
+  svg.append(heads);
+
+  const msPerWeek = Math.min(1200, Math.max(500, 18000 / WEEK_COUNT));
+  const btn = el('button', null, '▶ Rejouer la saison');
+  btn.className = 'replay-btn';
+  const readout = el('span', 'hint replay-week', '');
+  let t = WEEK_COUNT - 1, playing = false, lastTs = 0, frame = 0;
+
+  // The timeline: fractional weeks, so dragging glides between weeks the
+  // same way the replay does instead of jumping a whole week at a time.
+  const scrub = document.createElement('input');
+  scrub.type = 'range';
+  scrub.className = 'replay-scrub';
+  scrub.min = 0;
+  scrub.max = WEEK_COUNT - 1;
+  scrub.step = 0.01;
+  scrub.value = WEEK_COUNT - 1;
+  scrub.title = 'Glissez pour parcourir la saison';
+  scrub.oninput = () => {
+    if (playing) { playing = false; cancelAnimationFrame(frame); }
+    t = +scrub.value;
+    if (t >= WEEK_COUNT - 1) { finish(); return; }
+    cursorG.style.display = 'none';
+    btn.textContent = '▶ Reprendre';
+    draw();
+  };
+
+  function draw() {
+    const i0 = Math.floor(t), i1 = Math.min(WEEK_COUNT - 1, i0 + 1), f = t - i0;
+    const xt = x(i0) + (x(i1) - x(i0)) * f;
+    clipRect.setAttribute('width', xt + 2);
+    heads.innerHTML = '';
+    for (const { pl, t: lbl } of labels) {
+      const yt = y(rankAt(pl, i0)) + (y(rankAt(pl, i1)) - y(rankAt(pl, i0))) * f;
+      lbl.setAttribute('x', xt + 10);
+      lbl.setAttribute('y', yt + 4);
+      heads.append(svgEl('circle', {
+        class: 'dot', cx: xt, cy: yt, r: 4, fill: poolerColor(pl), 'data-pooler': pl.id
+      }));
+    }
+    readout.textContent = weekLabel(Math.round(t));
+    scrub.value = t;
+  }
+
+  function finish() {
+    playing = false;
+    t = WEEK_COUNT - 1;
+    clipRect.setAttribute('width', W);
+    heads.innerHTML = '';
+    for (const { pl, t: lbl } of labels) {
+      lbl.setAttribute('x', W - m.r + 10);
+      lbl.setAttribute('y', y(rankAt(pl, WEEK_COUNT - 1)) + 4);
+    }
+    cursorG.style.display = '';
+    btn.textContent = '▶ Rejouer la saison';
+    readout.textContent = '';
+    scrub.value = WEEK_COUNT - 1;
+  }
+
+  function step(ts) {
+    if (!playing || !svg.isConnected) return;
+    // The first frame's timestamp can predate the performance.now() taken at
+    // the click; a negative step would ask for week -1.
+    if (lastTs === null) lastTs = ts;
+    t = Math.min(WEEK_COUNT - 1, Math.max(0, t + (ts - lastTs) / msPerWeek));
+    lastTs = ts;
+    draw();
+    if (t >= WEEK_COUNT - 1) { finish(); return; }
+    frame = requestAnimationFrame(step);
+  }
+
+  btn.onclick = () => {
+    if (playing) {                       // pause
+      playing = false;
+      cancelAnimationFrame(frame);
+      btn.textContent = '▶ Reprendre';
+      return;
+    }
+    if (t >= WEEK_COUNT - 1) t = 0;      // finished or never started: from the top
+    playing = true;
+    cursorG.style.display = 'none';
+    btn.textContent = '❚❚ Pause';
+    draw();
+    lastTs = null;
+    frame = requestAnimationFrame(step);
+  };
+
+  const bar = el('div', 'replay-bar');
+  bar.append(btn, scrub, readout);
+  const holder = el('div');
+  holder.append(bar, wrap);
+  return holder;
 }
 
 /* ---- 3. Points gained in the selected week ----------------------------- */

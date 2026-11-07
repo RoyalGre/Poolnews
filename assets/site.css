@@ -372,6 +372,11 @@ svg.chart .bar { rx: 3; }
 svg.chart .hover-band { fill: transparent; }
 svg.chart .hover-band:hover { fill: var(--hover-wash); }
 svg.chart .cursor-line { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 3; }
+.replay-bar { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
+.replay-bar .replay-btn { min-width: 170px; }
+.replay-bar { flex-wrap: wrap; }
+.replay-bar .replay-scrub { flex: 1 1 200px; min-width: 0; }
+.replay-bar .replay-week { min-width: 170px; }
 
 .legend { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 10px; }
 .legend .item {

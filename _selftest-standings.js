@@ -232,6 +232,45 @@
     iso.dispatchEvent(new MouseEvent('dblclick'));
     ok(lines() === before, 'double-clicking the isolated one brings everybody back');
 
+    /* ---- 14b. replay of the position chart ----
+       Only the synchronous part: the first click rewinds to week 1 before
+       any animation frame runs, so its effect is checkable right away. */
+    const bump   = document.querySelectorAll('svg.chart')[1];
+    const replay = document.querySelector('.replay-btn');
+    ok(!!replay, 'the position chart has a replay button');
+    const clipW  = () => +bump.querySelector('#bumpClip rect').getAttribute('width');
+    const fullW  = clipW();
+    const bumpLines = bump.querySelectorAll('.line').length;
+    replay.click();
+    ok(clipW() < fullW / 10, 'replay rewinds: lines are hidden past week 1 (' + Math.round(clipW()) + ' of ' + fullW + ')');
+    const lbl0 = bump.querySelector('text.lbl');
+    ok(+lbl0.getAttribute('x') < 100, 'names ride the tip of their line, not the right edge');
+    ok(/Semaine 1\b/.test(document.querySelector('.replay-bar .hint').textContent),
+       'the readout shows the week being drawn');
+    ok(/Pause/.test(replay.textContent), 'while playing, the button offers Pause');
+    replay.click();
+    ok(/Reprendre/.test(replay.textContent), 'pausing offers to resume');
+    ok(bump.querySelectorAll('.line').length === bumpLines, 'the replay draws no extra lines');
+
+    // The timeline: drag to mid-season, then back near the start.
+    const scrub = document.querySelector('.replay-scrub');
+    ok(!!scrub, 'the position chart has a timeline');
+    const scrubTo = v => { scrub.value = v; scrub.dispatchEvent(new Event('input')); };
+    const mid = Math.floor((WEEK_COUNT - 1) / 2);
+    scrubTo(mid);
+    ok(new RegExp('Semaine ' + (mid + 1) + '\\b').test(document.querySelector('.replay-week').textContent),
+       'dragging the timeline to week ' + (mid + 1) + ' shows that week');
+    const midClip = clipW();
+    ok(midClip > fullW / 4 && midClip < fullW, 'the lines are drawn up to mid-season (' + Math.round(midClip) + ')');
+    scrubTo(1);
+    ok(clipW() < midClip, 'dragging back hides the later weeks again');
+    scrubTo(WEEK_COUNT - 1);
+    ok(clipW() >= fullW && /Rejouer/.test(replay.textContent),
+       'dragging to the end restores the full chart');
+    render();
+    ok(clipW() !== null && +document.querySelector('#bumpClip rect').getAttribute('width') >= fullW,
+       'a re-render restores the full chart');
+
     /* ---- 15. empty pool ---- */
     state = { version: 2, rosterSize: 12, poolers: [] };
     render();
