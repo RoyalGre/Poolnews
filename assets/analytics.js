@@ -13,7 +13,7 @@
    delays the page. GA4 does not store visitors' IP addresses.
    ========================================================================= */
 (function () {
-  var ID = 'G-NMNFQW90W1';
+  var ID = 'G-1VM7FKHWED';
   var HOST = 'royalgre.github.io';
 
   if (location.hostname !== HOST) return;
