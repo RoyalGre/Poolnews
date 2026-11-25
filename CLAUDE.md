@@ -223,8 +223,11 @@ careers. Canon lives in the `poolers` block of `pool-history.json`.
   `{"value":[...],"Count":n}`. Wrap it in `[int[]]@(...)`. Silent, and it breaks
   the browser.
 - The stats API returns rows in an **unstable order without an explicit `sort`**,
-  so paging silently skips and duplicates. `limit=-1` avoids paging entirely but
-  caps at **10,000 rows** — stay well under it or rows vanish with no error.
+  so paging silently skips and duplicates. **Since November 2026 every response
+  holds at most 100 rows** — `limit=-1` (or any larger limit) is silently
+  ignored while `total` still reports the true count. Always go through
+  `Get-AllStatsRows` in `season-path.ps1`: it pages under a unique sort and
+  throws unless rows == total. `start=10000` still returns nothing.
 
 ## NHL API notes (public, no key)
 

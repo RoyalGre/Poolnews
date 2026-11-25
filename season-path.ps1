@@ -37,6 +37,53 @@ function Get-SeasonPath {
     Join-Path $dir ("{0}.js" -f $Name)
 }
 
+<#  Every row of a stats-API report, paged.
+
+    Since November 2026 the stats API ignores limit=-1 (and any limit above
+    100): every response holds at most 100 rows, whatever was asked, while
+    "total" still reports the true count. Reading one response therefore
+    silently kept the 100 lowest player ids -- the nightly run refused to write
+    history for five nights before anyone noticed.
+
+    So: page with start= in steps of 100, under an explicit sort that makes
+    every row unique (without one the order is unstable and paging skips and
+    duplicates), then insist that the rows collected match "total" and that no
+    key repeats. Anything else throws rather than writing a short file.
+
+    $Uri is the report URL WITHOUT start/limit/sort. Get-Json must exist in
+    the caller's scope (each builder defines its own). #>
+function Get-AllStatsRows {
+    param(
+        [Parameter(Mandatory)][string]   $Uri,
+        [Parameter(Mandatory)][string[]] $SortBy,      # e.g. 'playerId' or 'playerId','gameId'
+        [int] $PageSize = 100
+    )
+    $sortJson = '[' + (($SortBy | ForEach-Object { '{"property":"' + $_ + '","direction":"ASC"}' }) -join ',') + ']'
+    $sort = [uri]::EscapeDataString($sortJson)
+    $sep  = if ($Uri.Contains('?')) { '&' } else { '?' }
+
+    $rows  = New-Object System.Collections.ArrayList
+    $total = -1
+    $start = 0
+    do {
+        $resp = Get-Json "$Uri${sep}sort=$sort&start=$start&limit=$PageSize"
+        $page = @($resp.data)
+        if ($total -lt 0) { $total = [int]$resp.total }
+        foreach ($r in $page) { [void]$rows.Add($r) }
+        $start += $PageSize
+    } while ($page.Count -gt 0 -and $rows.Count -lt $total)
+
+    if ($rows.Count -ne $total) {
+        throw "Stats API: collected $($rows.Count) rows but it reports $total -- refusing a short read."
+    }
+    $seen = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($r in $rows) {
+        $key = ($SortBy | ForEach-Object { [string]$r.$_ }) -join '|'
+        if (-not $seen.Add($key)) { throw "Stats API: row $key came back twice -- paging is unstable, refusing." }
+    }
+    return ,$rows.ToArray()
+}
+
 <#  Rewrites data/seasons.js from what is actually on disk, so the index can
     never drift from reality. Called at the end of a build. #>
 function Update-SeasonIndex {

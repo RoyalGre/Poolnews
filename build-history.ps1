@@ -106,26 +106,11 @@ Write-Host "  $($dates.Count) weekly snapshots to fetch"
 function Get-AsOf {
     param([string] $Kind, [string] $AsOf)
 
-    # limit=-1 returns the entire snapshot in one request (~850 skaters), which
-    # is what makes running this often cheap: 28 requests for a whole season
-    # instead of the ~300 that paging 100 at a time needed.
-    #
-    # An explicit sort stays, and it is not cosmetic: without one the API
-    # returns rows in an unstable order, so any paged read silently skips and
-    # duplicates players.
-    $sort = [uri]::EscapeDataString('[{"property":"playerId","direction":"ASC"}]')
-    $exp  = [uri]::EscapeDataString("gameTypeId=2 and seasonId=$Season and gameDate<=""$AsOf""")
-    $uri  = "$STAT/$Kind/summary?isAggregate=true&isGame=true&limit=-1&sort=$sort&cayenneExp=$exp"
-
-    $resp = Get-Json $uri
-    $rows = @($resp.data)
-
-    # limit=-1 stops at 10,000 rows and there is no way to page past it, so a
-    # response near the ceiling means players were dropped without an error.
-    if ($rows.Count -ge 9500) {
-        throw "$Kind snapshot for $AsOf returned $($rows.Count) rows -- too close to the 10,000 cap to trust."
-    }
-    return $rows
+    # limit=-1 used to return the whole snapshot in one request; since
+    # November 2026 the API caps every response at 100 rows, so this pages
+    # (~9 requests per snapshot) and checks the count -- see Get-AllStatsRows.
+    $exp = [uri]::EscapeDataString("gameTypeId=2 and seasonId=$Season and gameDate<=""$AsOf""")
+    return Get-AllStatsRows -Uri "$STAT/$Kind/summary?isAggregate=true&isGame=true&cayenneExp=$exp" -SortBy 'playerId'
 }
 
 $snapshots = @()     # each: @{ d = 'yyyy-MM-dd'; stats = @{ id = @(g,a) } }

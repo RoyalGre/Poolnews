@@ -151,17 +151,11 @@ if ($players.Count -eq 0) { throw 'No players fetched -- aborting without writin
 function Get-SummaryRows {
     param([string] $Kind, [string] $Season)   # Kind = 'skater' or 'goalie'
 
-    # limit=-1 brings back every player in one request. It stops at 10,000 rows
-    # with no way to page past that, so a response near the ceiling means rows
-    # were dropped silently -- refuse rather than write a short season.
-    $exp  = [uri]::EscapeDataString("seasonId=$Season and gameTypeId=2")
-    $uri  = "$STAT/$Kind/summary?isAggregate=false&isGame=false&limit=-1&cayenneExp=$exp"
-    $rows = @((Get-Json $uri).data)
-
-    if ($rows.Count -ge 9500) {
-        throw "$Kind summary returned $($rows.Count) rows -- too close to the 10,000 cap to trust."
-    }
-    return $rows
+    # limit=-1 used to bring back every player in one request; since November
+    # 2026 the API caps every response at 100 rows, which silently left most
+    # of the league at zero. Get-AllStatsRows pages and checks the count.
+    $exp = [uri]::EscapeDataString("seasonId=$Season and gameTypeId=2")
+    return Get-AllStatsRows -Uri "$STAT/$Kind/summary?isAggregate=false&isGame=false&cayenneExp=$exp" -SortBy 'playerId'
 }
 
 # Auto-detect: walk back from the current season until one has data. At the

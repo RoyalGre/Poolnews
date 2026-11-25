@@ -11,10 +11,11 @@
     accepts "playerId in (...)", so a whole season of game logs comes back in a
     couple of dozen requests rather than one per player.
 
-    Careful with the row cap: limit=-1 returns everything, but only up to
-    10,000 rows, and start=10000 returns NOTHING -- you cannot page past it. So
-    ids are requested in small batches whose row count stays well clear of the
-    ceiling. Silent truncation is the failure mode to avoid here.
+    Careful with the row caps: since November 2026 every response holds at most
+    100 rows (limit=-1 is ignored), so each batch is paged by Get-AllStatsRows;
+    and start=10000 returns NOTHING, so ids are still requested in batches
+    whose row count stays well clear of that ceiling. Silent truncation is the
+    failure mode to avoid here.
 
     Only aggregates are written out, not the raw rows: the page needs a season
     summary per player, and shipping ~80,000 game rows to the browser would be
@@ -79,8 +80,8 @@ if ([string]::IsNullOrWhiteSpace($OutPath)) {
 
 Write-Host "Season $Season" -ForegroundColor Cyan
 $exp     = [uri]::EscapeDataString("seasonId=$Season and gameTypeId=2")
-$summary = Get-Json "$STAT/skater/summary?isAggregate=false&isGame=false&limit=-1&cayenneExp=$exp"
-$allIds  = @($summary.data | Where-Object { [int]$_.gamesPlayed -gt 0 } | ForEach-Object { [int]$_.playerId })
+$summary = Get-AllStatsRows -Uri "$STAT/skater/summary?isAggregate=false&isGame=false&cayenneExp=$exp" -SortBy 'playerId'
+$allIds  = @($summary | Where-Object { [int]$_.gamesPlayed -gt 0 } | ForEach-Object { [int]$_.playerId })
 Write-Host "  $($allIds.Count) skaters played at least one game"
 
 # -----------------------------------------------------------------------------
@@ -95,15 +96,10 @@ for ($i = 0; $i -lt $allIds.Count; $i += $BatchSize) {
     $chunk = $allIds[$i..([Math]::Min($i + $BatchSize - 1, $allIds.Count - 1))]
     $list  = $chunk -join ','
     $cx    = [uri]::EscapeDataString("seasonId=$Season and gameTypeId=2 and playerId in ($list)")
-    $resp  = Get-Json "$STAT/skater/summary?isAggregate=false&isGame=true&limit=-1&cayenneExp=$cx"
-    $rows  = @($resp.data)
+    # Paged 100 rows at a time since the API stopped honouring limit=-1.
+    $rows  = Get-AllStatsRows -Uri "$STAT/skater/summary?isAggregate=false&isGame=true&cayenneExp=$cx" -SortBy 'playerId', 'gameId'
     $batch++
     $rowsTotal += $rows.Count
-
-    # A batch anywhere near the ceiling means rows were dropped without warning.
-    if ($rows.Count -ge 9500) {
-        throw "Batch $batch returned $($rows.Count) rows -- too close to the 10,000 cap. Lower -BatchSize."
-    }
 
     foreach ($r in $rows) {
         $id = [int]$r.playerId
